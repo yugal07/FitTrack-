@@ -27,43 +27,43 @@ exports.notFound = (req, res, next) => {
         };
         
         // Handle validation errors
-        exports.validationErrorHandler = (err, req, res, next) => {
-          // If error is a Mongoose validation error
-          if (err.name === 'ValidationError') {
-            const errors = Object.values(err.errors).map(val => val.message);
-            
-            return res.status(400).json({
-              success: false,
-              error: {
-                code: 'VALIDATION_ERROR',
-                message: errors.join(', '),
-              },
-            });
-          }
-        
-          // If error is a Mongoose cast error (invalid ID format)
-          if (err.name === 'CastError' && err.kind === 'ObjectId') {
-            return res.status(400).json({
-              success: false,
-              error: {
-                code: 'INVALID_ID',
-                message: 'Resource not found',
-              },
-            });
-          }
-        
-          // If error is a MongoDB duplicate key error
-          if (err.code === 11000) {
-            return res.status(400).json({
-              success: false,
-              error: {
-                code: 'DUPLICATE_KEY',
-                message: 'Duplicate field value entered',
-                field: Object.keys(err.keyValue)[0],
-              },
-            });
-          }
-        
-          // Pass to next error handler
-          next(err);
-        };
+exports.validationErrorHandler = (err, req, res, next) => {
+  // If error is a Mongoose validation error
+  if (err.name === 'ValidationError') {
+    const errors = Object.values(err.errors).map(val => val.message);
+    
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: errors.join(', '),
+      },
+    });
+  }
+
+  // If error is a Mongoose cast error (invalid ID format)
+  if (err.name === 'CastError' && err.kind === 'ObjectId') {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'INVALID_ID',
+        message: 'Resource not found',
+      },
+    });
+  }
+
+  // If error is a MongoDB duplicate key error
+  if (err.code === 11000) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'DUPLICATE_KEY',
+        message: 'Duplicate field value entered',
+        field: Object.keys(err.keyValue)[0],
+      },
+    });
+  }
+
+  // Pass to next error handler
+  next(err);
+};

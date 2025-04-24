@@ -3,6 +3,9 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const { notFound, errorHandler, validationErrorHandler } = require('./middleware/errorMiddleware');
+const path = require("path")
+const morgan = require("morgan")
+const startNotificationSchedulers = require("./services/notificationScheduler");
 
 dotenv.config();
 
@@ -13,6 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(morgan("dev"));
 
 // Static files folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -50,9 +54,10 @@ app.use(notFound);
 app.use(errorHandler);
 
 
-
 const PORT = process.env.PORT || 8001;
 
 app.listen(PORT, () => {
   console.log("got your server running B");
 });
+
+startNotificationSchedulers();

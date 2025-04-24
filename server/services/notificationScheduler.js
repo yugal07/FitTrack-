@@ -174,6 +174,12 @@ const scheduleGoalChecks = () => {
  * Initialize all notification schedulers
  */
 const initNotificationSchedulers = () => {
+  // Check if we're in a development environment with testing flag
+  if (process.env.NODE_ENV === 'test' && process.env.DISABLE_SCHEDULERS) {
+    console.log('Notification schedulers disabled in test mode');
+    return;
+  }
+  
   scheduleWorkoutReminders();
   scheduleNutritionReminders();
   scheduleGoalChecks();
@@ -181,9 +187,19 @@ const initNotificationSchedulers = () => {
   console.log('All notification schedulers initialized');
 };
 
+const startNotificationSchedulers = () => {
+  try {
+    console.log('Starting notification schedulers...');
+    initNotificationSchedulers();
+  } catch (error) {
+    console.error('Error starting notification schedulers:', error);
+  }
+};
+
 module.exports = {
   initNotificationSchedulers,
   scheduleWorkoutReminders,
   scheduleNutritionReminders,
-  scheduleGoalChecks
+  scheduleGoalChecks,
+  startNotificationSchedulers
 };
