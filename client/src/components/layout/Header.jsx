@@ -1,18 +1,16 @@
 // src/components/layout/Header.jsx
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   IconButton,
   Box,
   Menu,
   MenuItem,
   Avatar,
   Tooltip,
-  Switch,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
@@ -22,11 +20,14 @@ import {
   Brightness7 as LightIcon,
   Notifications as NotificationsIcon,
 } from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
 
 const Header = ({ toggleTheme, darkMode, toggleSidebar }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -35,6 +36,32 @@ const Header = ({ toggleTheme, darkMode, toggleSidebar }) => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  
+  const handleLogout = () => {
+    console.log('Logging out...');
+    logout();
+    handleClose();
+    navigate('/login');
+  };
+  
+  const handleProfile = () => {
+    navigate('/profile');
+    handleClose();
+  };
+  
+  const handleSettings = () => {
+    // Future implementation
+    handleClose();
+  };
+
+  // Get user's initials for avatar when no profile picture
+  const getUserInitials = () => {
+    if (!currentUser) return '';
+    return `${currentUser.firstName?.charAt(0) || ''}${currentUser.lastName?.charAt(0) || ''}`;
+  };
+
+  // Avatar src or empty string if no profile picture
+  const avatarSrc = currentUser?.profilePicture || '';
 
   return (
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
@@ -86,10 +113,16 @@ const Header = ({ toggleTheme, darkMode, toggleSidebar }) => {
               sx={{ ml: 1 }}
             >
               <Avatar
-                sx={{ width: 32, height: 32 }}
-                alt="User"
-                src="/src/assets/default-avatar.png"
-              />
+                sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  bgcolor: !avatarSrc ? 'primary.main' : undefined 
+                }}
+                alt={currentUser?.firstName || 'User'}
+                src={avatarSrc || undefined}
+              >
+                {!avatarSrc && getUserInitials()}
+              </Avatar>
             </IconButton>
           </Tooltip>
           
@@ -108,15 +141,9 @@ const Header = ({ toggleTheme, darkMode, toggleSidebar }) => {
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
-            <MenuItem
-              component={RouterLink}
-              to="/profile"
-              onClick={handleClose}
-            >
-              Profile
-            </MenuItem>
-            <MenuItem onClick={handleClose}>Settings</MenuItem>
-            <MenuItem onClick={handleClose}>Logout</MenuItem>
+            <MenuItem onClick={handleProfile}>Profile</MenuItem>
+            <MenuItem onClick={handleSettings}>Settings</MenuItem>
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </Box>
       </Toolbar>

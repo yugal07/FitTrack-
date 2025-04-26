@@ -1,6 +1,6 @@
 // src/pages/Login.jsx
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -9,15 +9,27 @@ import {
   Link,
   Alert,
   CircularProgress,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the return path from location state or default to dashboard
+  const from = location.state?.from?.pathname || '/';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,19 +39,35 @@ const Login = () => {
     }));
   };
 
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.email.trim() || !formData.password) {
+      setError('Email and password are required');
+      return;
+    }
+    
     setLoading(true);
     setError('');
 
     try {
-      // This would be replaced with actual API call
-      console.log('Logging in with:', formData);
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Handle successful login
+      console.log('Attempting login with:', { email: formData.email });
+      const result = await login(formData);
+      if (result) {
+        console.log('Login successful, navigating to:', from);
+        // Redirect to the page they tried to visit or dashboard
+        navigate(from, { replace: true });
+      } else {
+        setError('Invalid email or password. Please try again.');
+      }
     } catch (error) {
-      setError('Invalid email or password. Please try again.');
+      console.error('Login error in component:', error);
+      setError(error.message || 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -72,11 +100,24 @@ const Login = () => {
         fullWidth
         name="password"
         label="Password"
-        type="password"
+        type={showPassword ? "text" : "password"}
         id="password"
         autoComplete="current-password"
         value={formData.password}
         onChange={handleChange}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="toggle password visibility"
+                onClick={handleTogglePasswordVisibility}
+                edge="end"
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
       />
       
       <Button

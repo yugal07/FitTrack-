@@ -1,5 +1,5 @@
 // src/pages/Profile.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -11,23 +11,69 @@ import {
   Divider,
   MenuItem,
   CircularProgress,
-  IconButton,
   Alert,
 } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
+import { useAuth } from '../context/AuthContext';
+import { userService } from '../services/userService';
 
 const Profile = () => {
+  const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    gender: 'male',
-    fitnessLevel: 'beginner',
+    firstName: '',
+    lastName: '',
+    email: '',
+    gender: '',
+    fitnessLevel: '',
   });
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Load user data on component mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        setLoading(true);
+        
+        if (currentUser) {
+          console.log('Setting profile data from currentUser:', currentUser);
+          setFormData({
+            firstName: currentUser.firstName || '',
+            lastName: currentUser.lastName || '',
+            email: currentUser.email || '',
+            gender: currentUser.gender || '',
+            fitnessLevel: currentUser.fitnessLevel || 'beginner',
+          });
+        } else {
+          // Fallback: If currentUser is not available, fetch from API
+          console.log('CurrentUser not available, fetching profile data from API');
+          const response = await userService.getProfile();
+          if (response.success) {
+            const userData = response.data.user;
+            console.log('Fetched user data:', userData);
+            setFormData({
+              firstName: userData.firstName || '',
+              lastName: userData.lastName || '',
+              email: userData.email || '',
+              gender: userData.gender || '',
+              fitnessLevel: userData.fitnessLevel || 'beginner',
+            });
+          } else {
+            setError('Failed to load profile data');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+        setError('Failed to load profile data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,14 +90,43 @@ const Profile = () => {
     setSuccess(false);
 
     try {
-      // This would be replaced with actual API call
       console.log('Updating profile with:', formData);
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Handle successful update
-      setSuccess(true);
+      const response = await userService.updateProfile(formData);
+      if (response.success) {
+        console.log('Profile updated successfully:', response.data);
+        setSuccess(true);
+        // Set timeout to hide success message after 3 seconds
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(response.error?.message || 'Failed to update profile. Please try again.');
+      }
     } catch (error) {
-      setError('Failed to update profile. Please try again.');
+      console.error('Profile update error:', error);
+      setError('An error occurred while updating your profile.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      setLoading(true);
+      const response = await userService.uploadProfilePicture(file);
+      
+      if (response.success) {
+        console.log('Profile picture uploaded successfully:', response.data);
+        setSuccess(true);
+        // You'd typically update the user state here with the new profile picture
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(response.error?.message || 'Failed to upload profile picture.');
+      }
+    } catch (error) {
+      console.error('Profile picture upload error:', error);
+      setError('An error occurred while uploading your profile picture.');
     } finally {
       setLoading(false);
     }
@@ -70,6 +145,22 @@ const Profile = () => {
     { value: 'prefer not to say', label: 'Prefer not to say' },
   ];
 
+  // Get user's initials for avatar when no profile picture
+  const getUserInitials = () => {
+    return `${formData.firstName?.charAt(0) || ''}${formData.lastName?.charAt(0) || ''}`;
+  };
+
+  // Avatar src or empty string if no profile picture
+  const avatarSrc = currentUser?.profilePicture || '';
+
+  if (loading && !formData.firstName) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -79,10 +170,17 @@ const Profile = () => {
       <Paper sx={{ p: 3, mb: 4 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <Avatar
-            sx={{ width: 100, height: 100, mr: 3 }}
+            sx={{ 
+              width: 100, 
+              height: 100, 
+              mr: 3,
+              bgcolor: !avatarSrc ? 'primary.main' : undefined 
+            }}
             alt={`${formData.firstName} ${formData.lastName}`}
-            src="/src/assets/default-avatar.png"
-          />
+            src={avatarSrc || undefined}
+          >
+            {!avatarSrc && getUserInitials()}
+          </Avatar>
           <Box>
             <Typography variant="h5" gutterBottom>
               {formData.firstName} {formData.lastName}
@@ -100,6 +198,7 @@ const Profile = () => {
                 type="file"
                 accept="image/*"
                 hidden
+                onChange={handlePhotoUpload}
               />
             </Button>
           </Box>
@@ -147,7 +246,7 @@ const Profile = () => {
                 fullWidth
                 label="Gender"
                 name="gender"
-                value={formData.gender}
+                value={formData.gender || ''}
                 onChange={handleChange}
               >
                 {genderOptions.map((option) => (
@@ -163,7 +262,7 @@ const Profile = () => {
                 fullWidth
                 label="Fitness Level"
                 name="fitnessLevel"
-                value={formData.fitnessLevel}
+                value={formData.fitnessLevel || 'beginner'}
                 onChange={handleChange}
               >
                 {fitnessLevels.map((option) => (

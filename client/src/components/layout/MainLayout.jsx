@@ -1,14 +1,30 @@
 // src/components/layout/MainLayout.jsx
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Box, Container } from '@mui/material';
+import { Box, Container, useMediaQuery, useTheme } from '@mui/material';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
 const MainLayout = ({ toggleTheme, darkMode }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
   return (
     <Box sx={{ display: 'flex' }}>
-      <Header toggleTheme={toggleTheme} darkMode={darkMode} />
-      <Sidebar />
+      <Header 
+        toggleTheme={toggleTheme} 
+        darkMode={darkMode} 
+        toggleSidebar={handleDrawerToggle} 
+      />
+      <Sidebar 
+        mobileOpen={mobileOpen} 
+        handleDrawerToggle={handleDrawerToggle} 
+      />
       <Box
         component="main"
         sx={{

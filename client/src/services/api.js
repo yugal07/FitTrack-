@@ -33,7 +33,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     
     // If the error is due to an expired token (401) and we haven't already tried to refresh
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       
       try {
@@ -42,8 +42,8 @@ api.interceptors.response.use(
         
         if (!refreshToken) {
           // If no refresh token, log the user out
-          // You'll implement this function in your auth context
-          // logoutUser();
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
           return Promise.reject(error);
         }
         
@@ -65,7 +65,8 @@ api.interceptors.response.use(
         }
       } catch (refreshError) {
         // If refresh fails, log the user out
-        // logoutUser();
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
         return Promise.reject(refreshError);
       }
     }

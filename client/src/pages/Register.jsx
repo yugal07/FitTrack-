@@ -1,6 +1,6 @@
 // src/pages/Register.jsx
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -11,7 +11,11 @@ import {
   CircularProgress,
   Grid,
   MenuItem,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -23,8 +27,14 @@ const Register = () => {
     gender: '',
     fitnessLevel: 'beginner',
   });
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,12 +44,48 @@ const Register = () => {
     }));
   };
 
+  const togglePasswordVisibility = (field) => {
+    if (field === 'password') {
+      setShowPassword((prev) => !prev);
+    } else {
+      setShowConfirmPassword((prev) => !prev);
+    }
+  };
+
+  const validateForm = () => {
+    // Basic required field validation
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+      setError('All fields marked with * are required');
+      return false;
+    }
+    
+    // Email format validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+    
+    // Password validation
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return false;
+    }
+    
+    // Confirm password validation
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
+    // Validate form
+    if (!validateForm()) {
       return;
     }
     
@@ -47,13 +93,23 @@ const Register = () => {
     setError('');
 
     try {
-      // This would be replaced with actual API call
-      console.log('Registering with:', formData);
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // Handle successful registration
+      console.log('Attempting registration with:', { 
+        email: formData.email, 
+        firstName: formData.firstName,
+        lastName: formData.lastName 
+      });
+      
+      const result = await register(formData);
+      if (result) {
+        console.log('Registration successful, navigating to dashboard');
+        // Redirect to dashboard on successful registration
+        navigate('/');
+      } else {
+        setError('Registration failed. Please try again.');
+      }
     } catch (error) {
-      setError('Registration failed. Please try again.');
+      console.error('Registration error in component:', error);
+      setError(error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -124,11 +180,25 @@ const Register = () => {
             fullWidth
             name="password"
             label="Password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             id="password"
             autoComplete="new-password"
             value={formData.password}
             onChange={handleChange}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => togglePasswordVisibility('password')}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            helperText="Password must be at least 8 characters long"
           />
         </Grid>
         <Grid item xs={12}>
@@ -137,10 +207,23 @@ const Register = () => {
             fullWidth
             name="confirmPassword"
             label="Confirm Password"
-            type="password"
+            type={showConfirmPassword ? "text" : "password"}
             id="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle confirm password visibility"
+                    onClick={() => togglePasswordVisibility('confirm')}
+                    edge="end"
+                  >
+                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
