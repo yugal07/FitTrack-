@@ -24,8 +24,10 @@ export const AuthProvider = ({ children }) => {
           const response = await authService.getCurrentUser();
           if (response.success) {
             setCurrentUser(response.data);
+            console.log('User data loaded:', response.data);
           } else {
             // Token invalid, log out
+            console.error('Invalid token, logging out:', response.error);
             logout();
           }
         } catch (error) {
@@ -48,9 +50,13 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.login(credentials);
       
       if (response.success) {
+        console.log('Login successful. Setting user data:', response.data);
+        
         // Store tokens in localStorage
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
         
         // Set user data
         setCurrentUser(response.data);
@@ -60,8 +66,10 @@ export const AuthProvider = ({ children }) => {
         return null;
       }
     } catch (error) {
-      setError(error.response?.data?.error?.message || 'An error occurred during login');
-      throw error;
+      console.error('Login error in context:', error);
+      const errorMessage = error.message || 'An error occurred during login';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
@@ -71,8 +79,13 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.register(userData);
       
       if (response.success) {
+        console.log('Registration successful. Setting user data:', response.data);
+        
         // Store tokens in localStorage
         localStorage.setItem('token', response.data.token);
+        if (response.data.refreshToken) {
+          localStorage.setItem('refreshToken', response.data.refreshToken);
+        }
         
         // Set user data
         setCurrentUser(response.data);
@@ -82,8 +95,10 @@ export const AuthProvider = ({ children }) => {
         return null;
       }
     } catch (error) {
-      setError(error.response?.data?.error?.message || 'An error occurred during registration');
-      throw error;
+      console.error('Registration error in context:', error);
+      const errorMessage = error.message || 'An error occurred during registration';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
@@ -102,8 +117,9 @@ export const AuthProvider = ({ children }) => {
       const response = await authService.forgotPassword(email);
       return response.success;
     } catch (error) {
-      setError(error.response?.data?.error?.message || 'An error occurred while processing your request');
-      throw error;
+      const errorMessage = error.message || 'An error occurred while processing your request';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 

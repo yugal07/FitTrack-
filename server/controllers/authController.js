@@ -6,8 +6,15 @@ const { User, Profile } = require('../models');
 
 // Generate JWT token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'your-jwt-secret-key-here', {
     expiresIn: '30d',
+  });
+};
+
+// Generate refresh token
+const generateRefreshToken = (id) => {
+  return jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET || 'refresh-secret-key', {
+    expiresIn: '7d', // Refresh token lasts longer
   });
 };
 
@@ -48,6 +55,10 @@ exports.registerUser = async (req, res) => {
     });
 
     if (user) {
+      // Generate tokens
+      const token = generateToken(user._id);
+      const refreshToken = generateRefreshToken(user._id);
+
       res.status(201).json({
         success: true,
         data: {
@@ -56,7 +67,9 @@ exports.registerUser = async (req, res) => {
           lastName: user.lastName,
           email: user.email,
           fitnessLevel: user.fitnessLevel,
-          token: generateToken(user._id),
+          gender: user.gender,
+          token: token,
+          refreshToken: refreshToken,
         },
       });
     } else {
@@ -74,7 +87,7 @@ exports.registerUser = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error',
+        message: 'Server error: ' + (error.message || 'Unknown error'),
       },
     });
   }
@@ -113,6 +126,10 @@ exports.loginUser = async (req, res) => {
       });
     }
 
+    // Generate tokens
+    const token = generateToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+
     res.json({
       success: true,
       data: {
@@ -121,7 +138,10 @@ exports.loginUser = async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         fitnessLevel: user.fitnessLevel,
-        token: generateToken(user._id),
+        gender: user.gender,
+        profilePicture: user.profilePicture,
+        token: token,
+        refreshToken: refreshToken,
       },
     });
   } catch (error) {
@@ -231,20 +251,7 @@ exports.forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'USER_NOT_FOUND',
-          message: 'No user with that email',
-        },
-      });
-    }
-
-    // In a real application, you would generate a reset token
-    // and send an email to the user with a reset link
-    // For now, we'll just return a success message
-
+    // For security reasons, don't reveal whether a user exists
     res.json({
       success: true,
       message: 'If a user with that email exists, a password reset link will be sent',
@@ -261,7 +268,6 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// server/controllers/authController.js - Add this function
 // @desc    Refresh access token
 // @route   POST /api/auth/refresh-token
 // @access  Public
@@ -280,7 +286,10 @@ exports.refreshToken = async (req, res) => {
     }
 
     // Verify refresh token
-    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const decoded = jwt.verify(
+      refreshToken, 
+      process.env.REFRESH_TOKEN_SECRET || 'refresh-secret-key'
+    );
 
     // Get user from token
     const user = await User.findById(decoded.id);
@@ -330,72 +339,6 @@ exports.refreshToken = async (req, res) => {
       });
     }
     
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'SERVER_ERROR',
-        message: 'Server error',
-      },
-    });
-  }
-};
-
-// Add this function to generate refresh tokens
-const generateRefreshToken = (id) => {
-  return jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: '7d', // Refresh token lasts longer
-  });
-};
-
-// Modify the login function to return both tokens
-exports.loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Check for user email
-    const user = await User.findOne({ email }).select('+password');
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'INVALID_CREDENTIALS',
-          message: 'Invalid credentials',
-        },
-      });
-    }
-
-    // Check if password matches
-    const isMatch = await user.matchPassword(password);
-
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'INVALID_CREDENTIALS',
-          message: 'Invalid credentials',
-        },
-      });
-    }
-
-    // Generate tokens
-    const accessToken = generateToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
-
-    res.json({
-      success: true,
-      data: {
-        _id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        fitnessLevel: user.fitnessLevel,
-        token: accessToken,
-        refreshToken: refreshToken,
-      },
-    });
-  } catch (error) {
-    console.error('Error in loginUser:', error);
     res.status(500).json({
       success: false,
       error: {

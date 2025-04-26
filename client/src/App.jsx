@@ -1,6 +1,6 @@
 // src/App.jsx
-import { useState, useMemo } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { lightTheme, darkTheme } from './styles/theme';
 import { AuthProvider } from './context/AuthContext';
@@ -19,12 +19,28 @@ import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  // Check if dark mode preference is stored in localStorage
+  const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+  const [darkMode, setDarkMode] = useState(savedDarkMode);
   const theme = useMemo(() => (darkMode ? darkTheme : lightTheme), [darkMode]);
 
+  // Apply stored theme on initial load
+  useEffect(() => {
+    const stored = localStorage.getItem('darkMode');
+    if (stored !== null) {
+      setDarkMode(stored === 'true');
+    } else {
+      // Check system preference if no stored preference
+      const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setDarkMode(prefersDarkMode);
+      localStorage.setItem('darkMode', prefersDarkMode);
+    }
+  }, []);
+
   const toggleTheme = () => {
-    setDarkMode(!darkMode);
-    localStorage.setItem('darkMode', !darkMode);
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode);
   };
 
   return (
@@ -44,16 +60,11 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<MainLayout toggleTheme={toggleTheme} darkMode={darkMode} />}>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile" element={<Profile />} />
                 {/* Add more protected routes here */}
               </Route>
             </Route>
-
-            {/* Redirect to dashboard if already logged in */}
-            <Route
-              path="/"
-              element={<Navigate to="/dashboard" replace />}
-            />
 
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />

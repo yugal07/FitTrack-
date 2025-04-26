@@ -5,7 +5,7 @@ const connectDB = require('./config/db');
 const { notFound, errorHandler, validationErrorHandler } = require('./middleware/errorMiddleware');
 const path = require("path")
 const morgan = require("morgan")
-const startNotificationSchedulers = require("./services/notificationScheduler");
+const {startNotificationSchedulers} = require("./services/notificationScheduler");
 
 dotenv.config();
 
