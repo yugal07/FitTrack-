@@ -10,6 +10,8 @@ import MainLayout from './components/layout/MainLayout';
 import AuthLayout from './components/layout/AuthLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
+
+// changes
 // Page components
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
