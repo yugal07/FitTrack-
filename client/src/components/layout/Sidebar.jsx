@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
-  Drawer,
   List,
   ListItem,
   ListItemButton,
@@ -27,31 +26,29 @@ import {
   History as HistoryIcon,
 } from '@mui/icons-material';
 
-const drawerWidth = 240;
-
-const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
+const Sidebar = ({ open, handleDrawerToggle }) => {
   const location = useLocation();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
-  const [openSubmenus, setOpenSubmenus] = useState({
-    workouts: false,
-  });
+  // Track open state for each submenu using its ID
+  const [openSubmenus, setOpenSubmenus] = useState({});
 
-  const handleSubmenuToggle = (submenu) => {
-    setOpenSubmenus({
-      ...openSubmenus,
-      [submenu]: !openSubmenus[submenu],
-    });
+  const handleSubmenuToggle = (submenuId) => {
+    setOpenSubmenus(prev => ({
+      ...prev,
+      [submenuId]: !prev[submenuId]
+    }));
   };
 
   const menuItems = [
     {
+      id: 'dashboard',
       text: 'Dashboard',
       icon: <DashboardIcon />,
       path: '/',
     },
     {
+      id: 'workouts',
       text: 'Workouts',
       icon: <WorkoutIcon />,
       path: '/workouts',
@@ -74,10 +71,13 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
       ],
     },
     {
+      id: 'nutrition',
       text: 'Nutrition',
       icon: <NutritionIcon />,
       path: '/nutrition',
-    },{
+    },
+    {
+      id: 'progress',
       text: 'Progress',
       icon: <ProgressIcon />,
       path: '/progress',
@@ -102,32 +102,47 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
       ],
     },
     {
+      id: 'settings',
       text: 'Settings',
       icon: <SettingsIcon />,
       path: '/settings',
     },
   ];
 
-  const drawer = (
+  return (
     <div>
-      <Toolbar />
-      <Divider />
       <List>
         {menuItems.map((item) => (
-          <Box key={item.text}>
+          <Box key={item.id}>
             {item.submenu ? (
               <>
                 <ListItem disablePadding>
                   <ListItemButton
-                    onClick={() => handleSubmenuToggle('workouts')}
+                    onClick={() => handleSubmenuToggle(item.id)}
                     selected={location.pathname === item.path}
+                    sx={{
+                      minHeight: 48,
+                      justifyContent: open ? 'initial' : 'center',
+                      px: 2.5,
+                    }}
                   >
-                    <ListItemIcon>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.text} />
-                    {openSubmenus.workouts ? <ExpandLess /> : <ExpandMore />}
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: open ? 3 : 'auto',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={item.text} 
+                      sx={{ opacity: open ? 1 : 0 }}
+                    />
+                    {open && (openSubmenus[item.id] ? <ExpandLess /> : <ExpandMore />)}
                   </ListItemButton>
                 </ListItem>
-                <Collapse in={openSubmenus.workouts} timeout="auto" unmountOnExit>
+                <Collapse in={open && openSubmenus[item.id]} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {item.submenuItems.map((subItem) => (
                       <ListItemButton
@@ -135,10 +150,28 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
                         component={RouterLink}
                         to={subItem.path}
                         selected={location.pathname === subItem.path}
-                        sx={{ pl: 4 }}
+                        sx={{ 
+                          pl: 4,
+                          minHeight: 48,
+                          justifyContent: open ? 'initial' : 'center',
+                          px: 2.5,
+                        }}
                       >
-                        {subItem.icon && <ListItemIcon>{subItem.icon}</ListItemIcon>}
-                        <ListItemText primary={subItem.text} />
+                        {subItem.icon && (
+                          <ListItemIcon
+                            sx={{
+                              minWidth: 0,
+                              mr: open ? 3 : 'auto',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {subItem.icon}
+                          </ListItemIcon>
+                        )}
+                        <ListItemText 
+                          primary={subItem.text} 
+                          sx={{ opacity: open ? 1 : 0 }}
+                        />
                       </ListItemButton>
                     ))}
                   </List>
@@ -149,50 +182,32 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
                 component={RouterLink}
                 to={item.path}
                 selected={location.pathname === item.path}
+                sx={{
+                  minHeight: 48,
+                  justifyContent: open ? 'initial' : 'center',
+                  px: 2.5,
+                }}
               >
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 3 : 'auto',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ opacity: open ? 1 : 0 }}
+                />
               </ListItemButton>
             )}
           </Box>
         ))}
       </List>
+      <Divider />
     </div>
-  );
-
-  return (
-    <Box
-      component="nav"
-      sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-    >
-      {isMobile ? (
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile
-          }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
-      ) : (
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      )}
-    </Box>
   );
 };
 
