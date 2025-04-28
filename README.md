@@ -1,3 +1,5 @@
+![image](https://github.com/user-attachments/assets/3b462bf1-a82b-4c24-9e05-50acbc790cd7)
+
 # FitTrack - Fitness Tracking Application
 
 FitTrack is a comprehensive fitness tracking application built with the MERN stack (MongoDB, Express, React, Node.js). It helps users monitor their workouts, nutrition, and overall fitness progress in one centralized platform.
