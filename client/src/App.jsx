@@ -16,7 +16,11 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
+import Progress from './pages/Progress';
 import NotFound from './pages/NotFound';
+import WorkoutPerformance from './components/progress/WorkoutPerformance';
+import MeasurementsTracker from './components/progress/MeasurementTracker';
+import PhotoComparison from './components/progress/PhotoComparision';
 
 function App() {
   // Check if dark mode preference is stored in localStorage
@@ -62,6 +66,10 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/progress" element={<Progress />} />
+                <Route path="/progress/workout" element={<WorkoutPerformance />} />
+                <Route path="/progress/measurements" element={<MeasurementsTracker />} />
+                <Route path="/progress/photos" element={<PhotoComparison />} />
                 {/* Add more protected routes here */}
               </Route>
             </Route>

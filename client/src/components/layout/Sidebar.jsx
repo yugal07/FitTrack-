@@ -77,11 +77,29 @@ const Sidebar = ({ mobileOpen, handleDrawerToggle }) => {
       text: 'Nutrition',
       icon: <NutritionIcon />,
       path: '/nutrition',
-    },
-    {
+    },{
       text: 'Progress',
       icon: <ProgressIcon />,
       path: '/progress',
+      submenu: true,
+      submenuItems: [
+        {
+          text: 'Overview',
+          path: '/progress',
+        },
+        {
+          text: 'Workout Performance',
+          path: '/progress/workout',
+        },
+        {
+          text: 'Body Measurements',
+          path: '/progress/measurements',
+        },
+        {
+          text: 'Progress Photos',
+          path: '/progress/photos',
+        },
+      ],
     },
     {
       text: 'Settings',

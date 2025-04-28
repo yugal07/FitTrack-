@@ -11,8 +11,19 @@ import {
   CircularProgress,
   InputAdornment,
   IconButton,
+  Divider,
+  FormControlLabel,
+  Checkbox,
+  useTheme,
+  alpha,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import {
+  Visibility,
+  VisibilityOff,
+  Login as LoginIcon,
+  Email as EmailIcon,
+  Lock as LockIcon,
+} from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
@@ -23,7 +34,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   
+  const theme = useTheme();
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -74,12 +87,19 @@ const Login = () => {
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Log In to FitTrack
-      </Typography>
-      
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+    <Box component="form" onSubmit={handleSubmit}>
+      {error && (
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 3, 
+            borderRadius: 2,
+            '& .MuiAlert-icon': { alignItems: 'center' }
+          }}
+        >
+          {error}
+        </Alert>
+      )}
       
       <TextField
         margin="normal"
@@ -92,6 +112,19 @@ const Login = () => {
         autoFocus
         value={formData.email}
         onChange={handleChange}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <EmailIcon color="action" />
+            </InputAdornment>
+          ),
+        }}
+        sx={{
+          mb: 2,
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+          }
+        }}
       />
       
       <TextField
@@ -106,6 +139,11 @@ const Login = () => {
         value={formData.password}
         onChange={handleChange}
         InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <LockIcon color="action" />
+            </InputAdornment>
+          ),
           endAdornment: (
             <InputAdornment position="end">
               <IconButton
@@ -118,30 +156,90 @@ const Login = () => {
             </InputAdornment>
           ),
         }}
+        sx={{
+          mb: 1,
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+          }
+        }}
       />
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <FormControlLabel
+          control={
+            <Checkbox 
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              color="primary"
+              size="small"
+            />
+          }
+          label={
+            <Typography variant="body2">
+              Remember me
+            </Typography>
+          }
+        />
+        
+        <Link 
+          component={RouterLink} 
+          to="/forgot-password" 
+          variant="body2"
+          sx={{ 
+            color: theme.palette.primary.main,
+            textDecoration: 'none',
+            '&:hover': {
+              textDecoration: 'underline'
+            }
+          }}
+        >
+          Forgot password?
+        </Link>
+      </Box>
       
       <Button
         type="submit"
         fullWidth
         variant="contained"
-        sx={{ mt: 3, mb: 2 }}
         disabled={loading}
+        startIcon={loading ? null : <LoginIcon />}
+        sx={{ 
+          py: 1.5,
+          mb: 3,
+          borderRadius: 2,
+          textTransform: 'none',
+          fontSize: '1rem',
+          fontWeight: 600,
+          boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.4)}`,
+        }}
       >
         {loading ? <CircularProgress size={24} /> : 'Log In'}
       </Button>
       
-      <Box sx={{ textAlign: 'center' }}>
-        <Link component={RouterLink} to="/forgot-password" variant="body2">
-          Forgot password?
-        </Link>
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="body2">
-            Don't have an account?{' '}
-            <Link component={RouterLink} to="/register">
-              Sign Up
-            </Link>
-          </Typography>
-        </Box>
+      <Divider sx={{ my: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>
+          or
+        </Typography>
+      </Divider>
+      
+      <Box sx={{ textAlign: 'center', mt: 2 }}>
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          Don't have an account?
+        </Typography>
+        <Button
+          component={RouterLink}
+          to="/register"
+          variant="outlined"
+          fullWidth
+          sx={{
+            borderRadius: 2,
+            py: 1.2,
+            textTransform: 'none',
+            fontSize: '0.9rem',
+          }}
+        >
+          Create Account
+        </Button>
       </Box>
     </Box>
   );
