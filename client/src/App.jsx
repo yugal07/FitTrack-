@@ -5,6 +5,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import { lightTheme, darkTheme } from './styles/theme';
 import { AuthProvider } from './context/AuthContext';
 
+
 // Layout components
 import MainLayout from './components/layout/MainLayout';
 import AuthLayout from './components/layout/AuthLayout';
