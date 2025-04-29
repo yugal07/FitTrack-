@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # MongoDB service
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password123
+
+  # Backend service
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.server
+    container_name: fittrack-server
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - PORT=8001
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/fittrack?authSource=admin
+      - JWT_SECRET=your-jwt-secret-key-here
+      - REFRESH_TOKEN_SECRET=refresh-secret-key
+    volumes:
+      - server_uploads:/app/uploads
+
+  # Frontend service
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.client
+    container_name: fittrack-client
+    restart: always
+    depends_on:
+      - server
+    ports:
+      - "80:80"
+
+volumes:
+  mongodb_data:
+  server_uploads:
