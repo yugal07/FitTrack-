@@ -1,18 +1,18 @@
-// src/App.jsx
+// src/App.jsx (Updated with fixed admin routes)
 import { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { lightTheme, darkTheme } from './styles/theme';
 import { AuthProvider } from './context/AuthContext';
 
-
 // Layout components
 import MainLayout from './components/layout/MainLayout';
 import AuthLayout from './components/layout/AuthLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
+// Admin routes
+import AdminRoutes from './routes/AdminRoutes';
 
-// changes
 // Page components
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -62,6 +62,11 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
             </Route>
+
+            {/* Admin routes - handles its own auth protection */}
+            <Route path="/admin/*" element={
+              <AdminRoutes toggleTheme={toggleTheme} darkMode={darkMode} />
+            } />
 
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>

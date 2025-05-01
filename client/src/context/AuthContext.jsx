@@ -1,4 +1,4 @@
-// src/context/AuthContext.jsx
+// src/context/AuthContext.jsx (Updated with admin/user mode support)
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 
@@ -12,10 +12,15 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loginMode, setLoginMode] = useState('user'); // Track login mode - 'user' or 'admin'
 
   useEffect(() => {
     // Check if token exists in localStorage
     const token = localStorage.getItem('token');
+    const storedLoginMode = localStorage.getItem('loginMode') || 'user';
+    
+    // Set login mode from storage
+    setLoginMode(storedLoginMode);
     
     if (token) {
       // Fetch current user data
@@ -44,7 +49,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (credentials) => {
+  const login = async (credentials, mode = 'user') => {
     setError(null);
     try {
       const response = await authService.login(credentials);
@@ -57,6 +62,10 @@ export const AuthProvider = ({ children }) => {
         if (response.data.refreshToken) {
           localStorage.setItem('refreshToken', response.data.refreshToken);
         }
+        
+        // Store login mode
+        localStorage.setItem('loginMode', mode);
+        setLoginMode(mode);
         
         // Set user data
         setCurrentUser(response.data);
@@ -87,6 +96,10 @@ export const AuthProvider = ({ children }) => {
           localStorage.setItem('refreshToken', response.data.refreshToken);
         }
         
+        // Set default login mode to 'user' for new registrations
+        localStorage.setItem('loginMode', 'user');
+        setLoginMode('user');
+        
         // Set user data
         setCurrentUser(response.data);
         return response.data;
@@ -106,9 +119,11 @@ export const AuthProvider = ({ children }) => {
     // Clear tokens from localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('loginMode');
     
     // Clear user data
     setCurrentUser(null);
+    setLoginMode('user');
   };
 
   const forgotPassword = async (email) => {
@@ -123,14 +138,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Switch between admin and user mode without logging out
+  const switchLoginMode = (mode) => {
+    if (mode === 'admin' || mode === 'user') {
+      localStorage.setItem('loginMode', mode);
+      setLoginMode(mode);
+      return true;
+    }
+    return false;
+  };
+
   const value = {
     currentUser,
     loading,
     error,
+    loginMode,
     login,
     register,
     logout,
     forgotPassword,
+    switchLoginMode
   };
 
   return (

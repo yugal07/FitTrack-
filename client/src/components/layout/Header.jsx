@@ -1,4 +1,4 @@
-// src/components/layout/Header.jsx
+// src/components/layout/Header.jsx (Updated to include mode switcher)
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -33,7 +33,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
-const Header = ({ toggleTheme, darkMode, toggleSidebar, open, drawerWidth }) => {
+const Header = ({ toggleTheme, darkMode, toggleSidebar, open, drawerWidth, extraHeaderComponent }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
   const theme = useTheme();
@@ -148,6 +148,13 @@ const Header = ({ toggleTheme, darkMode, toggleSidebar, open, drawerWidth }) => 
         <Box sx={{ flexGrow: 1 }} />
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+          {/* Mode switcher component if provided */}
+          {extraHeaderComponent && (
+            <Box sx={{ mr: 1 }}>
+              {extraHeaderComponent}
+            </Box>
+          )}
+          
           {/* Dashboard quick access - visible on wider screens */}
           {!isMobile && (
             <Button

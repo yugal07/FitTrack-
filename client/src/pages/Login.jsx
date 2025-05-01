@@ -1,4 +1,4 @@
-// src/pages/Login.jsx
+// src/pages/Login.jsx (Fixed admin login flow)
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -16,6 +16,13 @@ import {
   Checkbox,
   useTheme,
   alpha,
+  Tabs,
+  Tab,
+  Paper,
+  Radio,
+  RadioGroup,
+  FormControl,
+  FormLabel
 } from '@mui/material';
 import {
   Visibility,
@@ -23,6 +30,8 @@ import {
   Login as LoginIcon,
   Email as EmailIcon,
   Lock as LockIcon,
+  AdminPanelSettings as AdminIcon,
+  Person as UserIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
@@ -35,6 +44,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [loginMode, setLoginMode] = useState('user'); // 'user' or 'admin' login mode
   
   const theme = useTheme();
   const { login } = useAuth();
@@ -56,6 +66,10 @@ const Login = () => {
     setShowPassword((prev) => !prev);
   };
 
+  const handleLoginModeChange = (event) => {
+    setLoginMode(event.target.value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -69,12 +83,28 @@ const Login = () => {
     setError('');
 
     try {
-      console.log('Attempting login with:', { email: formData.email });
-      const result = await login(formData);
+      console.log('Attempting login with:', { email: formDconsole.log(result.role)ata.email, mode: loginMode });
+      // Pass the login mode to the login function
+      const result = await login(formData, loginMode);
+      
       if (result) {
-        console.log('Login successful, navigating to:', from);
-        // Redirect to the page they tried to visit or dashboard
-        navigate(from, { replace: true });
+        console.log('Login successful');
+        
+        // Check if user is an admin
+        if (result.role === 'admin') {
+          // Admin user - redirect based on selected mode
+          if (loginMode === 'admin') {
+            console.log('Admin user logging in as admin, redirecting to admin dashboard');
+            navigate('/admin/dashboard');
+          } else {
+            console.log('Admin user logging in as regular user, navigating to user dashboard');
+            navigate(from, { replace: true });
+          }
+        } else {
+          // Regular user - always redirect to user dashboard
+          console.log('Regular user, navigating to user dashboard');
+          navigate(from, { replace: true });
+        }
       } else {
         setError('Invalid email or password. Please try again.');
       }
@@ -196,6 +226,54 @@ const Login = () => {
           Forgot password?
         </Link>
       </Box>
+      
+      {/* Admin Login Option */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          p: 2, 
+          mb: 3, 
+          bgcolor: alpha(theme.palette.primary.main, 0.05),
+          borderRadius: 2
+        }}
+      >
+        <FormControl component="fieldset">
+          <FormLabel component="legend" sx={{ fontSize: '0.875rem', mb: 1 }}>
+            Login Mode
+          </FormLabel>
+          <RadioGroup
+            row
+            name="login-mode"
+            value={loginMode}
+            onChange={handleLoginModeChange}
+          >
+            <FormControlLabel 
+              value="user" 
+              control={<Radio size="small" />} 
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <UserIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  <Typography variant="body2">User Dashboard</Typography>
+                </Box>
+              }
+            />
+            <FormControlLabel 
+              value="admin" 
+              control={<Radio size="small" />} 
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <AdminIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  <Typography variant="body2">Admin Dashboard</Typography>
+                </Box>
+              }
+            />
+          </RadioGroup>
+        </FormControl>
+        
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+          Note: Admin Dashboard option is only available for admin accounts
+        </Typography>
+      </Paper>
       
       <Button
         type="submit"

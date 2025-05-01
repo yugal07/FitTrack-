@@ -1,10 +1,11 @@
-// src/components/layout/MainLayout.jsx
+// src/components/layout/MainLayout.jsx (Updated with mode switcher)
 import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Box, Container, useMediaQuery, useTheme, Drawer, IconButton, Toolbar, AppBar } from '@mui/material';
 import { Menu as MenuIcon, ChevronLeft as ChevronLeftIcon } from '@mui/icons-material';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import ModeSwitcher from '../common/ModeSwitcher'; // Import the ModeSwitcher
 
 const drawerWidth = 260;
 
@@ -34,6 +35,8 @@ const MainLayout = ({ toggleTheme, darkMode }) => {
         toggleSidebar={handleDrawerToggle} 
         open={open}
         drawerWidth={drawerWidth}
+        // Add the ModeSwitcher component
+        extraHeaderComponent={<ModeSwitcher />}
       />
       
       {/* Sidebar for desktop - persistent drawer */}
