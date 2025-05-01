@@ -139,6 +139,7 @@ exports.loginUser = async (req, res) => {
         email: user.email,
         fitnessLevel: user.fitnessLevel,
         gender: user.gender,
+        role: user.role,
         profilePicture: user.profilePicture,
         token: token,
         refreshToken: refreshToken,

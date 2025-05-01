@@ -33,6 +33,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
+import ModeSwitcher from '../common/ModeSwitcher';
 
 const drawerWidth = 260;
 

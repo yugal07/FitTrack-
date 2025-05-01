@@ -35,7 +35,8 @@ import {
   PersonAdd as PersonAddIcon,
   EventNote as EventNoteIcon,
   Star as StarIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import { 
   LineChart, 

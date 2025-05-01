@@ -81,14 +81,15 @@ const Login = () => {
     
     setLoading(true);
     setError('');
-
+  
     try {
-      console.log('Attempting login with:', { email: formDconsole.log(result.role)ata.email, mode: loginMode });
+      console.log('Attempting login with:', { email: formData.email, mode: loginMode });
+      
       // Pass the login mode to the login function
       const result = await login(formData, loginMode);
       
       if (result) {
-        console.log('Login successful');
+        console.log('Login result:', result);
         
         // Check if user is an admin
         if (result.role === 'admin') {

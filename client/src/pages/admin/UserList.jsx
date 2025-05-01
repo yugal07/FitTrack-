@@ -22,7 +22,8 @@ import {
   Tooltip,
   CircularProgress,
   alpha,
-  useTheme
+  useTheme,
+  Divider
 } from '@mui/material';
 import {
   Search as SearchIcon,
