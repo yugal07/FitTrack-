@@ -175,3 +175,58 @@ body {
     font-size: 1.25rem !important;
   }
 }
+
+/* Override default focus and autofill styles for form inputs */
+/* This replaces the harsh square outline with a subtle, rounded effect */
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #4361ee !important;
+  border-width: 1px !important;
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15) !important;
+  outline: none !important;
+}
+
+/* Override the default focus-visible styles for inputs */
+.MuiOutlinedInput-root:focus-visible {
+  outline: none !important;
+}
+
+/* Override autofill styles in Chrome/Safari */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+  background-clip: content-box !important;
+}
+
+/* Fix for Firefox autofill */
+@-moz-document url-prefix() {
+  input:-moz-autofill,
+  textarea:-moz-autofill,
+  select:-moz-autofill {
+    background-color: transparent !important;
+    background-image: none !important;
+    color: inherit !important;
+  }
+}
+
+/* Modify existing :focus-visible rule to make it compatible with your inputs */
+.MuiOutlinedInput-root:focus-visible {
+  outline: none !important;
+}
+
+/* Add smooth transition for focus effects */
+.MuiOutlinedInput-notchedOutline {
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Ensure focused inputs don't get the default browser outline */
+.MuiInputBase-input:focus {
+  outline: none !important;
+}
