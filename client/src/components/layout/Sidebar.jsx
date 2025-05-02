@@ -1,4 +1,4 @@
-// src/components/layout/Sidebar.jsx
+// src/components/layout/Sidebar.jsx (Updated with Goals menu item)
 import { useState } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import {
@@ -24,6 +24,7 @@ import {
   ExpandMore,
   DirectionsRun as ExerciseIcon,
   History as HistoryIcon,
+  EmojiEvents as GoalsIcon, // Import Goals icon
 } from '@mui/icons-material';
 
 const Sidebar = ({ open, handleDrawerToggle }) => {
@@ -69,6 +70,12 @@ const Sidebar = ({ open, handleDrawerToggle }) => {
           icon: <HistoryIcon />,
         },
       ],
+    },
+    {
+      id: 'goals',
+      text: 'Goals',
+      icon: <GoalsIcon />,
+      path: '/goals',
     },
     {
       id: 'nutrition',
@@ -181,7 +188,7 @@ const Sidebar = ({ open, handleDrawerToggle }) => {
               <ListItemButton
                 component={RouterLink}
                 to={item.path}
-                selected={location.pathname === item.path}
+                selected={location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)}
                 sx={{
                   minHeight: 48,
                   justifyContent: open ? 'initial' : 'center',

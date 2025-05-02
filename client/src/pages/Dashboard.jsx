@@ -1,4 +1,4 @@
-// src/pages/Dashboard.jsx
+// src/pages/Dashboard.jsx (Updated with Goals Summary)
 import React , { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { 
@@ -40,6 +40,9 @@ import {
   AccessTime as TimeIcon
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+
+// Import Goals Summary Component
+import GoalsSummary from '../components/dashboard/GoalsSummary';
 
 // For demo purposes only
 import { 
@@ -193,6 +196,7 @@ const Dashboard = () => {
                     >
                       Start Workout
                     </Button>
+                    
                     <Button 
                       variant="outlined" 
                       component={RouterLink}
@@ -358,7 +362,7 @@ const Dashboard = () => {
           </Paper>
         </Grid>
 
-        {/* Recent Workouts & Trending */}
+        {/* Recent Workouts & Active Goals */}
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -454,30 +458,86 @@ const Dashboard = () => {
           </Paper>
         </Grid>
 
+        {/* Active Goals Summary */}
+        <Grid item xs={12} md={6}>
+          <GoalsSummary />
+        </Grid>
+
         {/* Weight Progress & Nutrition */}
         <Grid item xs={12} md={6}>
-          <Grid container spacing={3} sx={{ height: '100%' }}>
-            <Grid item xs={12}>
-              <Paper sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">Weight Progress</Typography>
-                  <Button 
-                    component={RouterLink} 
-                    to="/progress/measurements" 
-                    endIcon={<ArrowForwardIcon />}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Details
-                  </Button>
-                </Box>
-                
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={weightData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke={theme.palette.text.secondary} />
-                    <YAxis domain={['dataMin - 5', 'dataMax + 5']} tick={{ fontSize: 12 }} stroke={theme.palette.text.secondary} />
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Weight Progress</Typography>
+              <Button 
+                component={RouterLink} 
+                to="/progress/measurements" 
+                endIcon={<ArrowForwardIcon />}
+                sx={{ textTransform: 'none' }}
+              >
+                Details
+              </Button>
+            </Box>
+            
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={weightData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke={theme.palette.text.secondary} />
+                <YAxis domain={['dataMin - 5', 'dataMax + 5']} tick={{ fontSize: 12 }} stroke={theme.palette.text.secondary} />
+                <Tooltip 
+                  formatter={(value) => [`${value} lbs`, 'Weight']} 
+                  contentStyle={{ 
+                    borderRadius: 8, 
+                    border: 'none', 
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                    fontSize: 12
+                  }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="weight" 
+                  stroke={theme.palette.primary.main} 
+                  strokeWidth={2}
+                  dot={{ r: 4, strokeWidth: 2 }}
+                  activeDot={{ r: 6, strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </Paper>
+        </Grid>
+        
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">Nutrition Breakdown</Typography>
+              <Button 
+                component={RouterLink} 
+                to="/nutrition/macros" 
+                endIcon={<ArrowForwardIcon />}
+                sx={{ textTransform: 'none' }}
+              >
+                Details
+              </Button>
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Box sx={{ width: '50%', height: 180 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={nutritionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {nutritionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={macroColors[index % macroColors.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip 
-                      formatter={(value) => [`${value} lbs`, 'Weight']} 
+                      formatter={(value) => [`${value}%`, ""]} 
                       contentStyle={{ 
                         borderRadius: 8, 
                         border: 'none', 
@@ -485,106 +545,52 @@ const Dashboard = () => {
                         fontSize: 12
                       }}
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke={theme.palette.primary.main} 
-                      strokeWidth={2}
-                      dot={{ r: 4, strokeWidth: 2 }}
-                      activeDot={{ r: 6, strokeWidth: 2 }}
-                    />
-                  </LineChart>
+                  </PieChart>
                 </ResponsiveContainer>
-              </Paper>
-            </Grid>
-            <Grid item xs={12}>
-              <Paper sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">Nutrition Breakdown</Typography>
-                  <Button 
-                    component={RouterLink} 
-                    to="/nutrition/macros" 
-                    endIcon={<ArrowForwardIcon />}
-                    sx={{ textTransform: 'none' }}
-                  >
-                    Details
-                  </Button>
-                </Box>
+              </Box>
+              <Box sx={{ width: '50%', pl: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Today's Macros
+                </Typography>
                 
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Box sx={{ width: '50%', height: 180 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={nutritionData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={70}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {nutritionData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={macroColors[index % macroColors.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(value) => [`${value}%`, ""]} 
-                          contentStyle={{ 
-                            borderRadius: 8, 
-                            border: 'none', 
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                            fontSize: 12
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </Box>
-                  <Box sx={{ width: '50%', pl: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Today's Macros
-                    </Typography>
-                    
-                    {nutritionData.map((entry, index) => (
-                      <Box key={entry.name} sx={{ mb: 1.5 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
-                            <Box
-                              component="span"
-                              sx={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                bgcolor: macroColors[index],
-                                display: 'inline-block',
-                                mr: 1
-                              }}
-                            />
-                            {entry.name}
-                          </Typography>
-                          <Typography variant="body2" fontWeight="medium">
-                            {entry.value}%
-                          </Typography>
-                        </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={entry.value}
+                {nutritionData.map((entry, index) => (
+                  <Box key={entry.name} sx={{ mb: 1.5 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                      <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Box
+                          component="span"
                           sx={{
-                            height: 6,
-                            borderRadius: 3,
-                            bgcolor: alpha(macroColors[index], 0.1),
-                            '& .MuiLinearProgress-bar': {
-                              bgcolor: macroColors[index]
-                            }
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            bgcolor: macroColors[index],
+                            display: 'inline-block',
+                            mr: 1
                           }}
                         />
-                      </Box>
-                    ))}
+                        {entry.name}
+                      </Typography>
+                      <Typography variant="body2" fontWeight="medium">
+                        {entry.value}%
+                      </Typography>
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={entry.value}
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        bgcolor: alpha(macroColors[index], 0.1),
+                        '& .MuiLinearProgress-bar': {
+                          bgcolor: macroColors[index]
+                        }
+                      }}
+                    />
                   </Box>
-                </Box>
-              </Paper>
-            </Grid>
-          </Grid>
+                ))}
+              </Box>
+            </Box>
+          </Paper>
         </Grid>
 
         {/* Achievements & Upcoming */}

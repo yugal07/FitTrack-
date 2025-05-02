@@ -1,18 +1,17 @@
-// src/App.jsx
+// src/App.jsx (Updated with Goals routes)
 import { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { lightTheme, darkTheme } from './styles/theme';
 import { AuthProvider } from './context/AuthContext';
 
-
 // Layout components
 import MainLayout from './components/layout/MainLayout';
 import AuthLayout from './components/layout/AuthLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
+// Admin routes
 
-// changes
 // Page components
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -20,6 +19,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import Progress from './pages/Progress';
+import Goals from './pages/Goals'; // Import the new Goals page
 import NotFound from './pages/NotFound';
 import WorkoutPerformance from './components/progress/WorkoutPerformance';
 import MeasurementsTracker from './components/progress/MeasurementTracker';
@@ -63,12 +63,18 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
             </Route>
 
+            {/* Admin routes - handles its own auth protection */}
+
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route element={<MainLayout toggleTheme={toggleTheme} darkMode={darkMode} />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile" element={<Profile />} />
+                
+                {/* Goals routes */}
+                <Route path="/goals/*" element={<Goals />} />
+                
                 <Route path="/progress" element={<Progress />} />
                 <Route path="/progress/workout" element={<WorkoutPerformance />} />
                 <Route path="/progress/measurements" element={<MeasurementsTracker />} />
