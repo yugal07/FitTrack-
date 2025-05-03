@@ -1,6 +1,6 @@
-// src/services/api.js
 import axios from 'axios';
 
+// Use a consistent API URL approach
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
 
 const api = axios.create({
@@ -10,12 +10,16 @@ const api = axios.create({
   },
 });
 
-// Add a request interceptor to attach the auth token
+// Improved request interceptor with better logging
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
+      // Always set the Authorization header for all requests
       config.headers['Authorization'] = `Bearer ${token}`;
+      console.log(`Setting auth header for ${config.url}`);
+    } else {
+      console.warn(`No token available for request to ${config.url}`);
     }
     return config;
   },
@@ -24,7 +28,7 @@ api.interceptors.request.use(
   }
 );
 
-// Add a response interceptor to handle token refresh
+// Improved response interceptor with better error handling
 api.interceptors.response.use(
   (response) => {
     return response;
@@ -44,10 +48,11 @@ api.interceptors.response.use(
           // If no refresh token, log the user out
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
+          window.location.href = '/login'; // Force a redirect to login
           return Promise.reject(error);
         }
         
-        // Call the refresh token endpoint
+        // Call the refresh token endpoint with a new axios instance to avoid interceptors
         const response = await axios.post(`${API_URL}/auth/refresh-token`, {
           refreshToken,
         });
@@ -57,19 +62,33 @@ api.interceptors.response.use(
           localStorage.setItem('token', response.data.data.accessToken);
           localStorage.setItem('refreshToken', response.data.data.refreshToken);
           
-          // Update the Authorization header
+          // Update the Authorization header for the original request
           originalRequest.headers['Authorization'] = `Bearer ${response.data.data.accessToken}`;
+          
+          // Update default headers for future requests
+          api.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.accessToken}`;
           
           // Retry the original request
           return api(originalRequest);
         }
       } catch (refreshError) {
+        console.error('Error refreshing token:', refreshError);
         // If refresh fails, log the user out
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
+        window.location.href = '/login'; // Force a redirect to login
         return Promise.reject(refreshError);
       }
     }
+    
+    // Log detailed error info
+    console.error('API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
     
     return Promise.reject(error);
   }

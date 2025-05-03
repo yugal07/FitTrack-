@@ -31,13 +31,21 @@ const Sidebar = ({ open, handleDrawerToggle }) => {
   const theme = useTheme();
   
   // Track open state for each submenu using its ID
-  const [openSubmenus, setOpenSubmenus] = useState({});
+  const [openSubmenus, setOpenSubmenus] = useState({
+    workouts: true, // Set to true to have the workout submenu expanded by default
+    progress: false
+  });
 
   const handleSubmenuToggle = (submenuId) => {
     setOpenSubmenus(prev => ({
       ...prev,
       [submenuId]: !prev[submenuId]
     }));
+  };
+
+  // Check if the current route is part of a submenu
+  const isSubmenuActive = (submenuItems) => {
+    return submenuItems.some(item => location.pathname === item.path);
   };
 
   const menuItems = [
@@ -59,8 +67,8 @@ const Sidebar = ({ open, handleDrawerToggle }) => {
           path: '/workouts',
         },
         {
-          text: 'Exercise Library',
-          path: '/exercises',
+          text: 'Create Workout',
+          path: '/workouts/create',
           icon: <ExerciseIcon />,
         },
         {
@@ -116,32 +124,30 @@ const Sidebar = ({ open, handleDrawerToggle }) => {
           <Box key={item.id}>
             {item.submenu ? (
               <>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    onClick={() => handleSubmenuToggle(item.id)}
-                    selected={location.pathname === item.path}
+                <ListItemButton
+                  onClick={() => handleSubmenuToggle(item.id)}
+                  selected={location.pathname === item.path || isSubmenuActive(item.submenuItems)}
+                  sx={{
+                    minHeight: 48,
+                    justifyContent: open ? 'initial' : 'center',
+                    px: 2.5,
+                  }}
+                >
+                  <ListItemIcon
                     sx={{
-                      minHeight: 48,
-                      justifyContent: open ? 'initial' : 'center',
-                      px: 2.5,
+                      minWidth: 0,
+                      mr: open ? 3 : 'auto',
+                      justifyContent: 'center',
                     }}
                   >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 0,
-                        mr: open ? 3 : 'auto',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={item.text} 
-                      sx={{ opacity: open ? 1 : 0 }}
-                    />
-                    {open && (openSubmenus[item.id] ? <ExpandLess /> : <ExpandMore />)}
-                  </ListItemButton>
-                </ListItem>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={item.text} 
+                    sx={{ opacity: open ? 1 : 0 }}
+                  />
+                  {open && (openSubmenus[item.id] ? <ExpandLess /> : <ExpandMore />)}
+                </ListItemButton>
                 <Collapse in={open && openSubmenus[item.id]} timeout="auto" unmountOnExit>
                   <List component="div" disablePadding>
                     {item.submenuItems.map((subItem) => (
@@ -181,7 +187,7 @@ const Sidebar = ({ open, handleDrawerToggle }) => {
               <ListItemButton
                 component={RouterLink}
                 to={item.path}
-                selected={location.pathname === item.path}
+                selected={location.pathname === item.path || (item.path === '/' && location.pathname === '/dashboard')}
                 sx={{
                   minHeight: 48,
                   justifyContent: open ? 'initial' : 'center',
