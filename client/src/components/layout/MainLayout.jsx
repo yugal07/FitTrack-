@@ -105,7 +105,7 @@ const MainLayout = ({ toggleTheme, darkMode }) => {
             duration: theme.transitions.duration.enteringScreen,
           }),
           mt: 8,
-          overflow: 'hidden',
+          overflow: 'auto',
         }}
       >
         <Container maxWidth="xl" sx={{ py: { xs: 2, md: 3 } }}>

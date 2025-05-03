@@ -6,23 +6,30 @@ const { User } = require('../models');
 // Protect routes - Middleware to verify token and authorize user
 exports.protect = async (req, res, next) => {
   let token;
-
-  // Check if auth header exists and contains Bearer token
+  
+  // Log headers for debugging
+  console.log('Request headers:', req.headers);
+  
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
     try {
-      // Get token from header (Bearer token)
       token = req.headers.authorization.split(' ')[1];
-
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key-here');
-
-      // Get user from the token (exclude password)
-      req.user = await User.findById(decoded.id).select('-password');
-
-      if (!req.user) {
+      console.log('Token received:', token.substring(0, 15) + '...');
+      
+      // Log the secret being used (don't do this in production!)
+      const secret = process.env.JWT_SECRET || 'your-jwt-secret-key-here';
+      console.log('Using secret for verification:', secret.substring(0, 3) + '...');
+      
+      const decoded = jwt.verify(token, secret);
+      console.log('Token decoded successfully:', decoded);
+      
+      // Get user from token
+      const user = await User.findById(decoded.id).select('-password');
+      
+      if (!user) {
+        console.error('User not found for token ID:', decoded.id);
         return res.status(401).json({
           success: false,
           error: {
@@ -31,46 +38,33 @@ exports.protect = async (req, res, next) => {
           },
         });
       }
-
+      
+      req.user = user;
       next();
     } catch (error) {
-      console.error('Error in protect middleware:', error);
+      console.error('JWT verification error:', {
+        name: error.name,
+        message: error.message,
+        expiredAt: error.expiredAt
+      });
       
-      // Handle different types of JWT errors
-      if (error instanceof jwt.TokenExpiredError) {
-        return res.status(401).json({
-          success: false,
-          error: {
-            code: 'TOKEN_EXPIRED',
-            message: 'Your session has expired. Please log in again.',
-          },
-        });
-      }
-      
-      if (error instanceof jwt.JsonWebTokenError) {
-        return res.status(401).json({
-          success: false,
-          error: {
-            code: 'INVALID_TOKEN',
-            message: 'Not authorized, invalid token',
-          },
-        });
-      }
-      
+      // Return detailed error for debugging
       res.status(401).json({
         success: false,
         error: {
-          code: 'UNAUTHORIZED',
-          message: 'Not authorized, token failed',
+          code: error.name,
+          message: error.message,
+          expiredAt: error.expiredAt
         },
       });
     }
   } else {
+    console.error('No authorization header found or incorrect format');
     return res.status(401).json({
       success: false,
       error: {
         code: 'NO_TOKEN',
-        message: 'Not authorized, no token',
+        message: 'Not authorized, no token provided in Authorization header',
       },
     });
   }
