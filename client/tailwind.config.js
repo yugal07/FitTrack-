@@ -1,10 +1,10 @@
-// tailwind.config.js
+/** @type {import('tailwindcss').Config} */
 export default {
     content: [
       "./index.html",
       "./src/**/*.{js,jsx,ts,tsx}",
     ],
-    darkMode: 'class', // This enables dark mode with the 'class' strategy
+    darkMode: 'class',
     theme: {
       extend: {
         colors: {
@@ -84,7 +84,5 @@ export default {
         },
       },
     },
-    plugins: [
-      // Any additional tailwind plugins would go here
-    ],
+    plugins: [],
   }
