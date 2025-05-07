@@ -10,18 +10,13 @@ import ForgotPassword from './components/auth/ForgotPassword';
 import ResetPassword from './components/auth/ResetPassword';
 import Dashboard from './components/dashboard/Dashboard';
 import ChangePassword from './components/auth/ChangePassword';
+import Profile from './components/profile/Profile';
 
 // Placeholder components for future development
 const Workouts = () => <div className="text-gray-900 dark:text-white">Workouts page (to be implemented)</div>;
 const Progress = () => <div className="text-gray-900 dark:text-white">Progress page (to be implemented)</div>;
 const Nutrition = () => <div className="text-gray-900 dark:text-white">Nutrition page (to be implemented)</div>;
 const Goals = () => <div className="text-gray-900 dark:text-white">Goals page (to be implemented)</div>;
-const Profile = () => (
-  <div className="space-y-6">
-    <div className="text-gray-900 dark:text-white text-lg font-medium">Profile Settings</div>
-    <ChangePassword />
-  </div>
-);
 
 function App() {
   return (
