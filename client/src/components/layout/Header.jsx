@@ -183,12 +183,12 @@ const Header = ({ toggleTheme, darkMode, toggleSidebar, open, drawerWidth }) => 
             <IconButton 
               onClick={handleNotificationsMenu}
               sx={{ 
-                bgcolor: notificationsAnchorEl ? theme.palette.primary.main : 'transparent',
-                color: notificationsAnchorEl ? 'white' : 'inherit',
+                bgcolor: notificationsAnchorEl ? theme.palette.primary.main : 'blue',
+                color: notificationsAnchorEl ? 'blue' : 'inherit',
                 '&:hover': {
                   bgcolor: notificationsAnchorEl 
                     ? theme.palette.primary.dark 
-                    : (darkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)'),
+                    : (darkMode ? 'blue' : 'blue'),
                 }
               }}
             >
