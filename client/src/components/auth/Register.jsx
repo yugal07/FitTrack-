@@ -46,7 +46,7 @@ const AccountStep = ({ formData, onChange, onNext, error }) => {
       
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Email address
+          Email address<span className="text-red-500 ml-1">*</span>
         </label>
         <input
           type="email"
@@ -67,7 +67,7 @@ const AccountStep = ({ formData, onChange, onNext, error }) => {
       
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Password
+          Password<span className="text-red-500 ml-1">*</span>
         </label>
         <input
           type="password"
@@ -116,6 +116,10 @@ const PersonalInfoStep = ({ formData, onChange, onNext, onBack, error }) => {
       errors.lastName = 'Last name is required';
     }
     
+    if (!formData.gender) {
+      errors.gender = 'Please select a gender option';
+    }
+    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -139,7 +143,7 @@ const PersonalInfoStep = ({ formData, onChange, onNext, onBack, error }) => {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div>
           <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            First name
+            First name<span className="text-red-500 ml-1">*</span>
           </label>
           <input
             type="text"
@@ -159,7 +163,7 @@ const PersonalInfoStep = ({ formData, onChange, onNext, onBack, error }) => {
         
         <div>
           <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Last name
+            Last name<span className="text-red-500 ml-1">*</span>
           </label>
           <input
             type="text"
@@ -194,14 +198,17 @@ const PersonalInfoStep = ({ formData, onChange, onNext, onBack, error }) => {
       
       <div>
         <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Gender
+          Gender<span className="text-red-500 ml-1">*</span>
         </label>
         <select
           id="gender"
           name="gender"
           value={formData.gender}
           onChange={onChange}
-          className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
+          required
+          className={`appearance-none relative block w-full px-3 py-2 border ${
+            validationErrors.gender ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+          } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
         >
           <option value="">Select gender</option>
           <option value="male">Male</option>
@@ -209,6 +216,9 @@ const PersonalInfoStep = ({ formData, onChange, onNext, onBack, error }) => {
           <option value="other">Other</option>
           <option value="prefer not to say">Prefer not to say</option>
         </select>
+        {validationErrors.gender && (
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.gender}</p>
+        )}
       </div>
       
       <div className="pt-4 flex justify-between space-x-4">
@@ -244,13 +254,14 @@ const FitnessProfileStep = ({ formData, onChange, onSubmit, onBack, loading, err
       
       <div>
         <label htmlFor="fitnessLevel" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Fitness level
+          Fitness level<span className="text-red-500 ml-1">*</span>
         </label>
         <select
           id="fitnessLevel"
           name="fitnessLevel"
           value={formData.fitnessLevel}
           onChange={onChange}
+          required
           className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
         >
           <option value="beginner">Beginner</option>
@@ -342,6 +353,13 @@ const Register = () => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Final validation before submission
+    if (!formData.gender) {
+      setError('Gender selection is required to create your account');
+      setStep(2); // Go back to personal info step
+      return;
+    }
     
     try {
       setLoading(true);
