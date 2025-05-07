@@ -1,4 +1,3 @@
-
 const { Profile, User } = require('../models');
 const { deleteFile } = require('../middleware/uploadMiddleware');
 const path = require('path');

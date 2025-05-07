@@ -32,7 +32,7 @@ const isAuthenticated = () => {
 // Login user
 const login = async (email, password) => {
   try {
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/api/auth/login', { email, password });
     const { token, refreshToken } = response.data.data;
     storeTokens(token, refreshToken);
     return response.data;
@@ -44,7 +44,7 @@ const login = async (email, password) => {
 // Register user
 const register = async (userData) => {
   try {
-    const response = await api.post('/auth/register', userData);
+    const response = await api.post('/api/auth/register', userData);
     const { token, refreshToken } = response.data.data;
     storeTokens(token, refreshToken);
     return response.data;
@@ -66,7 +66,7 @@ const refreshToken = async () => {
       throw new Error('No refresh token available');
     }
 
-    const response = await api.post('/auth/refresh-token', { refreshToken });
+    const response = await api.post('/api/auth/refresh-token', { refreshToken });
     const { accessToken, refreshToken: newRefreshToken } = response.data.data;
     
     storeTokens(accessToken, newRefreshToken);
@@ -80,7 +80,7 @@ const refreshToken = async () => {
 // Forgot password
 const forgotPassword = async (email) => {
   try {
-    const response = await api.post('/auth/forgot-password', { email });
+    const response = await api.post('/api/auth/forgot-password', { email });
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -90,7 +90,7 @@ const forgotPassword = async (email) => {
 // Update password
 const updatePassword = async (currentPassword, newPassword) => {
   try {
-    const response = await api.put('/auth/password', { 
+    const response = await api.put('/api/auth/password', { 
       currentPassword, 
       newPassword 
     });
@@ -103,7 +103,7 @@ const updatePassword = async (currentPassword, newPassword) => {
 // Get current user
 const getCurrentUser = async () => {
   try {
-    const response = await api.get('/auth/me');
+    const response = await api.get('/api/auth/me');
     return response.data;
   } catch (error) {
     throw error.response?.data || error;

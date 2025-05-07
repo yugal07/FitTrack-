@@ -1,30 +1,86 @@
 // src/components/dashboard/Dashboard.jsx
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import ThemeToggle from '../ui/ThemeToggle';
+import StatCard from './StatCard';
+import ActivityTimeline from './ActivityTimeline';
+import UpcomingWorkouts from './UpcomingWorkouts';
+import GoalProgress from './GoalProgress';
+import NutritionSummary from './NutritionSummary';
+import WorkoutSuggestion from './WorkoutSuggestion';
+import RecentMeasurements from './RecentMeasurements';
+import api from '../../utils/api';
 
 const Dashboard = () => {
-  const { currentUser, logout } = useAuth();
-  const { isDark } = useTheme();
-  const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [loading, setLoading] = useState(true);
-  
+  const [stats, setStats] = useState({
+    totalWorkouts: 0,
+    totalCaloriesBurned: 0,
+    completedGoals: 0,
+    averageWorkoutDuration: 0
+  });
+  const [recentWorkouts, setRecentWorkouts] = useState([]);
+  const [upcomingWorkouts, setUpcomingWorkouts] = useState([]);
+  const [goals, setGoals] = useState([]);
+  const [nutritionData, setNutritionData] = useState(null);
+  const [measurements, setMeasurements] = useState([]);
+  const [error, setError] = useState('');
+
   useEffect(() => {
-    // This is a placeholder for loading additional dashboard data
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch workout stats
+        const workoutStatsRes = await api.get('/api/workout-sessions/stats');
+        
+        // Fetch recent workouts
+        const recentWorkoutsRes = await api.get('/api/workout-sessions?limit=5');
+        
+        // Fetch goals
+        const goalsRes = await api.get('/api/goals');
+        
+        // Fetch nutrition data for today
+        const today = new Date().toISOString().split('T')[0];
+        const nutritionRes = await api.get(`/api/nutrition/logs?startDate=${today}&endDate=${today}`);
+        
+        // Fetch recent measurements
+        const measurementsRes = await api.get('/api/profiles/measurements');
+        
+        // Set the data
+        setStats({
+          totalWorkouts: workoutStatsRes.data.data.totalWorkouts || 0,
+          totalCaloriesBurned: workoutStatsRes.data.data.totalCalories || 0,
+          completedGoals: goalsRes.data.data.filter(goal => goal.status === 'completed').length || 0,
+          averageWorkoutDuration: workoutStatsRes.data.data.avgDuration || 0
+        });
+        
+        setRecentWorkouts(recentWorkoutsRes.data.data || []);
+        
+        // Mock upcoming workouts for now
+        // In a real implementation, this would come from scheduled workouts
+        setUpcomingWorkouts([
+          { id: 1, name: 'Strength Training', scheduledFor: new Date(Date.now() + 86400000) },
+          { id: 2, name: 'HIIT Cardio', scheduledFor: new Date(Date.now() + 86400000 * 3) }
+        ]);
+        
+        setGoals(goalsRes.data.data || []);
+        
+        setNutritionData(nutritionRes.data.data[0] || null);
+        
+        setMeasurements(measurementsRes.data.data.slice(-3) || []);
+        
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    return () => clearTimeout(timer);
+    fetchDashboardData();
   }, []);
-  
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -35,112 +91,73 @@ const Dashboard = () => {
       </div>
     );
   }
-  
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      <header className="bg-white dark:bg-gray-800 shadow transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <div className="flex items-center space-x-4">
-            <ThemeToggle />
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="space-y-6">
+      {/* Welcome message */}
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Welcome back, {currentUser?.firstName}!
+        </h1>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">
+          Here's an overview of your fitness journey.
+        </p>
+      </div>
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg transition-colors">
-          <div className="px-4 py-5 sm:px-6">
-            <h2 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-              Welcome to FitTrack Pro!
-            </h2>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-              Your personal fitness tracking application.
-            </p>
-          </div>
-          <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-6">
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">User Information</h3>
-              <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Full name</dt>
-                  <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {currentUser?.firstName} {currentUser?.lastName}
-                  </dd>
-                </div>
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Email address</dt>
-                  <dd className="mt-1 text-sm text-gray-900 dark:text-white">{currentUser?.email}</dd>
-                </div>
-                <div className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Fitness level</dt>
-                  <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {currentUser?.fitnessLevel ? 
-                      currentUser.fitnessLevel.charAt(0).toUpperCase() + currentUser.fitnessLevel.slice(1) : 
-                      'Not set'}
-                  </dd>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Quick Actions</h3>
-              <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Action cards */}
-                <div className="bg-white dark:bg-gray-700 overflow-hidden shadow rounded-lg transition-colors">
-                  <div className="px-4 py-5 sm:p-6">
-                    <h4 className="text-base font-medium text-gray-900 dark:text-white">Start a Workout</h4>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
-                      Choose from our library of workouts or create your own.
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-3 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-700"
-                    >
-                      View Workouts
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="bg-white dark:bg-gray-700 overflow-hidden shadow rounded-lg transition-colors">
-                  <div className="px-4 py-5 sm:p-6">
-                    <h4 className="text-base font-medium text-gray-900 dark:text-white">Set a Goal</h4>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
-                      Define and track your fitness goals.
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-3 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-700"
-                    >
-                      Manage Goals
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="bg-white dark:bg-gray-700 overflow-hidden shadow rounded-lg transition-colors">
-                  <div className="px-4 py-5 sm:p-6">
-                    <h4 className="text-base font-medium text-gray-900 dark:text-white">Track Nutrition</h4>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-300">
-                      Log your meals and track your nutritional intake.
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-3 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-700"
-                    >
-                      Log Nutrition
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Stats section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard 
+          title="Total Workouts" 
+          value={stats.totalWorkouts} 
+          icon="Dumbbell" 
+          trend={stats.totalWorkouts > 10 ? 'up' : null} 
+        />
+        <StatCard 
+          title="Calories Burned" 
+          value={`${stats.totalCaloriesBurned.toLocaleString()} kcal`} 
+          icon="Flame" 
+          trend="up" 
+        />
+        <StatCard 
+          title="Completed Goals" 
+          value={stats.completedGoals} 
+          icon="Target" 
+          trend={stats.completedGoals > 0 ? 'up' : null} 
+        />
+        <StatCard 
+          title="Avg Workout Time" 
+          value={`${Math.round(stats.averageWorkoutDuration)} min`} 
+          icon="Clock" 
+          trend={stats.averageWorkoutDuration > 30 ? 'up' : null} 
+        />
+      </div>
+      
+      {/* Main dashboard content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Activity timeline */}
+          <ActivityTimeline recentWorkouts={recentWorkouts} />
+          
+          {/* Goal progress */}
+          <GoalProgress goals={goals} />
         </div>
-      </main>
+        
+        {/* Right column */}
+        <div className="space-y-6">
+          {/* Upcoming workouts */}
+          <UpcomingWorkouts workouts={upcomingWorkouts} />
+          
+          {/* Nutrition summary */}
+          <NutritionSummary nutritionData={nutritionData} />
+          
+          {/* Recent measurements */}
+          <RecentMeasurements measurements={measurements} />
+        </div>
+      </div>
+      
+      {/* Workout suggestion */}
+      <WorkoutSuggestion fitnessLevel={currentUser?.fitnessLevel} />
     </div>
   );
 };
