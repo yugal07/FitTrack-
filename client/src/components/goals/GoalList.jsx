@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { format, isValid } from 'date-fns';
 import api from '../../utils/api';
 import Alert from '../ui/Alert';
 import Button from '../ui/Button';
@@ -11,6 +11,14 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [progressValue, setProgressValue] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [localGoals, setLocalGoals] = useState([]);
+
+  // Update local goals whenever parent goals change
+  useEffect(() => {
+    if (goals && goals.length > 0) {
+      setLocalGoals(goals);
+    }
+  }, [goals]);
 
   const handleExpand = (goalId) => {
     if (expandedGoalId === goalId) {
@@ -35,18 +43,35 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
       const goalId = goal._id;
       const currentValue = parseFloat(progressValue[goalId]) || 0;
       
-      await api.patch(`/api/goals/${goalId}/progress`, { 
+      // Check if this update will complete the goal
+      const willComplete = currentValue >= goal.targetValue;
+      
+      // Send the progress update to the server
+      const response = await api.patch(`/api/goals/${goalId}/progress`, { 
         currentValue 
       });
       
-      setSuccessMessage('Progress updated successfully');
+      // Check if the goal was completed
+      if (willComplete) {
+        setSuccessMessage('Goal completed! Congratulations! 🎉');
+      } else {
+        setSuccessMessage('Progress updated successfully');
+      }
+      
+      // Reset progress value input
+      setProgressValue(prev => ({
+        ...prev,
+        [goalId]: ''
+      }));
       
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
       
+      // Call onGoalUpdated to refresh the goals list and potentially trigger the celebration
       onGoalUpdated();
+      
     } catch (err) {
       setUpdateError('Failed to update progress');
       console.error('Error updating goal progress:', err);
@@ -54,7 +79,6 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
       setUpdateLoading(false);
     }
   };
-
   const handleRequestDelete = (goalId) => {
     setConfirmDelete(goalId);
   };
@@ -70,6 +94,9 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
       
       await api.delete(`/api/goals/${goalId}`);
       
+      // Remove the goal from local state
+      setLocalGoals(prev => prev.filter(g => g._id !== goalId));
+      
       setSuccessMessage('Goal deleted successfully');
       setConfirmDelete(null);
       
@@ -78,6 +105,7 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
         setSuccessMessage('');
       }, 3000);
       
+      // Notify parent
       onGoalUpdated();
     } catch (err) {
       setUpdateError('Failed to delete goal');
@@ -88,9 +116,11 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
   };
 
   // Filter goals into their categories
-  const activeGoals = goals.filter(goal => goal.status === 'active');
-  const completedGoals = goals.filter(goal => goal.status === 'completed');
-  const abandonedGoals = goals.filter(goal => goal.status === 'abandoned');
+  // Use the local state rather than props to ensure we display the most up-to-date data
+  const goalsToDisplay = localGoals.length > 0 ? localGoals : goals;
+  const activeGoals = goalsToDisplay.filter(goal => goal.status === 'active');
+  const completedGoals = goalsToDisplay.filter(goal => goal.status === 'completed');
+  const abandonedGoals = goalsToDisplay.filter(goal => goal.status === 'abandoned');
 
   // Helper function to get a human-readable goal title
   const getGoalTitle = (goal) => {
@@ -112,7 +142,7 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
   };
 
   // Render empty state if no goals
-  if (!loading && goals.length === 0) {
+  if (!loading && goalsToDisplay.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="mx-auto w-24 h-24 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
@@ -181,7 +211,9 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
                     </h4>
                     <div className="flex items-center space-x-2 mt-2 sm:mt-0">
                       <span className="text-sm text-gray-500 dark:text-gray-400">
-                        Deadline: {format(new Date(goal.targetDate), 'MMM d, yyyy')}
+                        Deadline: {goal.targetDate && isValid(new Date(goal.targetDate))
+                          ? format(new Date(goal.targetDate), 'MMM d, yyyy')
+                          : 'unknown date'}
                       </span>
                       <button
                         onClick={() => handleExpand(goal._id)}
@@ -229,13 +261,17 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
                         <div className="mb-2 sm:mb-0">
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Started:</span>{' '}
                           <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {format(new Date(goal.startDate), 'MMM d, yyyy')}
+                            {goal.startDate && isValid(new Date(goal.startDate)) 
+                              ? format(new Date(goal.startDate), 'MMM d, yyyy')
+                              : 'unknown date'}
                           </span>
                         </div>
                         <div>
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Days left:</span>{' '}
                           <span className="text-sm text-gray-600 dark:text-gray-400">
-                            {Math.max(0, Math.ceil((new Date(goal.targetDate) - new Date()) / (1000 * 60 * 60 * 24)))}
+                            {goal.targetDate && isValid(new Date(goal.targetDate))
+                              ? Math.max(0, Math.ceil((new Date(goal.targetDate) - new Date()) / (1000 * 60 * 60 * 24)))
+                              : '?'}
                           </span>
                         </div>
                       </div>
@@ -260,7 +296,7 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
                           <Button
                             type="button"
                             variant="primary"
-                            disabled={updateLoading}
+                            disabled={updateLoading || progressValue[goal._id] === undefined || progressValue[goal._id] === ''}
                             onClick={() => handleProgressUpdate(goal)}
                           >
                             {updateLoading ? 'Updating...' : 'Update'}
@@ -335,7 +371,7 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
                     </h4>
                   </div>
                   <div className="mt-2 sm:mt-0 text-sm text-gray-500 dark:text-gray-400">
-                    Completed on {format(new Date(goal.updatedAt), 'MMM d, yyyy')}
+                    Completed on {goal.updatedAt ? format(new Date(goal.updatedAt), 'MMM d, yyyy') : 'unknown date'}
                   </div>
                 </div>
               </div>
@@ -363,7 +399,7 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
                     {getGoalTitle(goal)}
                   </h4>
                   <div className="mt-2 sm:mt-0 text-sm text-gray-500 dark:text-gray-400">
-                    Abandoned on {format(new Date(goal.updatedAt), 'MMM d, yyyy')}
+                    Abandoned on {goal.updatedAt ? format(new Date(goal.updatedAt), 'MMM d, yyyy') : 'unknown date'}
                   </div>
                 </div>
               </div>

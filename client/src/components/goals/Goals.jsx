@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../utils/api';
 import Card from '../ui/Card';
@@ -17,6 +17,9 @@ const Goals = () => {
   const [achievedGoal, setAchievedGoal] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const { currentUser } = useAuth();
+  
+  // Use a ref to store the previous goals state to compare for completions
+  const prevGoalsRef = useRef([]);
 
   useEffect(() => {
     fetchGoals();
@@ -26,18 +29,33 @@ const Goals = () => {
     try {
       setLoading(true);
       const response = await api.get('/api/goals');
-      setGoals(response.data.data);
+      const newGoals = response.data.data;
       
-      // Check if any goal was just completed to show achievement
-      const justCompletedGoal = response.data.data.find(
-        goal => goal.status === 'completed' && 
-        new Date(goal.updatedAt).getTime() > Date.now() - 60000 // completed in the last minute
-      );
+      // Store current goals to state
+      setGoals(newGoals);
       
-      if (justCompletedGoal && !showAchievement) {
-        setAchievedGoal(justCompletedGoal);
-        setShowAchievement(true);
+      // Check for newly completed goals by comparing with previous state
+      if (prevGoalsRef.current.length > 0) {
+        const previouslyActiveGoals = prevGoalsRef.current.filter(goal => goal.status === 'active');
+        
+        // Find goals that were active before but are now completed
+        const newlyCompletedGoals = newGoals.filter(newGoal => 
+          newGoal.status === 'completed' && 
+          previouslyActiveGoals.some(prevGoal => 
+            prevGoal._id === newGoal._id && prevGoal.status === 'active'
+          )
+        );
+        
+        // If we found a newly completed goal, show the achievement modal
+        if (newlyCompletedGoals.length > 0 && !showAchievement) {
+          // Use the first newly completed goal (in case there are multiple)
+          setAchievedGoal(newlyCompletedGoals[0]);
+          setShowAchievement(true);
+        }
       }
+      
+      // Update the previous goals ref
+      prevGoalsRef.current = newGoals;
       
       setError('');
     } catch (err) {
