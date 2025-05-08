@@ -1,4 +1,3 @@
-// src/components/profile/PhotoForm.jsx
 import { useState } from 'react';
 
 const PhotoForm = ({ onSubmit, onCancel, loading }) => {

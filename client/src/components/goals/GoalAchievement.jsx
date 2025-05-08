@@ -1,4 +1,3 @@
-// src/components/goals/GoalAchievement.jsx
 import { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { format } from 'date-fns';

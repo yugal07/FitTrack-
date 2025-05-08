@@ -1,4 +1,4 @@
-// src/components/ui/Alert.jsx
+
 import { useState, useEffect } from 'react';
 
 const Alert = ({ 

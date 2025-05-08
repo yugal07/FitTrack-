@@ -1,4 +1,3 @@
-// src/components/dashboard/StatCard.jsx
 import React from 'react';
 import { 
   ArrowUpIcon,

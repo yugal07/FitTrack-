@@ -1,4 +1,3 @@
-// src/components/goals/GoalStatistics.jsx
 import { useEffect, useState } from 'react';
 import Card from '../ui/Card';
 

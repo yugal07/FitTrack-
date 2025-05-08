@@ -1,4 +1,3 @@
-// src/components/profile/ProgressPhotos.jsx
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import api from '../../utils/api';

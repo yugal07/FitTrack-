@@ -1,4 +1,3 @@
-// src/components/goals/GoalList.jsx
 import { useState } from 'react';
 import { format } from 'date-fns';
 import api from '../../utils/api';

@@ -1,4 +1,3 @@
-// src/services/authService.js
 import api from '../utils/api';
 
 // Store auth tokens in localStorage

@@ -1,4 +1,3 @@
-// src/components/auth/ResetPassword.jsx
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';

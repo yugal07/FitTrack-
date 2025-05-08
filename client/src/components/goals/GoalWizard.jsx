@@ -1,4 +1,3 @@
-// src/components/goals/GoalWizard.jsx
 import React ,{ useState } from 'react';
 import api from '../../utils/api';
 import Button from '../ui/Button';

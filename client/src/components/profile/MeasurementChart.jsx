@@ -1,4 +1,3 @@
-// src/components/profile/MeasurementChart.jsx
 import { useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 

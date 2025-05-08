@@ -1,4 +1,3 @@
-// src/components/profile/MeasurementForm.jsx
 import { useState } from 'react';
 
 const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {

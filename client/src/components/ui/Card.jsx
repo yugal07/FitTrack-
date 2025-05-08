@@ -1,4 +1,3 @@
-// src/components/ui/Card.jsx
 const Card = ({ 
     children, 
     title, 

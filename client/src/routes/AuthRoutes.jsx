@@ -1,4 +1,3 @@
-// src/routes/AuthRoutes.jsx
 import { Route, Routes, Navigate } from 'react-router-dom';
 import Login from '../components/auth/Login';
 import Register from '../components/auth/Register';

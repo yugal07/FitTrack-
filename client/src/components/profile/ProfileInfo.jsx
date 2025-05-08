@@ -1,4 +1,3 @@
-// src/components/profile/ProfileInfo.jsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../utils/api';

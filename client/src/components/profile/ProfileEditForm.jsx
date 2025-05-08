@@ -1,4 +1,3 @@
-// src/components/profile/ProfileEditForm.jsx
 import { useState } from 'react';
 
 const ProfileEditForm = ({ initialData, onSave, onCancel, loading }) => {

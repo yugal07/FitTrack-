@@ -1,4 +1,3 @@
-// src/components/dashboard/ActivityTimeline.jsx
 import React from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 

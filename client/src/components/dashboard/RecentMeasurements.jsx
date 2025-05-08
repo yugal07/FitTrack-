@@ -1,4 +1,3 @@
-// src/components/dashboard/RecentMeasurements.jsx
 import React from 'react';
 import { format } from 'date-fns';
 

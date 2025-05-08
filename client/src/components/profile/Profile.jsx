@@ -1,4 +1,4 @@
-// src/components/profile/Profile.jsx
+
 import { useState } from 'react';
 import ProfileInfo from './ProfileInfo';
 import MeasurementsTracker from './MeasurementsTracker';

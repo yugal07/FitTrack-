@@ -1,4 +1,3 @@
-// src/components/ui/ThemeToggle.jsx
 import { useTheme } from '../../contexts/ThemeContext';
 
 const ThemeToggle = ({ className = '' }) => {

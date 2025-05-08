@@ -1,4 +1,3 @@
-// src/components/dashboard/NutritionSummary.jsx
 import React from 'react';
 
 const NutritionSummary = ({ nutritionData }) => {
