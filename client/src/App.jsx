@@ -11,10 +11,10 @@ import Dashboard from './components/dashboard/Dashboard';
 import ChangePassword from './components/auth/ChangePassword';
 import Profile from './components/profile/Profile';
 import Goals from './components/goals/Goals'; 
+import Progress from './components/progress/Progress';
 
 // Placeholder components for future development
 const Workouts = () => <div className="text-gray-900 dark:text-white">Workouts page (to be implemented)</div>;
-const Progress = () => <div className="text-gray-900 dark:text-white">Progress page (to be implemented)</div>;
 const Nutrition = () => <div className="text-gray-900 dark:text-white">Nutrition page (to be implemented)</div>;
 
 function App() {
