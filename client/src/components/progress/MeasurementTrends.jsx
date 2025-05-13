@@ -275,7 +275,7 @@ const MeasurementTrends = () => {
         <div className="mt-4 text-center">
           <Button
             variant="outline"
-            onClick={() => window.location.href = '/profile#measurements'}
+            onClick={() => window.location.href = 'profile#measurements'}
           >
             Add New Measurement
           </Button>
