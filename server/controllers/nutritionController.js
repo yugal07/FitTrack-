@@ -276,7 +276,7 @@ exports.deleteNutritionLog = async (req, res) => {
 // @access  Private
 exports.addMeal = async (req, res) => {
   try {
-    const { type, time, foods, notes } = req.body;
+    const { type, time, foods, notes , unit } = req.body;
 
     if (!type || !foods || !Array.isArray(foods) || foods.length === 0) {
       return res.status(400).json({
