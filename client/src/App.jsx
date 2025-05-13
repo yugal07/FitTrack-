@@ -12,11 +12,11 @@ import ChangePassword from './components/auth/ChangePassword';
 import Profile from './components/profile/Profile';
 import Goals from './components/goals/Goals'; 
 import Progress from './components/progress/Progress';
+
 import Nutrition from './components/nutrition/Nutrition';
 
 // Placeholder components for future development
-const Workouts = () => <div className="text-gray-900 dark:text-white">Workouts page (to be implemented)</div>;
-const Nutritions = () => <div className="text-gray-900 dark:text-white">Nutrition page (to be implemented)</div>;
+import Workouts from './components/workout/Workouts'; 
 
 function App() {
   return (
