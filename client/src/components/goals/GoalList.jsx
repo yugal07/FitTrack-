@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import { format, isValid } from 'date-fns';
-import api from '../../utils/api';
-import Alert from '../ui/Alert';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
 
 const GoalList = ({ goals, loading, onGoalUpdated }) => {
   const [expandedGoalId, setExpandedGoalId] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
-  const [updateError, setUpdateError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const [progressValue, setProgressValue] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [localGoals, setLocalGoals] = useState([]);
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
 
   // Update local goals whenever parent goals change
   useEffect(() => {
@@ -38,7 +41,6 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
   const handleProgressUpdate = async (goal) => {
     try {
       setUpdateLoading(true);
-      setUpdateError('');
       
       const goalId = goal._id;
       const currentValue = parseFloat(progressValue[goalId]) || 0;
@@ -47,15 +49,15 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
       const willComplete = currentValue >= goal.targetValue;
       
       // Send the progress update to the server
-      const response = await api.patch(`/api/goals/${goalId}/progress`, { 
+      await api.patch(`/api/goals/${goalId}/progress`, { 
         currentValue 
       });
       
       // Check if the goal was completed
       if (willComplete) {
-        setSuccessMessage('Goal completed! Congratulations! 🎉');
+        toast.success('Goal completed! Congratulations! 🎉');
       } else {
-        setSuccessMessage('Progress updated successfully');
+        toast.success('Progress updated successfully');
       }
       
       // Reset progress value input
@@ -64,21 +66,17 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
         [goalId]: ''
       }));
       
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
-      
       // Call onGoalUpdated to refresh the goals list and potentially trigger the celebration
       onGoalUpdated();
       
     } catch (err) {
-      setUpdateError('Failed to update progress');
+      // Error will be handled by the API toast interceptor
       console.error('Error updating goal progress:', err);
     } finally {
       setUpdateLoading(false);
     }
   };
+
   const handleRequestDelete = (goalId) => {
     setConfirmDelete(goalId);
   };
@@ -90,25 +88,19 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
   const handleConfirmDelete = async (goalId) => {
     try {
       setUpdateLoading(true);
-      setUpdateError('');
       
       await api.delete(`/api/goals/${goalId}`);
       
       // Remove the goal from local state
       setLocalGoals(prev => prev.filter(g => g._id !== goalId));
       
-      setSuccessMessage('Goal deleted successfully');
+      toast.success('Goal deleted successfully');
       setConfirmDelete(null);
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage('');
-      }, 3000);
       
       // Notify parent
       onGoalUpdated();
     } catch (err) {
-      setUpdateError('Failed to delete goal');
+      // Error will be handled by the API toast interceptor
       console.error('Error deleting goal:', err);
     } finally {
       setUpdateLoading(false);
@@ -172,22 +164,6 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
 
   return (
     <div className="space-y-6">
-      {updateError && (
-        <Alert 
-          type="error"
-          message={updateError}
-          onDismiss={() => setUpdateError('')}
-        />
-      )}
-      
-      {successMessage && (
-        <Alert 
-          type="success"
-          message={successMessage}
-          onDismiss={() => setSuccessMessage('')}
-        />
-      )}
-
       {/* Active Goals */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
