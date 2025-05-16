@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
 import ExerciseForm from './ExerciseForm';
-import api from '../../utils/api';
 
 const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -16,10 +16,14 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
   });
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showExerciseForm, setShowExerciseForm] = useState(false);
   const [currentExercise, setCurrentExercise] = useState(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(null);
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
   
   // Load workout data if editing
   useEffect(() => {
@@ -57,11 +61,10 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
     
     try {
       setLoading(true);
-      setError('');
       
       // Validate form
       if (!formData.date || !formData.duration || !formData.type) {
-        setError('Please fill in all required fields');
+        toast.error('Please fill in all required fields');
         setLoading(false);
         return;
       }
@@ -94,6 +97,7 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
       // Submit to API
       if (workout) {
         await api.put(`/api/workout-sessions/${workout._id}`, workoutData);
+        // Remove toast.success here
       } else {
         // For new workouts, we need a workoutId
         // If user didn't select a specific workout template, we'll create a custom one
@@ -120,14 +124,15 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
         
         // Now log the workout session
         await api.post('/api/workout-sessions', workoutData);
+        // Remove toast.success here
       }
       
       // Call the onSubmit callback
       onSubmit();
       
     } catch (err) {
+      // Error is handled by the API interceptor
       console.error('Error saving workout:', err);
-      setError(err.response?.data?.error?.message || 'Failed to save workout');
     } finally {
       setLoading(false);
     }
@@ -150,6 +155,7 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
       ...prev,
       exercises: prev.exercises.filter((_, i) => i !== index)
     }));
+    toast.success('Exercise removed');
   };
 
   const handleExerciseSubmit = (exerciseData) => {
@@ -159,9 +165,11 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
       if (currentExerciseIndex !== null) {
         // Edit existing exercise
         updatedExercises[currentExerciseIndex] = exerciseData;
+        toast.success('Exercise updated');
       } else {
         // Add new exercise
         updatedExercises.push(exerciseData);
+        toast.success('Exercise added');
       }
       
       return {
@@ -183,15 +191,6 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
 
   return (
     <div>
-      {error && (
-        <Alert 
-          type="error"
-          message={error}
-          onDismiss={() => setError('')}
-          className="mb-4"
-        />
-      )}
-      
       {showExerciseForm ? (
         <ExerciseForm 
           exercise={currentExercise}

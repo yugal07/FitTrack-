@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import api from '../../utils/api';
 import { format } from 'date-fns';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
 
 // Components
 import DailyIntakeForm from './DailyIntakeForm';
@@ -18,9 +18,13 @@ const Nutrition = () => {
   const [date, setDate] = useState(new Date());
   const [nutritionLog, setNutritionLog] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState('daily');
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
 
   // Fetch nutrition log for the selected date
   useEffect(() => {
@@ -48,10 +52,9 @@ const Nutrition = () => {
       } else {
         setNutritionLog(null);
       }
-      setError(null);
     } catch (err) {
+      // Error is handled by the API interceptor
       console.error('Error fetching nutrition log:', err);
-      setError('Failed to load nutrition data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -68,10 +71,10 @@ const Nutrition = () => {
       });
       
       setNutritionLog(response.data.data);
-      setError(null);
+      toast.success('Nutrition log created successfully');
     } catch (err) {
+      // Error is handled by the API interceptor
       console.error('Error creating nutrition log:', err);
-      setError('Failed to create nutrition log. Please try again.');
     }
   };
 
@@ -97,7 +100,7 @@ const Nutrition = () => {
     if (!nutritionLog) return;
     
     try {
-      const response = await api.patch('api/nutrition/water', {
+      await api.patch('api/nutrition/water', {
         date: format(date, 'yyyy-MM-dd'),
         amount
       });
@@ -106,9 +109,11 @@ const Nutrition = () => {
         ...nutritionLog,
         waterIntake: amount
       });
+      
+      toast.success('Water intake updated');
     } catch (err) {
+      // Error is handled by the API interceptor
       console.error('Error updating water intake:', err);
-      setError('Failed to update water intake. Please try again.');
     }
   };
 
@@ -360,15 +365,6 @@ const Nutrition = () => {
             />
           </div>
         </div>
-      )}
-      
-      {/* Error Message */}
-      {error && (
-        <Alert 
-          type="error" 
-          message={error}
-          className="mb-4"
-        />
       )}
       
       {/* Tab Content */}

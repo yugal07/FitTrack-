@@ -1,7 +1,7 @@
-import React ,{ useState } from 'react';
-import api from '../../utils/api';
+import React, { useState } from 'react';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
 
 const GoalWizard = ({ onClose, onGoalCreated }) => {
   const [step, setStep] = useState(1);
@@ -14,7 +14,11 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     status: 'active'
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,36 +57,34 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     // Validate current step
     if (step === 1) {
       if (!formData.type) {
-        setError('Please select a goal type');
+        toast.error('Please select a goal type');
         return;
       }
     } else if (step === 2) {
       if (!formData.targetValue) {
-        setError('Please enter a target value');
+        toast.error('Please enter a target value');
         return;
       }
       if (!formData.unit) {
-        setError('Please specify a unit of measurement');
+        toast.error('Please specify a unit of measurement');
         return;
       }
       
       if (isNaN(formData.targetValue) || parseFloat(formData.targetValue) <= 0) {
-        setError('Target value must be a positive number');
+        toast.error('Target value must be a positive number');
         return;
       }
       
       if (formData.currentValue && (isNaN(formData.currentValue) || parseFloat(formData.currentValue) < 0)) {
-        setError('Current value must be a positive number');
+        toast.error('Current value must be a positive number');
         return;
       }
     }
     
-    setError('');
     setStep(prevStep => prevStep + 1);
   };
   
   const prevStep = () => {
-    setError('');
     setStep(prevStep => prevStep - 1);
   };
   
@@ -91,7 +93,7 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     
     // Final validation
     if (!formData.targetDate) {
-      setError('Please select a target date');
+      toast.error('Please select a target date');
       return;
     }
     
@@ -99,13 +101,12 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     today.setHours(0, 0, 0, 0);
     
     if (new Date(formData.targetDate) < today) {
-      setError('Target date cannot be in the past');
+      toast.error('Target date cannot be in the past');
       return;
     }
     
     try {
       setLoading(true);
-      setError('');
       
       // Process data for submission
       const goalData = {
@@ -119,7 +120,7 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
       // Success
       onGoalCreated();
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Failed to create goal');
+      // Error is handled by API interceptor
       console.error('Error creating goal:', err);
     } finally {
       setLoading(false);
@@ -472,16 +473,6 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
                     <div className={step >= 4 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}>Review</div>
                   </div>
                 </div>
-                
-                {/* Error alert */}
-                {error && (
-                  <Alert 
-                    type="error"
-                    message={error}
-                    onDismiss={() => setError('')}
-                    className="mb-4"
-                  />
-                )}
                 
                 {/* Step content */}
                 <div className="mb-6">

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
-import api from '../../utils/api';
 
 const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -12,8 +12,12 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
   
   const [availableExercises, setAvailableExercises] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [isCustomExercise, setIsCustomExercise] = useState(false);
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
   
   // Load exercises from API
   useEffect(() => {
@@ -23,8 +27,8 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
         const response = await api.get('/api/exercises');
         setAvailableExercises(response.data.data);
       } catch (err) {
+        // Error is handled by the API interceptor
         console.error('Error fetching exercises:', err);
-        setError('Failed to load exercises. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -110,7 +114,7 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
     
     // Validate form
     if ((!formData.exerciseId && !isCustomExercise) || (isCustomExercise && !formData.exerciseName)) {
-      setError('Please select or enter an exercise');
+      toast.error('Please select or enter an exercise');
       return;
     }
     
@@ -120,7 +124,7 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
     });
     
     if (validSets.length === 0) {
-      setError('Please add at least one set with reps or duration');
+      toast.error('Please add at least one set with reps or duration');
       return;
     }
     
@@ -133,15 +137,6 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
   
   return (
     <div>
-      {error && (
-        <Alert 
-          type="error"
-          message={error}
-          onDismiss={() => setError('')}
-          className="mb-4"
-        />
-      )}
-      
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Exercise Selection */}
         <div>

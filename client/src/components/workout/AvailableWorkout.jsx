@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
-import api from '../../utils/api';
 
 const AvailableWorkouts = () => {
   const [workouts, setWorkouts] = useState([]);
   const [filteredWorkouts, setFilteredWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [filter, setFilter] = useState({
     fitnessLevel: '',
     type: '',
     search: ''
   });
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
   
   // Load available workout templates
   useEffect(() => {
@@ -22,10 +26,9 @@ const AvailableWorkouts = () => {
         const response = await api.get('/api/workouts?isCustom=false');
         setWorkouts(response.data.data);
         setFilteredWorkouts(response.data.data);
-        setError('');
       } catch (err) {
+        // Error is handled by the API interceptor
         console.error('Error fetching workout templates:', err);
-        setError('Failed to load workout templates. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -76,8 +79,9 @@ const AvailableWorkouts = () => {
       // Navigate to create workout session with this template
       window.location.href = `/workouts?template=${workoutId}`;
     } catch (err) {
+      // Show toast error
+      toast.error('Failed to start workout. Please try again.');
       console.error('Error starting workout:', err);
-      setError('Failed to start workout. Please try again.');
     }
   };
   
@@ -89,15 +93,6 @@ const AvailableWorkouts = () => {
   
   return (
     <div>
-      {error && (
-        <Alert 
-          type="error"
-          message={error}
-          onDismiss={() => setError('')}
-          className="mb-4"
-        />
-      )}
-      
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Find Workouts</h3>
