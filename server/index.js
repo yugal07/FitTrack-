@@ -1,3 +1,4 @@
+// server/index.js (update)
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -31,6 +32,7 @@ const workoutSessionRoutes = require('./routes/workoutSessionRoutes');
 const nutritionRoutes = require("./routes/nutritionRoutes");
 const uploadRoutes = require("./routes/uploadRoutes")
 const notificationRoutes = require("./routes/notificationRoutes");
+const adminRoutes = require('./routes/adminRoutes'); // Add admin routes
 
 // mounting routes
 app.use('/api/auth', authRoutes);
@@ -42,8 +44,8 @@ app.use('/api/workouts', workoutRoutes);
 app.use('/api/workout-sessions', workoutSessionRoutes);
 app.use('/api/nutrition' , nutritionRoutes);
 app.use('/api/uploads' , uploadRoutes);
-app.use('/api/notifications' , notificationRoutes)
-
+app.use('/api/notifications' , notificationRoutes);
+app.use('/api/admin', adminRoutes); // Mount admin routes
 
 app.get('/', (req, res) => {
   res.json({ message: 'hahaha' });
@@ -52,7 +54,6 @@ app.get('/', (req, res) => {
 app.use(validationErrorHandler);
 app.use(notFound);
 app.use(errorHandler);
-
 
 const PORT = process.env.PORT || 8001;
 
