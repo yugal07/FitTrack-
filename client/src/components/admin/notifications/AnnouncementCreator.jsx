@@ -1,4 +1,3 @@
-// client/src/components/admin/notifications/AnnouncementCreator.jsx
 import { useState } from 'react';
 import adminService from '../../../services/adminService';
 

@@ -1,4 +1,3 @@
-// client/src/components/admin/content/NutritionManager.jsx
 import { useState, useEffect } from 'react';
 import adminService from '../../../services/adminService';
 import NutritionItemForm from './NutritionItemForm';

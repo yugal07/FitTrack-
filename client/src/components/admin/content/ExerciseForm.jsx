@@ -1,4 +1,4 @@
-// client/src/components/admin/content/ExerciseForm.jsx
+
 import { useState, useEffect } from 'react';
 
 const ExerciseForm = ({ exercise, onSubmit, onCancel }) => {

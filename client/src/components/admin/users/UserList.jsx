@@ -1,4 +1,3 @@
-// client/src/components/admin/users/UserList.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import adminService from '../../../services/adminService';

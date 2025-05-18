@@ -1,4 +1,3 @@
-// client/src/components/admin/content/WorkoutForm.jsx
 import { useState, useEffect } from 'react';
 import adminService from '../../../services/adminService';
 

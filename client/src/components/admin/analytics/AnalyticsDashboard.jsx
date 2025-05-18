@@ -1,4 +1,3 @@
-// client/src/components/admin/analytics/AnalyticsDashboard.jsx
 import { useState, useEffect } from 'react';
 import adminService from '../../../services/adminService';
 

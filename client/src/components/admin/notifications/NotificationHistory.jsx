@@ -1,4 +1,3 @@
-// client/src/components/admin/notifications/NotificationHistory.jsx
 import { useState, useEffect } from 'react';
 import adminService from '../../../services/adminService';
 

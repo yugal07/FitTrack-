@@ -1,4 +1,3 @@
-// client/src/components/admin/AdminDashboard.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
