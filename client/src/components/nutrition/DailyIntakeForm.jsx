@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import api from '../../utils/api';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
+
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 
@@ -66,7 +68,7 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
   };
 
   // Set relevant presets based on meal type
-  useState(() => {
+  useEffect(() => {
     setPresets(foodPresets[formData.type] || []);
   }, [formData.type]);
 
