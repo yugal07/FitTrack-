@@ -583,3 +583,188 @@ exports.getNotifications = async (req, res) => {
   }
 };
 
+
+/**
+ * Get admin system overview
+ * This combines various statistics into a single API call for the admin dashboard
+ */
+exports.getSystemOverview = async (req, res) => {
+  try {
+    // Get total user count
+    const userCount = await User.countDocuments();
+    
+    // Get active users (users who have logged workouts in the last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const activeUsers = await WorkoutSession.distinct('userId', {
+      date: { $gte: thirtyDaysAgo }
+    }).then(users => users.length);
+    
+    // Get user growth by month
+    const userGrowth = await User.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: {
+            $concat: [
+              { $toString: "$_id.year" },
+              "-",
+              {
+                $cond: {
+                  if: { $lt: ["$_id.month", 10] },
+                  then: { $concat: ["0", { $toString: "$_id.month" }] },
+                  else: { $toString: "$_id.month" }
+                }
+              }
+            ]
+          },
+          count: 1
+        }
+      },
+      { $limit: 12 } // Last 12 months
+    ]);
+    
+    // Get recent signups
+    const recentSignups = await User.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('firstName lastName email role createdAt');
+    
+    // Get exercise stats
+    const totalExercises = await Exercise.countDocuments();
+    const exercisesByMuscleGroup = await Exercise.aggregate([
+      {
+        $unwind: "$muscleGroups"
+      },
+      {
+        $group: {
+          _id: "$muscleGroups",
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+    
+    // Get workout stats
+    const totalWorkouts = await Workout.countDocuments();
+    const workoutsByType = await Workout.aggregate([
+      {
+        $group: {
+          _id: "$type",
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+    
+    // Get completed workout sessions
+    const totalCompletedWorkouts = await WorkoutSession.countDocuments();
+    const workoutActivity = await WorkoutSession.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: {
+            $concat: [
+              { $toString: "$_id.year" },
+              "-",
+              {
+                $cond: {
+                  if: { $lt: ["$_id.month", 10] },
+                  then: { $concat: ["0", { $toString: "$_id.month" }] },
+                  else: { $toString: "$_id.month" }
+                }
+              }
+            ]
+          },
+          count: 1
+        }
+      },
+      { $limit: 12 } // Last 12 months
+    ]);
+    
+    // Get most popular workouts
+    const popularWorkouts = await WorkoutSession.aggregate([
+      {
+        $group: {
+          _id: "$workoutId",
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: "workouts",
+          localField: "_id",
+          foreignField: "_id",
+          as: "workout"
+        }
+      },
+      { $unwind: "$workout" },
+      {
+        $project: {
+          _id: 0,
+          name: "$workout.name",
+          type: "$workout.type",
+          count: 1
+        }
+      }
+    ]);
+    
+    // Aggregate all data
+    const systemOverview = {
+      users: {
+        total: userCount,
+        active: activeUsers,
+        growth: userGrowth,
+        recent: recentSignups
+      },
+      exercises: {
+        total: totalExercises,
+        byMuscleGroup: exercisesByMuscleGroup
+      },
+      workouts: {
+        total: totalWorkouts,
+        byType: workoutsByType,
+        completed: totalCompletedWorkouts,
+        activity: workoutActivity,
+        popular: popularWorkouts
+      }
+    };
+    
+    res.json({
+      success: true,
+      data: systemOverview
+    });
+  } catch (error) {
+    console.error('Error in getSystemOverview:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SERVER_ERROR',
+        message: 'Server error'
+      }
+    });
+  }
+};

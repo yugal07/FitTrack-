@@ -9,7 +9,8 @@ const {
   deleteUser,
   getAnalytics,
   sendAnnouncement,
-  getNotifications
+  getNotifications,
+  getSystemOverview
 } = require('../controllers/adminController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -27,6 +28,8 @@ router.route('/users/:id')
   .get(getUserById)
   .put(updateUser)
   .delete(deleteUser);
+
+router.get('/overview' , getSystemOverview);
 
 // Analytics
 router.get('/analytics', getAnalytics);

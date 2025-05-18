@@ -1,10 +1,9 @@
-// client/src/components/auth/AuthGuard.jsx
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 // Protect routes that require authentication
 const AuthGuard = ({ children, requireAdmin = false }) => {
-  const { isAuthenticated, isAdmin, loading } = useAuth();
+  const { isAuthenticated, isAdmin, currentUser, loading } = useAuth();
   const location = useLocation();
 
   // If authentication is loading, show nothing
@@ -22,6 +21,11 @@ const AuthGuard = ({ children, requireAdmin = false }) => {
   if (requireAdmin && !isAdmin()) {
     // Redirect to dashboard if user is not admin
     return <Navigate to="/dashboard" replace />;
+  }
+
+  // If this is the dashboard route and the user is an admin, redirect to admin dashboard
+  if (location.pathname === '/dashboard' && isAdmin()) {
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   // User is authenticated and has appropriate permissions, render the children

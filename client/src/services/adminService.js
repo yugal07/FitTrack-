@@ -172,6 +172,56 @@ const getNotifications = async (params = {}) => {
   }
 };
 
+// Get nutrition items with filtering
+const getNutritionItems = async (params = {}) => {
+  try {
+    const response = await api.get('/api/admin/nutrition', { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get nutrition item by ID
+const getNutritionItemById = async (itemId) => {
+  try {
+    const response = await api.get(`/api/admin/nutrition/${itemId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Create nutrition item
+const createNutritionItem = async (itemData) => {
+  try {
+    const response = await api.post('/api/admin/nutrition', itemData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Update nutrition item
+const updateNutritionItem = async (itemId, itemData) => {
+  try {
+    const response = await api.put(`/api/admin/nutrition/${itemId}`, itemData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Delete nutrition item
+const deleteNutritionItem = async (itemId) => {
+  try {
+    const response = await api.delete(`/api/admin/nutrition/${itemId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 const adminService = {
   getStats,
   getUsers,
@@ -190,7 +240,12 @@ const adminService = {
   updateWorkout,
   deleteWorkout,
   sendAnnouncement,
-  getNotifications
+  getNotifications,
+   getNutritionItems,
+  getNutritionItemById,
+  createNutritionItem,
+  updateNutritionItem,
+  deleteNutritionItem
 };
 
 export default adminService;

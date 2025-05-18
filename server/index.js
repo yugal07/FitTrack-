@@ -32,7 +32,8 @@ const workoutSessionRoutes = require('./routes/workoutSessionRoutes');
 const nutritionRoutes = require("./routes/nutritionRoutes");
 const uploadRoutes = require("./routes/uploadRoutes")
 const notificationRoutes = require("./routes/notificationRoutes");
-const adminRoutes = require('./routes/adminRoutes'); // Add admin routes
+const adminRoutes = require('./routes/adminRoutes');
+const adminNutritionRoutes = require("./routes/adminNutritionRoutes");
 
 // mounting routes
 app.use('/api/auth', authRoutes);
@@ -45,7 +46,8 @@ app.use('/api/workout-sessions', workoutSessionRoutes);
 app.use('/api/nutrition' , nutritionRoutes);
 app.use('/api/uploads' , uploadRoutes);
 app.use('/api/notifications' , notificationRoutes);
-app.use('/api/admin', adminRoutes); // Mount admin routes
+app.use('/api/admin', adminRoutes); 
+app.use('/api/admin/nutrition' , adminNutritionRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'hahaha' });
