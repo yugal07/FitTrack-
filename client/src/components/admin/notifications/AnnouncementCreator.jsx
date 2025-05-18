@@ -1,45 +1,36 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import adminService from '../../../services/adminService';
 
 const AnnouncementCreator = () => {
-  const [formData, setFormData] = useState({
-    title: '',
-    message: '',
-    targetUsers: 'all' // 'all', 'beginner', 'intermediate', 'advanced'
-  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.title.trim() || !formData.message.trim()) {
-      setError('Title and message are required');
-      return;
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    reset,
+    formState: { errors } 
+  } = useForm({
+    defaultValues: {
+      title: '',
+      message: '',
+      targetUsers: 'all' // 'all', 'beginner', 'intermediate', 'advanced'
     }
-    
+  });
+  
+  const onSubmit = async (data) => {
     try {
       setLoading(true);
       setError(null);
       setSuccess(false);
       
-      const response = await adminService.sendAnnouncement(formData);
+      await adminService.sendAnnouncement(data);
       
       setSuccess(true);
-      setFormData({
-        title: '',
-        message: '',
-        targetUsers: 'all'
-      });
+      reset(); // Reset form to default values
       
       // Hide success message after 5 seconds
       setTimeout(() => {
@@ -76,7 +67,7 @@ const AnnouncementCreator = () => {
           </div>
         )}
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-6">
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -85,13 +76,19 @@ const AnnouncementCreator = () => {
               <div className="mt-1">
                 <input
                   type="text"
-                  name="title"
                   id="title"
-                  value={formData.title}
-                  onChange={handleChange}
                   placeholder="New Feature Announcement"
-                  className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                  className={`shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm ${
+                    errors.title ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-600'
+                  } dark:bg-gray-700 dark:text-white rounded-md`}
+                  {...register('title', {
+                    required: 'Title is required',
+                    validate: value => value.trim() !== '' || 'Title cannot be empty'
+                  })}
                 />
+                {errors.title && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.title.message}</p>
+                )}
               </div>
             </div>
             
@@ -102,13 +99,19 @@ const AnnouncementCreator = () => {
               <div className="mt-1">
                 <textarea
                   id="message"
-                  name="message"
                   rows={5}
-                  value={formData.message}
-                  onChange={handleChange}
                   placeholder="Enter the announcement message here..."
-                  className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                  className={`shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm ${
+                    errors.message ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-600'
+                  } dark:bg-gray-700 dark:text-white rounded-md`}
+                  {...register('message', {
+                    required: 'Message is required',
+                    validate: value => value.trim() !== '' || 'Message cannot be empty'
+                  })}
                 ></textarea>
+                {errors.message && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.message.message}</p>
+                )}
               </div>
             </div>
             
@@ -119,16 +122,19 @@ const AnnouncementCreator = () => {
               <div className="mt-1">
                 <select
                   id="targetUsers"
-                  name="targetUsers"
-                  value={formData.targetUsers}
-                  onChange={handleChange}
                   className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                  {...register('targetUsers', {
+                    required: 'Please select target users'
+                  })}
                 >
                   <option value="all">All Users</option>
                   <option value="beginner">Beginner Users Only</option>
                   <option value="intermediate">Intermediate Users Only</option>
                   <option value="advanced">Advanced Users Only</option>
                 </select>
+                {errors.targetUsers && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.targetUsers.message}</p>
+                )}
               </div>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 Choose which users will receive this announcement
@@ -139,7 +145,7 @@ const AnnouncementCreator = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800 disabled:opacity-50"
               >
                 {loading ? (
                   <>
