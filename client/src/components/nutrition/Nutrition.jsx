@@ -12,7 +12,7 @@ import WaterTracker from './WaterTracker';
 import NutritionSummary from './NutritionSummary';
 import NutritionStats from './NutritionStats';
 import MealPlanner from './MealPlanner';
-// import NutritionGoals from './NutritionGoals';
+import NutritionGoals from './NutritionGoals';
 
 const Nutrition = () => {
   const [date, setDate] = useState(new Date());

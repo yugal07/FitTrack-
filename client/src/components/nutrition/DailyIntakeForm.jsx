@@ -1,11 +1,8 @@
-<<<<<<< HEAD
 import { useEffect, useState } from 'react';
 import api from '../../utils/api';
-=======
-import { useState } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
->>>>>>> fca44a1a89f229c6c543ab135aac66ba328b5bca
+
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 
