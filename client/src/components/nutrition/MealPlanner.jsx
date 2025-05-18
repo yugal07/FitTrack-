@@ -40,15 +40,10 @@ const MealPlanner = () => {
   }, [currentWeekStart]);
 
   // Navigate to previous week
-//   const goToPreviousWeek = () => {
-//     setCurrentWeekStart(prevWeekStart => addDays(prevWeekStart, -7));
-//     };
+
     const goToPreviousWeek = () => setCurrentWeekStart(prev => addDays(prev, -7));
 
   // Navigate to next week
-//   const goToNextWeek = () => {
-//     setCurrentWeekStart(prevWeekStart => addDays(prevWeekStart, 7));
-//     };
     
     const goToNextWeek = () => setCurrentWeekStart(prev => addDays(prev, 7));
 
