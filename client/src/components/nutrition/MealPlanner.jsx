@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { format, addDays, startOfWeek } from 'date-fns';
+import { useToast } from '../../contexts/ToastContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
 
 const MealPlanner = () => {
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
@@ -11,8 +11,9 @@ const MealPlanner = () => {
   const [editingMeal, setEditingMeal] = useState(null);
   const [editText, setEditText] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  
+  // Get toast functions
+  const toast = useToast();
 
   const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
   const weekDays = [...Array(7)].map((_, i) => addDays(currentWeekStart, i));
@@ -40,17 +41,10 @@ const MealPlanner = () => {
   }, [currentWeekStart]);
 
   // Navigate to previous week
-//   const goToPreviousWeek = () => {
-//     setCurrentWeekStart(prevWeekStart => addDays(prevWeekStart, -7));
-//     };
-    const goToPreviousWeek = () => setCurrentWeekStart(prev => addDays(prev, -7));
+  const goToPreviousWeek = () => setCurrentWeekStart(prev => addDays(prev, -7));
 
   // Navigate to next week
-//   const goToNextWeek = () => {
-//     setCurrentWeekStart(prevWeekStart => addDays(prevWeekStart, 7));
-//     };
-    
-    const goToNextWeek = () => setCurrentWeekStart(prev => addDays(prev, 7));
+  const goToNextWeek = () => setCurrentWeekStart(prev => addDays(prev, 7));
 
   // Start editing a specific meal
   const handleEditMeal = (day, meal) => {
@@ -77,15 +71,14 @@ const MealPlanner = () => {
           }
         }));
         
-        setSuccess('Meal saved successfully!');
-        setTimeout(() => setSuccess(null), 3000);
+        toast.success('Meal saved successfully!');
         
         // Reset editing state
         setEditingDay(null);
         setEditingMeal(null);
         setEditText('');
       } catch (err) {
-        setError('Failed to save meal. Please try again.');
+        toast.error('Failed to save meal. Please try again.');
       } finally {
         setSaving(false);
       }
@@ -110,13 +103,14 @@ const MealPlanner = () => {
           [meal]: ''
         }
       }));
+      
+      toast.success('Meal cleared');
     }
   };
 
   // Generate a meal plan using AI (simulated)
   const handleGenerateMealPlan = () => {
     setSaving(true);
-    setError(null);
     
     // Simulate API call to generate a meal plan
     setTimeout(() => {
@@ -135,10 +129,9 @@ const MealPlanner = () => {
         });
         
         setMealPlan(generatedPlan);
-        setSuccess('Meal plan generated successfully!');
-        setTimeout(() => setSuccess(null), 3000);
+        toast.success('Meal plan generated successfully!');
       } catch (err) {
-        setError('Failed to generate meal plan. Please try again.');
+        toast.error('Failed to generate meal plan. Please try again.');
       } finally {
         setSaving(false);
       }
@@ -187,22 +180,6 @@ const MealPlanner = () => {
         title="Weekly Meal Planner"
         subtitle="Plan your meals for the week ahead"
       >
-        {error && (
-          <Alert 
-            type="error" 
-            message={error} 
-            className="mb-4"
-          />
-        )}
-        
-        {success && (
-          <Alert 
-            type="success" 
-            message={success} 
-            className="mb-4"
-          />
-        )}
-        
         {/* Week navigation */}
         <div className="flex items-center justify-between mb-6">
           <Button 

@@ -1,22 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import api from '../../utils/api';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Card from '../ui/Card';
 import GoalList from './GoalList';
 import GoalWizard from './GoalWizard';
 import GoalStatistics from './GoalStatistics';
 import GoalAchievement from './GoalAchievement';
-import Alert from '../ui/Alert';
 
 const Goals = () => {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [showWizard, setShowWizard] = useState(false);
   const [showAchievement, setShowAchievement] = useState(false);
   const [achievedGoal, setAchievedGoal] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const { currentUser } = useAuth();
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
   
   // Use a ref to store the previous goals state to compare for completions
   const prevGoalsRef = useRef([]);
@@ -57,9 +61,8 @@ const Goals = () => {
       // Update the previous goals ref
       prevGoalsRef.current = newGoals;
       
-      setError('');
     } catch (err) {
-      setError('Failed to load goals. Please try again.');
+      // Error is handled by toast API interceptor
       console.error('Error fetching goals:', err);
     } finally {
       setLoading(false);
@@ -76,6 +79,7 @@ const Goals = () => {
 
   const handleGoalCreated = () => {
     setShowWizard(false);
+    toast.success('Goal created successfully!');
     setRefreshKey(old => old + 1); // Refresh the goals list
   };
 
@@ -110,15 +114,6 @@ const Goals = () => {
           Set and track your fitness goals to stay motivated on your journey.
         </p>
       </div>
-
-      {error && (
-        <Alert 
-          type="error"
-          title="Error"
-          message={error}
-          onDismiss={() => setError('')}
-        />
-      )}
       
       {/* Goal Statistics */}
       <GoalStatistics goals={goals} loading={loading} />

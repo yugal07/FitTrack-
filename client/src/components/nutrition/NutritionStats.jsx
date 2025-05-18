@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import { format, subDays, startOfWeek, startOfMonth } from 'date-fns';
-import api from '../../utils/api';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
 
 const NutritionStats = () => {
   const [timeframe, setTimeframe] = useState('week');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
 
   useEffect(() => {
     fetchStats();
@@ -18,7 +22,6 @@ const NutritionStats = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      setError(null);
 
       // Calculate date range based on selected timeframe
       const today = new Date();
@@ -50,8 +53,8 @@ const NutritionStats = () => {
 
       setStats(response.data.data);
     } catch (err) {
+      // Error is handled by the API interceptor
       console.error('Error fetching nutrition stats:', err);
-      setError('Failed to load nutrition statistics. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -357,11 +360,6 @@ const NutritionStats = () => {
           Last 3 Months
         </Button>
       </div>
-
-      {/* Error message */}
-      {error && (
-        <Alert type="error" message={error} className="mb-4" />
-      )}
 
       {/* Loading state */}
       {loading && (

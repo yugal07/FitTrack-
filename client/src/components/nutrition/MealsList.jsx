@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import api from '../../utils/api';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
 
 const MealsList = ({ meals = [], nutritionLogId, onMealDeleted, showDetails = false }) => {
   const [deletingMealId, setDeletingMealId] = useState(null);
   const [expandedMealId, setExpandedMealId] = useState(null);
-  const [error, setError] = useState(null);
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
 
   // Format meal type for display
   const formatMealType = (type) => {
@@ -17,16 +21,17 @@ const MealsList = ({ meals = [], nutritionLogId, onMealDeleted, showDetails = fa
   // Handle delete meal
   const handleDeleteMeal = async (mealId) => {
     setDeletingMealId(mealId);
-    setError(null);
     
     try {
       const response = await api.delete(`api/nutrition/logs/${nutritionLogId}/meals/${mealId}`);
+      toast.success('Meal deleted successfully');
+      
       if (onMealDeleted) {
         onMealDeleted(response.data.nutritionLog);
       }
     } catch (err) {
+      // Error is handled by the API interceptor
       console.error('Error deleting meal:', err);
-      setError('Failed to delete meal. Please try again.');
     } finally {
       setDeletingMealId(null);
     }
@@ -135,8 +140,6 @@ const MealsList = ({ meals = [], nutritionLogId, onMealDeleted, showDetails = fa
 
   return (
     <div className="space-y-4">
-      {error && <Alert type="error" message={error} />}
-      
       {meals.map((meal) => {
         const mealMacros = calculateMealMacros(meal.foods);
         const isExpanded = expandedMealId === meal._id || showDetails;
