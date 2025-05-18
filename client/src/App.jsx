@@ -32,6 +32,7 @@ function App() {
   return (
     <Router>
       <ThemeProvider>
+        <ToastProvider>
         <AuthProvider>
           <Routes>
             {/* Public routes */}
@@ -107,6 +108,7 @@ function App() {
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
         </AuthProvider>
+        </ToastProvider>
       </ThemeProvider>
     </Router>
   );
