@@ -13,75 +13,100 @@ import ChangePassword from './components/auth/ChangePassword';
 import Profile from './components/profile/Profile';
 import Goals from './components/goals/Goals'; 
 import Progress from './components/progress/Progress';
-
 import Nutrition from './components/nutrition/Nutrition';
+import Workouts from './components/workout/Workouts';
 
-// Placeholder components for future development
-import Workouts from './components/workout/Workouts'; 
+// Admin components
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboard from './components/admin/AdminDashboard';
+import UserList from './components/admin/users/UserList';
+import UserDetail from './components/admin/users/UserDetail';
+import AnalyticsDashboard from './components/admin/analytics/AnalyticsDashboard';
+import ExerciseManager from './components/admin/content/ExerciseManager';
+import WorkoutManager from './components/admin/content/WorkoutManager';
+import NutritionManager from './components/admin/content/NutritionManager';
+import AnnouncementCreator from './components/admin/notifications/AnnouncementCreator';
+import NotificationHistory from './components/admin/notifications/NotificationHistory';
 
 function App() {
   return (
     <Router>
       <ThemeProvider>
-        <ToastProvider>
-          <AuthProvider>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              
-              {/* Protected routes */}
-              <Route path="/dashboard" element={
-                <AuthGuard>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </AuthGuard>
-              } />
-              <Route path="/workouts" element={
-                <AuthGuard>
-                  <Layout>
-                    <Workouts />
-                  </Layout>
-                </AuthGuard>
-              } />
-              <Route path="/progress" element={
-                <AuthGuard>
-                  <Layout>
-                    <Progress />
-                  </Layout>
-                </AuthGuard>
-              } />
-              <Route path="/nutrition" element={
-                <AuthGuard>
-                  <Layout>
-                    <Nutrition />
-                  </Layout>
-                </AuthGuard>
-              } />
-              <Route path="/goals" element={
-                <AuthGuard>
-                  <Layout>
-                    <Goals />
-                  </Layout>
-                </AuthGuard>
-              } />
-              <Route path="/profile" element={
-                <AuthGuard>
-                  <Layout>
-                    <Profile />
-                  </Layout>
-                </AuthGuard>
-              } />
-              
-              {/* Redirects */}
-              <Route path="/" element={<Navigate to="/dashboard" />} />
-              <Route path="*" element={<Navigate to="/dashboard" />} />
-            </Routes>
-          </AuthProvider>
-        </ToastProvider>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            
+            {/* Protected user routes */}
+            <Route path="/dashboard" element={
+              <AuthGuard>
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              </AuthGuard>
+            } />
+            <Route path="/workouts" element={
+              <AuthGuard>
+                <Layout>
+                  <Workouts />
+                </Layout>
+              </AuthGuard>
+            } />
+            <Route path="/progress" element={
+              <AuthGuard>
+                <Layout>
+                  <Progress />
+                </Layout>
+              </AuthGuard>
+            } />
+            <Route path="/nutrition" element={
+              <AuthGuard>
+                <Layout>
+                  <Nutrition />
+                </Layout>
+              </AuthGuard>
+            } />
+            <Route path="/goals" element={
+              <AuthGuard>
+                <Layout>
+                  <Goals />
+                </Layout>
+              </AuthGuard>
+            } />
+            <Route path="/profile" element={
+              <AuthGuard>
+                <Layout>
+                  <Profile />
+                </Layout>
+              </AuthGuard>
+            } />
+            
+            {/* Admin routes */}
+            <Route path="/admin" element={
+              <AuthGuard requireAdmin={true}>
+                <AdminLayout />
+              </AuthGuard>
+            }>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="users" element={<UserList />} />
+              <Route path="users/:id" element={<UserDetail />} />
+              <Route path="analytics" element={<AnalyticsDashboard />} />
+              <Route path="exercises" element={<ExerciseManager />} />
+              <Route path="workouts" element={<WorkoutManager />} />
+              <Route path="nutrition" element={<NutritionManager />} />
+              <Route path="announcements" element={<AnnouncementCreator />} />
+              <Route path="notifications" element={<NotificationHistory />} />
+            </Route>
+            
+            {/* Redirects */}
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="*" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </AuthProvider>
       </ThemeProvider>
     </Router>
   );

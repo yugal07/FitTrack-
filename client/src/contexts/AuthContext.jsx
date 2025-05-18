@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
@@ -44,7 +43,14 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       const response = await authService.login(email, password);
       setCurrentUser(response.data);
-      navigate('/dashboard');
+      
+      // Redirect based on user role
+      if (response.data.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+      
       return response;
     } catch (err) {
       setError(err.error?.message || 'Login failed');
@@ -52,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Register function
+  // Register function (unchanged)
   const register = async (userData) => {
     try {
       setError(null);
@@ -66,11 +72,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function
+  // Logout function (unchanged)
   const logout = () => {
     authService.logout();
     setCurrentUser(null);
     navigate('/login');
+  };
+
+  // Check if user is admin
+  const isAdmin = () => {
+    return currentUser && currentUser.role === 'admin';
   };
 
   // Update user information
@@ -78,7 +89,7 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(user);
   };
 
-  // Forgot password function
+  // Forgot password function (unchanged)
   const forgotPassword = async (email) => {
     try {
       setError(null);
@@ -89,7 +100,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Change password function
+  // Change password function (unchanged)
   const changePassword = async (currentPassword, newPassword) => {
     try {
       setError(null);
@@ -111,7 +122,8 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     forgotPassword,
     changePassword,
-    isAuthenticated: authService.isAuthenticated
+    isAuthenticated: authService.isAuthenticated,
+    isAdmin
   };
 
   return (

@@ -19,25 +19,33 @@ const Login = () => {
   const from = location.state?.from?.pathname || '/dashboard';
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  
+  if (!email.trim() || !password.trim()) {
+    setError('Please enter both email and password');
+    return;
+  }
+  
+  try {
+    setLoading(true);
+    setError('');
+    const response = await login(email, password);
+
+    console.log(response);
     
-    if (!email.trim() || !password.trim()) {
-      setError('Please enter both email and password');
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      setError('');
-      await login(email, password);
+    // Check if user is admin and redirect appropriately
+    if (response.data.role === 'admin') {
+      navigate('/admin/dashboard', { replace: true });
+    } else {
       navigate(from, { replace: true });
-    } catch (err) {
-      setError(err.error?.message || 'Failed to log in. Please check your credentials.');
-      console.error('Login error:', err);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (err) {
+    setError(err.error?.message || 'Failed to log in. Please check your credentials.');
+    console.error('Login error:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex bg-gradient-to-b from-indigo-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors">
