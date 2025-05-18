@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import api from '../../utils/api';
 import { useToast } from '../../contexts/ToastContext';
@@ -24,9 +26,9 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
     notes: ''
   };
 
-  const [formData, setFormData] = useState(initialFormState);
+  // State hooks
   const [loading, setLoading] = useState(false);
-  const [presets, setPresets] = useState({});
+  const [presets, setPresets] = useState([]);
   const [showPresets, setShowPresets] = useState(false);
 
   // Get toast functions
@@ -67,131 +69,67 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
     ]
   };
 
+  // React Hook Form setup
+  const { 
+    register, 
+    control, 
+    handleSubmit, 
+    watch, 
+    setValue, 
+    formState: { errors }, 
+    reset 
+  } = useForm({
+    defaultValues: initialFormState
+  });
+  
   // Set relevant presets based on meal type
   useEffect(() => {
     setPresets(foodPresets[formData.type] || []);
   }, [formData.type]);
 
-  // Handle meal type change
-  const handleTypeChange = (e) => {
-    setFormData({
-      ...formData,
-      type: e.target.value
-    });
-    setPresets(foodPresets[e.target.value] || []);
-  };
+  // Field array for food items
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "foods"
+  });
 
-  // Handle time change
-  const handleTimeChange = (e) => {
-    setFormData({
-      ...formData,
-      time: e.target.value
-    });
-  };
+  // Watch the meal type to update presets
+  const mealType = watch('type');
 
-  // Handle notes change
-  const handleNotesChange = (e) => {
-    setFormData({
-      ...formData,
-      notes: e.target.value
-    });
-  };
-
-  // Handle food item change
-  const handleFoodChange = (index, field, value) => {
-    const updatedFoods = [...formData.foods];
-    updatedFoods[index] = {
-      ...updatedFoods[index],
-      [field]: field === 'name' ? value : Number(value)
-    };
-    
-    setFormData({
-      ...formData,
-      foods: updatedFoods
-    });
-  };
-
-  // Add food item
-  const handleAddFood = () => {
-    setFormData({
-      ...formData,
-      foods: [
-        ...formData.foods,
-        {
-          name: '',
-          quantity: 1,
-          unit: 'serving',
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0
-        }
-      ]
-    });
-  };
-
-  // Remove food item
-  const handleRemoveFood = (index) => {
-    if (formData.foods.length === 1) return;
-    
-    const updatedFoods = formData.foods.filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      foods: updatedFoods
-    });
-  };
+  // Update presets when meal type changes
+  useEffect(() => {
+    setPresets(foodPresets[mealType] || []);
+  }, [mealType]);
 
   // Add preset food
   const handleAddPreset = (preset) => {
-    setFormData({
-      ...formData,
-      foods: [...formData.foods, { ...preset }]
-    });
+    append({ ...preset });
     setShowPresets(false);
   };
 
   // Calculate total calories and macros
   const calculateTotals = () => {
-    return formData.foods.reduce((totals, food) => {
+    const foods = watch('foods');
+    return foods.reduce((totals, food) => {
       return {
-        calories: totals.calories + (food.calories * food.quantity),
-        protein: totals.protein + (food.protein * food.quantity),
-        carbs: totals.carbs + (food.carbs * food.quantity),
-        fat: totals.fat + (food.fat * food.quantity)
+        calories: totals.calories + (parseFloat(food.calories || 0) * parseFloat(food.quantity || 0)),
+        protein: totals.protein + (parseFloat(food.protein || 0) * parseFloat(food.quantity || 0)),
+        carbs: totals.carbs + (parseFloat(food.carbs || 0) * parseFloat(food.quantity || 0)),
+        fat: totals.fat + (parseFloat(food.fat || 0) * parseFloat(food.quantity || 0))
       };
     }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
   };
 
   // Submit form
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
     setLoading(true);
     
     try {
-      // Validate form data
-      if (!formData.type) {
-        toast.error('Meal type is required');
-        setLoading(false);
-        return;
-      }
-      
-      if (formData.foods.some(food => !food.name.trim())) {
-        toast.error('All food items must have a name');
-        setLoading(false);
-        return;
-      }
-      
-      if (formData.foods.some(food => food.calories < 0)) {
-        toast.error('Calories cannot be negative');
-        setLoading(false);
-        return;
-      }
-      
       // Submit to API
-      const response = await api.post(`api/nutrition/logs/${nutritionLogId}/meals`, formData);
+      const response = await api.post(`api/nutrition/logs/${nutritionLogId}/meals`, data);
       
       toast.success('Meal added successfully!');
-      setFormData(initialFormState);
+      reset(initialFormState);
       
       // Call the callback function
       if (onMealAdded) onMealAdded(response.data.nutritionLog);
@@ -255,7 +193,7 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
   const totals = calculateTotals();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Meal Type */}
         <div>
@@ -264,10 +202,10 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
           </label>
           <div className="relative">
             <select
-              value={formData.type}
-              onChange={handleTypeChange}
-              className="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              required
+              {...register('type', { required: 'Meal type is required' })}
+              className={`block w-full rounded-md shadow-sm sm:text-sm ${
+                errors.type ? 'border-red-300 dark:border-red-700 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500'
+              } dark:bg-gray-800`}
             >
               <option value="breakfast">Breakfast</option>
               <option value="lunch">Lunch</option>
@@ -275,23 +213,41 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
               <option value="snack">Snack</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-              {getMealIcon(formData.type)}
+              {getMealIcon(mealType)}
             </div>
           </div>
+          {errors.type && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.type.message}</p>
+          )}
         </div>
         
         {/* Meal Time */}
-        <Input
-          type="datetime-local"
-          label="Time"
-          value={formData.time}
-          onChange={handleTimeChange}
-          required
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Time
+          </label>
+          <input
+            type="datetime-local"
+            {...register('time', { 
+              required: 'Time is required',
+              validate: value => {
+                const mealTime = new Date(value);
+                const now = new Date();
+                return mealTime <= now || 'Meal time cannot be in the future';
+              }
+            })}
+            className={`block w-full rounded-md shadow-sm sm:text-sm ${
+              errors.time ? 'border-red-300 dark:border-red-700 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500'
+            } dark:bg-gray-800`}
+          />
+          {errors.time && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.time.message}</p>
+          )}
+        </div>
       </div>
       
       {/* Summary Card */}
-      <div className={`p-3 rounded-lg border ${getMealTypeStyle(formData.type)}`}>
+      <div className={`p-3 rounded-lg border ${getMealTypeStyle(mealType)}`}>
         <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meal Summary</h4>
         <div className="grid grid-cols-4 gap-2">
           <div className="text-center">
@@ -330,7 +286,15 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
               type="button"
               variant="primary"
               size="sm"
-              onClick={handleAddFood}
+              onClick={() => append({
+                name: '',
+                quantity: 1,
+                unit: 'serving',
+                calories: 0,
+                protein: 0,
+                carbs: 0,
+                fat: 0
+              })}
             >
               Add Food
             </Button>
@@ -340,7 +304,7 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
         {/* Food Presets */}
         {showPresets && (
           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 mb-4">
-            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Common {formData.type.charAt(0).toUpperCase() + formData.type.slice(1)} Foods</h5>
+            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Common {mealType.charAt(0).toUpperCase() + mealType.slice(1)} Foods</h5>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
               {presets.map((preset, idx) => (
                 <div 
@@ -358,14 +322,14 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
           </div>
         )}
         
-        {formData.foods.map((food, index) => (
-          <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-md space-y-3 bg-white dark:bg-gray-800 shadow-sm">
+        {fields.map((field, index) => (
+          <div key={field.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-md space-y-3 bg-white dark:bg-gray-800 shadow-sm">
             <div className="flex justify-between">
               <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Food Item {index + 1}</h5>
-              {formData.foods.length > 1 && (
+              {fields.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => handleRemoveFood(index)}
+                  onClick={() => remove(index)}
                   className="text-red-500 hover:text-red-700 text-sm flex items-center"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -377,33 +341,55 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Input
-                label="Food Name"
-                value={food.name}
-                onChange={(e) => handleFoodChange(index, 'name', e.target.value)}
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Food Name
+                </label>
+                <input
+                  type="text"
+                  {...register(`foods.${index}.name`, { 
+                    required: 'Food name is required',
+                    validate: value => value.trim() !== '' || 'Food name cannot be empty'
+                  })}
+                  className={`block w-full rounded-md shadow-sm sm:text-sm ${
+                    errors.foods?.[index]?.name ? 'border-red-300 dark:border-red-700 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500'
+                  } dark:bg-gray-800`}
+                />
+                {errors.foods?.[index]?.name && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.foods[index].name.message}</p>
+                )}
+              </div>
               
               <div className="grid grid-cols-2 gap-2">
-                <Input
-                  type="number"
-                  label="Quantity"
-                  value={food.quantity}
-                  onChange={(e) => handleFoodChange(index, 'quantity', e.target.value)}
-                  min="0.1"
-                  step="0.1"
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    {...register(`foods.${index}.quantity`, { 
+                      required: 'Quantity is required',
+                      min: { value: 0.1, message: 'Quantity must be positive' },
+                      valueAsNumber: true
+                    })}
+                    min="0.1"
+                    step="0.1"
+                    className={`block w-full rounded-md shadow-sm sm:text-sm ${
+                      errors.foods?.[index]?.quantity ? 'border-red-300 dark:border-red-700 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500'
+                    } dark:bg-gray-800`}
+                  />
+                  {errors.foods?.[index]?.quantity && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.foods[index].quantity.message}</p>
+                  )}
+                </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Unit
                   </label>
                   <select
-                    value={food.unit}
-                    onChange={(e) => handleFoodChange(index, 'unit', e.target.value)}
+                    {...register(`foods.${index}.unit`, { required: 'Unit is required' })}
                     className="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    required
                   >
                     <option value="g">g</option>
                     <option value="oz">oz</option>
@@ -417,51 +403,102 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
                     <option value="large">large</option>
                     <option value="small">small</option>
                   </select>
+                  {errors.foods?.[index]?.unit && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.foods[index].unit.message}</p>
+                  )}
                 </div>
               </div>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <Input
-                type="number"
-                label="Calories"
-                value={food.calories}
-                onChange={(e) => handleFoodChange(index, 'calories', e.target.value)}
-                min="0"
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Calories
+                </label>
+                <input
+                  type="number"
+                  {...register(`foods.${index}.calories`, { 
+                    required: 'Calories are required',
+                    min: { value: 0, message: 'Cannot be negative' },
+                    valueAsNumber: true
+                  })}
+                  min="0"
+                  className={`block w-full rounded-md shadow-sm sm:text-sm ${
+                    errors.foods?.[index]?.calories ? 'border-red-300 dark:border-red-700 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500'
+                  } dark:bg-gray-800`}
+                />
+                {errors.foods?.[index]?.calories && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.foods[index].calories.message}</p>
+                )}
+              </div>
               
-              <Input
-                type="number"
-                label="Protein (g)"
-                value={food.protein}
-                onChange={(e) => handleFoodChange(index, 'protein', e.target.value)}
-                min="0"
-                step="0.1"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Protein (g)
+                </label>
+                <input
+                  type="number"
+                  {...register(`foods.${index}.protein`, { 
+                    min: { value: 0, message: 'Cannot be negative' },
+                    valueAsNumber: true
+                  })}
+                  min="0"
+                  step="0.1"
+                  className={`block w-full rounded-md shadow-sm sm:text-sm ${
+                    errors.foods?.[index]?.protein ? 'border-red-300 dark:border-red-700 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500'
+                  } dark:bg-gray-800`}
+                />
+                {errors.foods?.[index]?.protein && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.foods[index].protein.message}</p>
+                )}
+              </div>
               
-              <Input
-                type="number"
-                label="Carbs (g)"
-                value={food.carbs}
-                onChange={(e) => handleFoodChange(index, 'carbs', e.target.value)}
-                min="0"
-                step="0.1"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Carbs (g)
+                </label>
+                <input
+                  type="number"
+                  {...register(`foods.${index}.carbs`, { 
+                    min: { value: 0, message: 'Cannot be negative' },
+                    valueAsNumber: true
+                  })}
+                  min="0"
+                  step="0.1"
+                  className={`block w-full rounded-md shadow-sm sm:text-sm ${
+                    errors.foods?.[index]?.carbs ? 'border-red-300 dark:border-red-700 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500'
+                  } dark:bg-gray-800`}
+                />
+                {errors.foods?.[index]?.carbs && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.foods[index].carbs.message}</p>
+                )}
+              </div>
               
-              <Input
-                type="number"
-                label="Fat (g)"
-                value={food.fat}
-                onChange={(e) => handleFoodChange(index, 'fat', e.target.value)}
-                min="0"
-                step="0.1"
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Fat (g)
+                </label>
+                <input
+                  type="number"
+                  {...register(`foods.${index}.fat`, { 
+                    min: { value: 0, message: 'Cannot be negative' },
+                    valueAsNumber: true
+                  })}
+                  min="0"
+                  step="0.1"
+                  className={`block w-full rounded-md shadow-sm sm:text-sm ${
+                    errors.foods?.[index]?.fat ? 'border-red-300 dark:border-red-700 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500 focus:border-indigo-500'
+                  } dark:bg-gray-800`}
+                />
+                {errors.foods?.[index]?.fat && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.foods[index].fat.message}</p>
+                )}
+              </div>
             </div>
 
             {/* Per item total */}
             <div className="text-right text-sm text-gray-500 dark:text-gray-400">
-              Item total: {Math.round(food.calories * food.quantity)} calories
+              Item total: {Math.round((watch(`foods.${index}.calories`) || 0) * (watch(`foods.${index}.quantity`) || 0))} calories
             </div>
           </div>
         ))}
@@ -473,8 +510,7 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
           Notes (Optional)
         </label>
         <textarea
-          value={formData.notes}
-          onChange={handleNotesChange}
+          {...register('notes')}
           rows="2"
           className="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
           placeholder="Add any notes about this meal..."

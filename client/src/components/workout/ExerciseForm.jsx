@@ -1,15 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
 
 const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    exerciseId: '',
-    exerciseName: '',
-    sets: [{ weight: '', reps: '', duration: '', completed: true }]
-  });
-  
   const [availableExercises, setAvailableExercises] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isCustomExercise, setIsCustomExercise] = useState(false);
@@ -18,6 +13,33 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
   const toast = useToast();
   // Get toast-enabled API
   const api = apiWithToast(toast);
+  
+  // React Hook Form setup
+  const { 
+    register, 
+    control, 
+    handleSubmit, 
+    setValue,
+    formState: { errors },
+    watch
+  } = useForm({
+    defaultValues: {
+      exerciseId: '',
+      exerciseName: '',
+      sets: [{ weight: '', reps: '', duration: '', completed: true }]
+    }
+  });
+  
+  // Setup field array for dynamic sets
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "sets"
+  });
+  
+  // Watch values for validation
+  const watchExerciseId = watch('exerciseId');
+  const watchExerciseName = watch('exerciseName');
+  const watchSets = watch('sets');
   
   // Load exercises from API
   useEffect(() => {
@@ -40,86 +62,59 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
   // If editing, load exercise data
   useEffect(() => {
     if (exercise) {
-      setFormData({
-        exerciseId: exercise.exerciseId,
-        exerciseName: exercise.exerciseName,
-        sets: exercise.sets && exercise.sets.length > 0 
-          ? exercise.sets 
-          : [{ weight: '', reps: '', duration: '', completed: true }]
-      });
+      setValue('exerciseId', exercise.exerciseId);
+      setValue('exerciseName', exercise.exerciseName);
+      
+      if (exercise.sets && exercise.sets.length > 0) {
+        // Remove default set and add all exercise sets
+        remove(0);
+        exercise.sets.forEach((set) => {
+          append({
+            weight: set.weight,
+            reps: set.reps,
+            duration: set.duration,
+            completed: set.completed !== undefined ? set.completed : true
+          });
+        });
+      }
       
       // Check if this is a custom exercise
       setIsCustomExercise(!availableExercises.some(ex => ex._id === exercise.exerciseId));
     }
-  }, [exercise, availableExercises]);
+  }, [exercise, availableExercises, setValue, append, remove]);
   
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleExerciseTypeChange = (e) => {
+    const value = e.target.value;
     
-    if (name === 'exerciseId') {
-      // If selecting from dropdown, set the name too
-      const selectedExercise = availableExercises.find(ex => ex._id === value);
-      
-      if (value === 'custom') {
-        setIsCustomExercise(true);
-        setFormData(prev => ({
-          ...prev,
-          exerciseId: '',
-          exerciseName: ''
-        }));
-      } else if (selectedExercise) {
-        setIsCustomExercise(false);
-        setFormData(prev => ({
-          ...prev,
-          exerciseId: value,
-          exerciseName: selectedExercise.name
-        }));
-      }
+    if (value === 'custom') {
+      setIsCustomExercise(true);
+      setValue('exerciseId', '');
+      setValue('exerciseName', '');
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setIsCustomExercise(false);
+      const selectedExercise = availableExercises.find(ex => ex._id === value);
+      if (selectedExercise) {
+        setValue('exerciseId', value);
+        setValue('exerciseName', selectedExercise.name);
+      }
     }
-  };
-  
-  const handleSetChange = (index, field, value) => {
-    setFormData(prev => {
-      const updatedSets = [...prev.sets];
-      updatedSets[index] = {
-        ...updatedSets[index],
-        [field]: value
-      };
-      
-      return {
-        ...prev,
-        sets: updatedSets
-      };
-    });
   };
   
   const handleAddSet = () => {
-    setFormData(prev => ({
-      ...prev,
-      sets: [...prev.sets, { weight: '', reps: '', duration: '', completed: true }]
-    }));
+    append({ weight: '', reps: '', duration: '', completed: true });
   };
-  
-  const handleRemoveSet = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      sets: prev.sets.filter((_, i) => i !== index)
-    }));
-  };
-  
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Validate form
-    if ((!formData.exerciseId && !isCustomExercise) || (isCustomExercise && !formData.exerciseName)) {
-      toast.error('Please select or enter an exercise');
-      return;
+
+  // Prevent negative values in numeric inputs
+  const handleNumericInput = (e) => {
+    // Don't allow minus sign
+    if (e.key === '-' || e.key === 'e') {
+      e.preventDefault();
     }
-    
-    // For each set, ensure it has at least reps or duration
-    const validSets = formData.sets.filter(set => {
+  };
+  
+  const onFormSubmit = (data) => {
+    // Validate that at least one set has reps or duration
+    const validSets = data.sets.filter(set => {
       return set.reps || set.duration;
     });
     
@@ -128,16 +123,28 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
       return;
     }
     
+    // Make sure all numeric values are non-negative
+    const hasNegativeValues = data.sets.some(set => 
+      (set.weight && parseFloat(set.weight) < 0) || 
+      (set.reps && parseFloat(set.reps) < 0) || 
+      (set.duration && parseFloat(set.duration) < 0)
+    );
+    
+    if (hasNegativeValues) {
+      toast.error('Weight, reps, and duration cannot be negative');
+      return;
+    }
+    
     // Submit the valid data
     onSubmit({
-      ...formData,
+      ...data,
       sets: validSets
     });
   };
   
   return (
     <div>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
         {/* Exercise Selection */}
         <div>
           <label htmlFor="exerciseId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -147,14 +154,18 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
             <div className="mt-1">
               <input
                 type="text"
-                name="exerciseName"
                 id="exerciseName"
-                value={formData.exerciseName}
-                onChange={handleChange}
-                className="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className={`block w-full rounded-md ${
+                  errors.exerciseName ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+                } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
                 placeholder="Enter custom exercise name"
-                required
+                {...register('exerciseName', {
+                  required: 'Custom exercise name is required'
+                })}
               />
+              {errors.exerciseName && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.exerciseName.message}</p>
+              )}
               <div className="mt-2 flex items-center text-sm">
                 <button
                   type="button"
@@ -169,11 +180,17 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
             <div className="mt-1">
               <select
                 id="exerciseId"
-                name="exerciseId"
-                value={formData.exerciseId}
-                onChange={handleChange}
-                className="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                required={!isCustomExercise}
+                className={`block w-full rounded-md ${
+                  errors.exerciseId ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+                } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
+                {...register('exerciseId', {
+                  required: isCustomExercise ? false : 'Please select an exercise'
+                })}
+                onChange={(e) => {
+                  handleExerciseTypeChange(e);
+                  // Also update the register value
+                  register('exerciseId').onChange(e);
+                }}
               >
                 <option value="">Select an exercise</option>
                 {availableExercises.map(exercise => (
@@ -183,6 +200,9 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
                 ))}
                 <option value="custom">Add a custom exercise</option>
               </select>
+              {errors.exerciseId && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.exerciseId.message}</p>
+              )}
             </div>
           )}
         </div>
@@ -202,17 +222,17 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
           </div>
           
           <div className="space-y-4">
-            {formData.sets.map((set, index) => (
+            {fields.map((field, index) => (
               <div 
-                key={index} 
+                key={field.id} 
                 className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex justify-between items-center mb-3">
                   <h4 className="font-medium text-gray-900 dark:text-white">Set {index + 1}</h4>
-                  {formData.sets.length > 1 && (
+                  {fields.length > 1 && (
                     <button
                       type="button"
-                      onClick={() => handleRemoveSet(index)}
+                      onClick={() => remove(index)}
                       className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm"
                     >
                       Remove
@@ -222,59 +242,97 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label htmlFor={`weight-${index}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label htmlFor={`sets.${index}.weight`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Weight (kg)
                     </label>
                     <input
                       type="number"
-                      id={`weight-${index}`}
-                      value={set.weight}
-                      onChange={(e) => handleSetChange(index, 'weight', e.target.value)}
+                      id={`sets.${index}.weight`}
                       className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                       placeholder="Optional"
                       min="0"
                       step="0.5"
+                      onKeyDown={handleNumericInput}
+                      {...register(`sets.${index}.weight`, {
+                        min: { value: 0, message: "Weight cannot be negative" },
+                        valueAsNumber: true
+                      })}
                     />
+                    {errors.sets?.[index]?.weight && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                        {errors.sets[index].weight.message}
+                      </p>
+                    )}
                   </div>
                   
                   <div>
-                    <label htmlFor={`reps-${index}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label htmlFor={`sets.${index}.reps`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Reps
                     </label>
                     <input
                       type="number"
-                      id={`reps-${index}`}
-                      value={set.reps}
-                      onChange={(e) => handleSetChange(index, 'reps', e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      id={`sets.${index}.reps`}
+                      className={`mt-1 block w-full rounded-md ${
+                        !watchSets[index]?.reps && !watchSets[index]?.duration ? 'border-amber-300 dark:border-amber-700' : 'border-gray-300 dark:border-gray-700'
+                      } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
                       placeholder="Enter reps"
                       min="0"
+                      onKeyDown={handleNumericInput}
+                      {...register(`sets.${index}.reps`, {
+                        min: { value: 0, message: "Reps cannot be negative" },
+                        valueAsNumber: true
+                      })}
                     />
+                    {errors.sets?.[index]?.reps ? (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                        {errors.sets[index].reps.message}
+                      </p>
+                    ) : (
+                      !watchSets[index]?.reps && !watchSets[index]?.duration && (
+                        <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Enter reps or duration</p>
+                      )
+                    )}
                   </div>
                   
                   <div>
-                    <label htmlFor={`duration-${index}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label htmlFor={`sets.${index}.duration`} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Duration (seconds)
                     </label>
                     <input
                       type="number"
-                      id={`duration-${index}`}
-                      value={set.duration}
-                      onChange={(e) => handleSetChange(index, 'duration', e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      id={`sets.${index}.duration`}
+                      className={`mt-1 block w-full rounded-md ${
+                        !watchSets[index]?.reps && !watchSets[index]?.duration ? 'border-amber-300 dark:border-amber-700' : 'border-gray-300 dark:border-gray-700'
+                      } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
                       placeholder="For timed exercises"
                       min="0"
+                      onKeyDown={handleNumericInput}
+                      {...register(`sets.${index}.duration`, {
+                        min: { value: 0, message: "Duration cannot be negative" },
+                        valueAsNumber: true
+                      })}
                     />
+                    {errors.sets?.[index]?.duration && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                        {errors.sets[index].duration.message}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
                 <div className="mt-3">
                   <label className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={set.completed}
-                      onChange={(e) => handleSetChange(index, 'completed', e.target.checked)}
-                      className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    <Controller
+                      name={`sets.${index}.completed`}
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                          checked={field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                        />
+                      )}
                     />
                     <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                       Completed

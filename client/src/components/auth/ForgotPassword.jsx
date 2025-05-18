@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
 const ForgotPassword = () => {
-  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -13,20 +13,28 @@ const ForgotPassword = () => {
   const { forgotPassword } = useAuth();
   const { isDark } = useTheme();
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!email.trim()) {
-      setError('Please enter your email address');
-      return;
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors },
+    watch 
+  } = useForm({
+    defaultValues: {
+      email: ''
     }
-    
+  });
+  
+  // For displaying the email in success message
+  const watchEmail = watch('email', '');
+  
+  const onSubmit = async (data) => {
     try {
       setLoading(true);
       setError('');
       setSuccess(false);
       
-      await forgotPassword(email);
+      await forgotPassword(data.email);
       setSuccess(true);
     } catch (err) {
       setError(err.error?.message || 'An error occurred. Please try again.');
@@ -63,7 +71,7 @@ const ForgotPassword = () => {
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Check your email</h3>
                 <div className="mt-3 text-sm text-gray-700 dark:text-gray-300">
-                  <p>If an account exists with the email <span className="font-medium">{email}</span>, we've sent instructions to reset your password.</p>
+                  <p>If an account exists with the email <span className="font-medium">{watchEmail}</span>, we've sent instructions to reset your password.</p>
                 </div>
                 <div className="mt-6">
                   <Link
@@ -83,22 +91,30 @@ const ForgotPassword = () => {
                 </div>
               )}
               
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
                 <div>
                   <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Email address
                   </label>
                   <input
                     id="email-address"
-                    name="email"
                     type="email"
                     autoComplete="email"
-                    required
-                    className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    className={`appearance-none relative block w-full px-3 py-2 border ${
+                      errors.email ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+                    } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                     placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    {...register('email', {
+                      required: 'Email is required',
+                      pattern: {
+                        value: /\S+@\S+\.\S+/,
+                        message: 'Please enter a valid email address'
+                      }
+                    })}
                   />
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
+                  )}
                 </div>
                 
                 <div>
