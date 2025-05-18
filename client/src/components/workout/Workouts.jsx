@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../contexts/ToastContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import WorkoutList from './WorkoutList';
 import AvailableWorkouts from './AvailableWorkout';
 import WorkoutForm from './WorkoutForm';
-import Alert from '../ui/Alert';
 
 const Workouts = () => {
   const [activeTab, setActiveTab] = useState('history');
   const [showWorkoutForm, setShowWorkoutForm] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState(null);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [error, setError] = useState('');
   
+  // Get toast functions
+  const toast = useToast();
   const navigate = useNavigate();
 
   const handleStartWorkout = () => {
@@ -29,12 +29,9 @@ const Workouts = () => {
   const handleWorkoutSubmit = () => {
     setShowWorkoutForm(false);
     setEditingWorkout(null);
-    setSuccessMessage(editingWorkout ? 'Workout updated successfully!' : 'Workout logged successfully!');
     
-    // Clear success message after 3 seconds
-    setTimeout(() => {
-      setSuccessMessage('');
-    }, 3000);
+    // Show success message
+    toast.success(editingWorkout ? 'Workout updated successfully!' : 'Workout logged successfully!');
     
     // Refresh data or update state here
     setActiveTab('history');
@@ -70,23 +67,6 @@ const Workouts = () => {
           Track and manage your workout activities
         </p>
       </div>
-
-      {/* Success/Error messages */}
-      {successMessage && (
-        <Alert 
-          type="success"
-          message={successMessage}
-          onDismiss={() => setSuccessMessage('')}
-        />
-      )}
-      
-      {error && (
-        <Alert 
-          type="error"
-          message={error}
-          onDismiss={() => setError('')}
-        />
-      )}
 
       {/* Workout Form */}
       {showWorkoutForm ? (

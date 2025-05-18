@@ -142,6 +142,7 @@ exports.loginUser = async (req, res) => {
         profilePicture: user.profilePicture,
         token: token,
         refreshToken: refreshToken,
+        role: user.role
       },
     });
   } catch (error) {

@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 import { useEffect, useState } from 'react';
 import api from '../../utils/api';
+=======
+import { useState } from 'react';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
+>>>>>>> fca44a1a89f229c6c543ab135aac66ba328b5bca
 import Input from '../ui/Input';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
 
 const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
   const initialFormState = {
@@ -24,10 +29,13 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
 
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [presets, setPresets] = useState({});
   const [showPresets, setShowPresets] = useState(false);
+
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
 
   // Common food presets for quick selection
   const foodPresets = {
@@ -161,36 +169,39 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
     
     try {
       // Validate form data
       if (!formData.type) {
-        throw new Error('Meal type is required');
+        toast.error('Meal type is required');
+        setLoading(false);
+        return;
       }
       
       if (formData.foods.some(food => !food.name.trim())) {
-        throw new Error('All food items must have a name');
+        toast.error('All food items must have a name');
+        setLoading(false);
+        return;
       }
       
       if (formData.foods.some(food => food.calories < 0)) {
-        throw new Error('Calories cannot be negative');
+        toast.error('Calories cannot be negative');
+        setLoading(false);
+        return;
       }
       
       // Submit to API
       const response = await api.post(`api/nutrition/logs/${nutritionLogId}/meals`, formData);
       
-      setSuccess('Meal added successfully!');
+      toast.success('Meal added successfully!');
       setFormData(initialFormState);
       
-      // Pass updated log back to parent
-      setTimeout(() => {
-        setSuccess(null);
-        if (onMealAdded) onMealAdded(response.data.nutritionLog);
-      }, 1500);
+      // Call the callback function
+      if (onMealAdded) onMealAdded(response.data.nutritionLog);
+      
     } catch (err) {
+      // Error is handled by the API interceptor
       console.error('Error adding meal:', err);
-      setError(err.response?.data?.error?.message || err.message || 'Failed to add meal');
     } finally {
       setLoading(false);
     }
@@ -248,9 +259,6 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && <Alert type="error" message={error} />}
-      {success && <Alert type="success" message={success} />}
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Meal Type */}
         <div>

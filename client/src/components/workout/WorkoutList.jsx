@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { useToast } from '../../contexts/ToastContext';
+import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
-import Alert from '../ui/Alert';
-import api from '../../utils/api';
 import WorkoutDetail from './WorkoutDetail';
 
 const WorkoutList = ({ onEditWorkout }) => {
   const [workouts, setWorkouts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [selectedWorkout, setSelectedWorkout] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [filter, setFilter] = useState({
@@ -17,6 +16,11 @@ const WorkoutList = ({ onEditWorkout }) => {
     type: '',
     search: ''
   });
+  
+  // Get toast functions
+  const toast = useToast();
+  // Get toast-enabled API
+  const api = apiWithToast(toast);
   
   // Load workouts from API
   useEffect(() => {
@@ -36,10 +40,9 @@ const WorkoutList = ({ onEditWorkout }) => {
       
       const response = await api.get(`/api/workout-sessions?${params.toString()}`);
       setWorkouts(response.data.data);
-      setError('');
     } catch (err) {
+      // Error is handled by the API interceptor
       console.error('Error fetching workouts:', err);
-      setError('Failed to load workout history. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -57,6 +60,7 @@ const WorkoutList = ({ onEditWorkout }) => {
       type: '',
       search: ''
     });
+    toast.info('Filters reset');
   };
   
   const handleViewDetail = (workout) => {
@@ -93,9 +97,11 @@ const WorkoutList = ({ onEditWorkout }) => {
         setShowDetail(false);
         setSelectedWorkout(null);
       }
+      
+      toast.success('Workout deleted successfully');
     } catch (err) {
+      // Error is handled by the API interceptor
       console.error('Error deleting workout:', err);
-      setError('Failed to delete workout. Please try again.');
     }
   };
   
@@ -159,15 +165,6 @@ const WorkoutList = ({ onEditWorkout }) => {
   
   return (
     <div>
-      {error && (
-        <Alert 
-          type="error"
-          message={error}
-          onDismiss={() => setError('')}
-          className="mb-4"
-        />
-      )}
-      
       {showDetail && selectedWorkout ? (
         <WorkoutDetail 
           workout={selectedWorkout}
