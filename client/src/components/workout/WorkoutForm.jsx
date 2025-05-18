@@ -264,6 +264,12 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
                 type="number"
                 id="duration"
                 min="1"
+                onInput={(e) => {
+                  // Prevent negative values by setting to empty if user tries to enter a negative number
+                  if (e.target.value < 0) {
+                    e.target.value = '';
+                  }
+                }}
                 className={`mt-1 block w-full rounded-md ${
                   errors.duration ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
                 } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
@@ -273,9 +279,12 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
                     value: 1,
                     message: 'Duration must be at least 1 minute'
                   },
+                  validate: {
+                    positive: value => parseInt(value) > 0 || 'Negative values are not allowed'
+                  },
                   pattern: {
                     value: /^[0-9]+$/,
-                    message: 'Duration must be a number'
+                    message: 'Duration must be a positive number'
                   }
                 })}
               />

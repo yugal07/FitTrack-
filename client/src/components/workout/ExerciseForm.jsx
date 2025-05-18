@@ -103,6 +103,14 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
   const handleAddSet = () => {
     append({ weight: '', reps: '', duration: '', completed: true });
   };
+
+  // Prevent negative values in numeric inputs
+  const handleNumericInput = (e) => {
+    // Don't allow minus sign
+    if (e.key === '-' || e.key === 'e') {
+      e.preventDefault();
+    }
+  };
   
   const onFormSubmit = (data) => {
     // Validate that at least one set has reps or duration
@@ -112,6 +120,18 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
     
     if (validSets.length === 0) {
       toast.error('Please add at least one set with reps or duration');
+      return;
+    }
+    
+    // Make sure all numeric values are non-negative
+    const hasNegativeValues = data.sets.some(set => 
+      (set.weight && parseFloat(set.weight) < 0) || 
+      (set.reps && parseFloat(set.reps) < 0) || 
+      (set.duration && parseFloat(set.duration) < 0)
+    );
+    
+    if (hasNegativeValues) {
+      toast.error('Weight, reps, and duration cannot be negative');
       return;
     }
     
@@ -232,8 +252,17 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
                       placeholder="Optional"
                       min="0"
                       step="0.5"
-                      {...register(`sets.${index}.weight`)}
+                      onKeyDown={handleNumericInput}
+                      {...register(`sets.${index}.weight`, {
+                        min: { value: 0, message: "Weight cannot be negative" },
+                        valueAsNumber: true
+                      })}
                     />
+                    {errors.sets?.[index]?.weight && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                        {errors.sets[index].weight.message}
+                      </p>
+                    )}
                   </div>
                   
                   <div>
@@ -248,10 +277,20 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
                       } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
                       placeholder="Enter reps"
                       min="0"
-                      {...register(`sets.${index}.reps`)}
+                      onKeyDown={handleNumericInput}
+                      {...register(`sets.${index}.reps`, {
+                        min: { value: 0, message: "Reps cannot be negative" },
+                        valueAsNumber: true
+                      })}
                     />
-                    {!watchSets[index]?.reps && !watchSets[index]?.duration && (
-                      <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Enter reps or duration</p>
+                    {errors.sets?.[index]?.reps ? (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                        {errors.sets[index].reps.message}
+                      </p>
+                    ) : (
+                      !watchSets[index]?.reps && !watchSets[index]?.duration && (
+                        <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Enter reps or duration</p>
+                      )
                     )}
                   </div>
                   
@@ -267,8 +306,17 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
                       } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
                       placeholder="For timed exercises"
                       min="0"
-                      {...register(`sets.${index}.duration`)}
+                      onKeyDown={handleNumericInput}
+                      {...register(`sets.${index}.duration`, {
+                        min: { value: 0, message: "Duration cannot be negative" },
+                        valueAsNumber: true
+                      })}
                     />
+                    {errors.sets?.[index]?.duration && (
+                      <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                        {errors.sets[index].duration.message}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
