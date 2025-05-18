@@ -222,7 +222,6 @@ const UserDetail = () => {
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
-                    // client/src/components/admin/users/UserDetail.jsx (continued)
                     className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
                   />
                 </div>

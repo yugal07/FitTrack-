@@ -48,7 +48,6 @@ const ExerciseManager = () => {
   
   useEffect(() => {
     fetchExercises();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSearch = (e) => {

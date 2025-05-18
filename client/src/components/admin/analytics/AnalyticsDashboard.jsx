@@ -55,7 +55,6 @@ const AnalyticsDashboard = () => {
   
   useEffect(() => {
     fetchAnalytics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   const handleDateChange = (e) => {

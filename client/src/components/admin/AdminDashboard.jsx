@@ -18,7 +18,6 @@ const AdminDashboard = () => {
     const fetchAdminStats = async () => {
       try {
         setLoading(true);
-        // This API endpoint would need to be implemented on the server
         const response = await api.get('/api/admin/stats');
         setStats(response.data.data);
       } catch (err) {
@@ -42,7 +41,6 @@ const AdminDashboard = () => {
 
   if (error) {
     return (
-        // client/src/components/admin/AdminDashboard.jsx (continued)
       <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-4 rounded-md text-red-700 dark:text-red-300">
         <p>{error}</p>
       </div>

@@ -30,6 +30,8 @@ const Login = () => {
     setLoading(true);
     setError('');
     const response = await login(email, password);
+
+    console.log(response);
     
     // Check if user is admin and redirect appropriately
     if (response.data.role === 'admin') {

@@ -251,11 +251,3 @@ exports.deleteNutritionItem = async (req, res) => {
   }
 };
 
-module.exports = {
-  NutritionItem,
-  getNutritionItems,
-  getNutritionItem,
-  createNutritionItem,
-  updateNutritionItem,
-  deleteNutritionItem
-};

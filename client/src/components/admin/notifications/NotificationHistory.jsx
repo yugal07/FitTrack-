@@ -77,7 +77,6 @@ const NotificationHistory = () => {
       </div>
       
       {/* Filter Form */}
-      // client/src/components/admin/notifications/NotificationHistory.jsx (continued)
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
         <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Filter Notifications</h2>
         <form onSubmit={handleFilterSubmit} className="space-y-4 sm:flex sm:items-end sm:space-y-0 sm:space-x-4">

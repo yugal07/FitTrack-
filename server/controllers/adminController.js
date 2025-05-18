@@ -212,7 +212,6 @@ exports.updateUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in updateUser:', error);
-    // server/controllers/adminController.js (continued)
     res.status(500).json({
       success: false,
       error: {
