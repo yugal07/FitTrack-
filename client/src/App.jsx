@@ -32,6 +32,7 @@ function App() {
   return (
     <Router>
       <ThemeProvider>
+        <ToastProvider>
         <AuthProvider>
           <ToastProvider>
             <Routes>
@@ -109,6 +110,7 @@ function App() {
             </Routes>
           </ToastProvider>
         </AuthProvider>
+        </ToastProvider>
       </ThemeProvider>
     </Router>
   );

@@ -41,10 +41,12 @@ const MealPlanner = () => {
   }, [currentWeekStart]);
 
   // Navigate to previous week
-  const goToPreviousWeek = () => setCurrentWeekStart(prev => addDays(prev, -7));
+
+    const goToPreviousWeek = () => setCurrentWeekStart(prev => addDays(prev, -7));
 
   // Navigate to next week
-  const goToNextWeek = () => setCurrentWeekStart(prev => addDays(prev, 7));
+    
+    const goToNextWeek = () => setCurrentWeekStart(prev => addDays(prev, 7));
 
   // Start editing a specific meal
   const handleEditMeal = (day, meal) => {
