@@ -108,256 +108,269 @@ const ProgressReport = () => {
     }
   };
 
-  const generatePDF = () => {
-    setGeneratingPdf(true);
+const generatePDF = () => {
+  setGeneratingPdf(true);
+  
+  try {
+    const dateRange = getDateRange();
+    const doc = new jsPDF();
     
-    try {
-      const dateRange = getDateRange();
-      const doc = new jsPDF();
-      
-      // Add title
-      doc.setFontSize(18);
-      doc.text(`Fitness Progress Report - ${dateRange.label}`, 105, 15, { align: 'center' });
-      
-      // Add date generated
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${format(new Date(), 'MMMM d, yyyy')}`, 105, 22, { align: 'center' });
-      
-      let yPos = 30;
-      
-      // Add summary section
+    // Add title
+    doc.setFontSize(18);
+    doc.text(`Fitness Progress Report - ${dateRange.label}`, 105, 15, { align: 'center' });
+    
+    // Add date generated
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${format(new Date(), 'MMMM d, yyyy')}`, 105, 22, { align: 'center' });
+    
+    let yPos = 30;
+    
+    // Add summary section
+    doc.setFontSize(14);
+    doc.text('Summary', 14, yPos);
+    
+    yPos += 8;
+    doc.setFontSize(10);
+    doc.text(`Total Workouts: ${workouts.length}`, 14, yPos);
+    
+    yPos += 6;
+    const totalDuration = workouts.reduce((total, workout) => total + (workout.duration || 0), 0);
+    doc.text(`Total Workout Duration: ${Math.round(totalDuration)} minutes`, 14, yPos);
+    
+    yPos += 6;
+    const totalCalories = workouts.reduce((total, workout) => total + (workout.caloriesBurned || 0), 0);
+    doc.text(`Total Calories Burned: ${Math.round(totalCalories)} kcal`, 14, yPos);
+    
+    yPos += 6;
+    const completedGoals = goals.filter(goal => goal.status === 'completed').length;
+    doc.text(`Goals Completed: ${completedGoals}`, 14, yPos);
+    
+    // Add measurements section if available
+    if (measurements.length > 0) {
+      yPos += 12;
       doc.setFontSize(14);
-      doc.text('Summary', 14, yPos);
+      doc.text('Measurements', 14, yPos);
       
       yPos += 8;
       doc.setFontSize(10);
-      doc.text(`Total Workouts: ${workouts.length}`, 14, yPos);
       
-      yPos += 6;
-      const totalDuration = workouts.reduce((total, workout) => total + (workout.duration || 0), 0);
-      doc.text(`Total Workout Duration: ${Math.round(totalDuration)} minutes`, 14, yPos);
+      // Find first and last measurements for comparison
+      const firstMeasurement = measurements[0];
+      const lastMeasurement = measurements[measurements.length - 1];
       
-      yPos += 6;
-      const totalCalories = workouts.reduce((total, workout) => total + (workout.caloriesBurned || 0), 0);
-      doc.text(`Total Calories Burned: ${Math.round(totalCalories)} kcal`, 14, yPos);
-      
-      yPos += 6;
-      const completedGoals = goals.filter(goal => goal.status === 'completed').length;
-      doc.text(`Goals Completed: ${completedGoals}`, 14, yPos);
-      
-      // Add measurements section if available
-      if (measurements.length > 0) {
-        yPos += 12;
-        doc.setFontSize(14);
-        doc.text('Measurements', 14, yPos);
+      if (firstMeasurement && lastMeasurement) {
+        const metrics = [
+          { id: 'weight', label: 'Weight (kg)' },
+          { id: 'bodyFat', label: 'Body Fat (%)' },
+          { id: 'chest', label: 'Chest (cm)' },
+          { id: 'waist', label: 'Waist (cm)' },
+          { id: 'hips', label: 'Hips (cm)' }
+        ];
         
+        // Create manual table headers
+        doc.setFillColor(79, 70, 229);
+        doc.setTextColor(255, 255, 255);
+        doc.rect(14, yPos, 180, 8, 'F');
+        doc.text('Metric', 16, yPos + 5);
+        doc.text('Start', 60, yPos + 5);
+        doc.text('End', 100, yPos + 5);
+        doc.text('Change', 140, yPos + 5);
         yPos += 8;
-        doc.setFontSize(10);
         
-        // Find first and last measurements for comparison
-        const firstMeasurement = measurements[0];
-        const lastMeasurement = measurements[measurements.length - 1];
+        // Reset text color
+        doc.setTextColor(0, 0, 0);
         
-        if (firstMeasurement && lastMeasurement) {
-          const metrics = [
-            { id: 'weight', label: 'Weight (kg)' },
-            { id: 'bodyFat', label: 'Body Fat (%)' },
-            { id: 'chest', label: 'Chest (cm)' },
-            { id: 'waist', label: 'Waist (cm)' },
-            { id: 'hips', label: 'Hips (cm)' }
-          ];
-          
-          const tableData = metrics.map(metric => {
-            if (firstMeasurement[metric.id] !== undefined && lastMeasurement[metric.id] !== undefined) {
-              const change = lastMeasurement[metric.id] - firstMeasurement[metric.id];
-              const changeFormatted = change.toFixed(1);
-              const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '→';
-              
-              return [
-                metric.label.split(' ')[0],
-                firstMeasurement[metric.id] ? firstMeasurement[metric.id].toFixed(1) : '-',
-                lastMeasurement[metric.id] ? lastMeasurement[metric.id].toFixed(1) : '-',
-                `${changeFormatted} ${arrow}`
-              ];
-            }
-            return [metric.label.split(' ')[0], '-', '-', '-'];
-          }).filter(row => row[1] !== '-' || row[2] !== '-');
-          
-          if (tableData.length > 0) {
-            doc.autoTable({
-              head: [['Metric', 'Start', 'End', 'Change']],
-              body: tableData,
-              startY: yPos,
-              theme: 'grid',
-              headStyles: { fillColor: [79, 70, 229] },
-              styles: { fontSize: 9 }
-            });
+        // Create rows
+        for (let i = 0; i < metrics.length; i++) {
+          const metric = metrics[i];
+          if (firstMeasurement[metric.id] !== undefined && lastMeasurement[metric.id] !== undefined) {
+            const change = lastMeasurement[metric.id] - firstMeasurement[metric.id];
+            const changeFormatted = change.toFixed(1);
+            const arrow = change > 0 ? '↑' : change < 0 ? '↓' : '→';
             
-            yPos = doc.lastAutoTable.finalY + 10;
-          } else {
-            doc.text('No measurement data available for comparison', 14, yPos);
-            yPos += 6;
+            // Add zebra striping
+            if (i % 2 === 0) {
+              doc.setFillColor(240, 240, 240);
+              doc.rect(14, yPos, 180, 8, 'F');
+            }
+            
+            doc.text(metric.label.split(' ')[0], 16, yPos + 5);
+            doc.text(firstMeasurement[metric.id]?.toFixed(1) || '-', 60, yPos + 5);
+            doc.text(lastMeasurement[metric.id]?.toFixed(1) || '-', 100, yPos + 5);
+            doc.text(`${changeFormatted} ${arrow}`, 140, yPos + 5);
+            
+            yPos += 8;
           }
         }
       } else {
-        yPos += 6;
-        doc.text('No measurement data available for this period', 14, yPos);
-        yPos += 6;
-      }
-      
-      // Add workouts section
-      doc.setFontSize(14);
-      doc.text('Workout Summary', 14, yPos);
-      
-      yPos += 8;
-      doc.setFontSize(10);
-      
-      if (workouts.length > 0) {
-        // Group workouts by type
-        const workoutsByType = workouts.reduce((acc, workout) => {
-          const type = workout.workoutId?.type || 'unknown';
-          if (!acc[type]) acc[type] = 0;
-          acc[type]++;
-          return acc;
-        }, {});
-        
-        const workoutTypeData = Object.entries(workoutsByType).map(([type, count]) => [
-          type.charAt(0).toUpperCase() + type.slice(1),
-          count.toString(),
-          `${Math.round((count / workouts.length) * 100)}%`
-        ]);
-        
-        doc.autoTable({
-          head: [['Workout Type', 'Count', 'Percentage']],
-          body: workoutTypeData,
-          startY: yPos,
-          theme: 'grid',
-          headStyles: { fillColor: [79, 70, 229] },
-          styles: { fontSize: 9 }
-        });
-        
-        yPos = doc.lastAutoTable.finalY + 10;
-        
-        // Most recent workouts
-        doc.setFontSize(12);
-        doc.text('Recent Workouts', 14, yPos);
-        yPos += 6;
-        
-        const recentWorkoutsData = workouts.slice(0, 5).map(workout => [
-          format(new Date(workout.date), 'MMM d, yyyy'),
-          workout.workoutId?.name || 'Unknown',
-          `${workout.duration || 0} mins`,
-          `${workout.caloriesBurned || 0} kcal`
-        ]);
-        
-        doc.autoTable({
-          head: [['Date', 'Workout', 'Duration', 'Calories']],
-          body: recentWorkoutsData,
-          startY: yPos,
-          theme: 'grid',
-          headStyles: { fillColor: [79, 70, 229] },
-          styles: { fontSize: 9 }
-        });
-        
-        yPos = doc.lastAutoTable.finalY + 10;
-      } else {
-        doc.text('No workout data available for this period', 14, yPos);
+        doc.text('No measurement data available for comparison', 14, yPos);
         yPos += 6;
       }
+    } else {
+      yPos += 6;
+      doc.text('No measurement data available for this period', 14, yPos);
+      yPos += 6;
+    }
+    
+    // Add workouts section
+    yPos += 6;
+    doc.setFontSize(14);
+    doc.text('Workout Summary', 14, yPos);
+    
+    yPos += 8;
+    doc.setFontSize(10);
+    
+    if (workouts.length > 0) {
+      // Group workouts by type
+      const workoutsByType = workouts.reduce((acc, workout) => {
+        const type = workout.workoutId?.type || 'unknown';
+        if (!acc[type]) acc[type] = 0;
+        acc[type]++;
+        return acc;
+      }, {});
       
-      // Add goals section
-      doc.setFontSize(14);
-      doc.text('Goals Progress', 14, yPos);
-      
+      // Create manual table headers for workout types
+      doc.setFillColor(79, 70, 229);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(14, yPos, 180, 8, 'F');
+      doc.text('Workout Type', 16, yPos + 5);
+      doc.text('Count', 100, yPos + 5);
+      doc.text('Percentage', 140, yPos + 5);
       yPos += 8;
       
-      if (goals.length > 0) {
-        const goalsData = goals.map(goal => {
-          const progress = Math.min(100, Math.round((goal.currentValue / goal.targetValue) * 100));
-          const progressText = `${progress}%`;
-          
-          return [
-            getGoalTitle(goal),
-            goal.status.charAt(0).toUpperCase() + goal.status.slice(1),
-            `${goal.currentValue} / ${goal.targetValue} ${goal.unit || ''}`,
-            progressText
-          ];
-        });
-        
-        doc.autoTable({
-          head: [['Goal', 'Status', 'Progress', 'Completion']],
-          body: goalsData,
-          startY: yPos,
-          theme: 'grid',
-          headStyles: { fillColor: [79, 70, 229] },
-          styles: { fontSize: 9 }
-        });
-        
-        yPos = doc.lastAutoTable.finalY + 10;
-      } else {
-        doc.text('No goals data available for this period', 14, yPos);
-        yPos += 6;
-      }
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
       
-      // Add nutrition section if available
-      if (nutrition.length > 0) {
-        doc.setFontSize(14);
-        doc.text('Nutrition Summary', 14, yPos);
+      // Create rows for workout types
+      let i = 0;
+      for (const [type, count] of Object.entries(workoutsByType)) {
+        // Add zebra striping
+        if (i % 2 === 0) {
+          doc.setFillColor(240, 240, 240);
+          doc.rect(14, yPos, 180, 8, 'F');
+        }
+        
+        const percentage = Math.round((count / workouts.length) * 100);
+        const displayType = type.charAt(0).toUpperCase() + type.slice(1);
+        
+        doc.text(displayType, 16, yPos + 5);
+        doc.text(count.toString(), 100, yPos + 5);
+        doc.text(`${percentage}%`, 140, yPos + 5);
         
         yPos += 8;
-        
-        // Calculate nutrition averages
-        const totalCaloriesNutrition = nutrition.reduce((sum, log) => sum + (log.totalCalories || 0), 0);
-        const avgCalories = totalCaloriesNutrition / nutrition.length;
-        
-        const totalProtein = nutrition.reduce((sum, log) => sum + (log.totalProtein || 0), 0);
-        const avgProtein = totalProtein / nutrition.length;
-        
-        const totalCarbs = nutrition.reduce((sum, log) => sum + (log.totalCarbs || 0), 0);
-        const avgCarbs = totalCarbs / nutrition.length;
-        
-        const totalFat = nutrition.reduce((sum, log) => sum + (log.totalFat || 0), 0);
-        const avgFat = totalFat / nutrition.length;
-        
-        const totalWater = nutrition.reduce((sum, log) => sum + (log.waterIntake || 0), 0);
-        const avgWater = totalWater / nutrition.length;
-        
-        const nutritionData = [
-          ['Average Calories', `${Math.round(avgCalories)} kcal`],
-          ['Average Protein', `${Math.round(avgProtein)} g`],
-          ['Average Carbs', `${Math.round(avgCarbs)} g`],
-          ['Average Fat', `${Math.round(avgFat)} g`],
-          ['Average Water Intake', `${Math.round(avgWater / 1000)} L`]
-        ];
-        
-        doc.autoTable({
-          body: nutritionData,
-          startY: yPos,
-          theme: 'plain',
-          styles: { fontSize: 10 }
-        });
-        
-        yPos = doc.lastAutoTable.finalY + 10;
+        i++;
       }
       
-      // Add footer
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.text('FitTrack Pro - Progress Report', 14, doc.internal.pageSize.height - 10);
-        doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10);
-      }
+      // Section for recent workouts
+      yPos += 8;
+      doc.setFontSize(12);
+      doc.text('Recent Workouts', 14, yPos);
+      yPos += 6;
       
-      // Save the PDF
-      doc.save(`FitTrack_Progress_Report_${dateRange.label.replace(/\s/g, '_')}.pdf`);
-    } catch (err) {
-      console.error('Error generating PDF:', err);
-      setError('Failed to generate PDF report');
-    } finally {
-      setGeneratingPdf(false);
+      // Create manual table headers for recent workouts
+      doc.setFontSize(10);
+      doc.setFillColor(79, 70, 229);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(14, yPos, 180, 8, 'F');
+      doc.text('Date', 16, yPos + 5);
+      doc.text('Workout', 55, yPos + 5);
+      doc.text('Duration', 120, yPos + 5);
+      doc.text('Calories', 160, yPos + 5);
+      yPos += 8;
+      
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+      
+      // Create rows for recent workouts
+      for (let i = 0; i < Math.min(5, workouts.length); i++) {
+        const workout = workouts[i];
+        
+        // Add zebra striping
+        if (i % 2 === 0) {
+          doc.setFillColor(240, 240, 240);
+          doc.rect(14, yPos, 180, 8, 'F');
+        }
+        
+        doc.text(format(new Date(workout.date), 'MMM d, yyyy'), 16, yPos + 5);
+        doc.text(workout.workoutId?.name || 'Unknown', 55, yPos + 5);
+        doc.text(`${workout.duration || 0} mins`, 120, yPos + 5);
+        doc.text(`${workout.caloriesBurned || 0} kcal`, 160, yPos + 5);
+        
+        yPos += 8;
+      }
+    } else {
+      doc.text('No workout data available for this period', 14, yPos);
+      yPos += 6;
     }
-  };
+    
+    // Add goals section
+    yPos += 10;
+    doc.setFontSize(14);
+    doc.text('Goals Progress', 14, yPos);
+    
+    yPos += 8;
+    
+    if (goals.length > 0) {
+      // Create manual table headers for goals
+      doc.setFontSize(10);
+      doc.setFillColor(79, 70, 229);
+      doc.setTextColor(255, 255, 255);
+      doc.rect(14, yPos, 180, 8, 'F');
+      doc.text('Goal', 16, yPos + 5);
+      doc.text('Status', 95, yPos + 5);
+      doc.text('Progress', 130, yPos + 5);
+      doc.text('Completion', 165, yPos + 5);
+      yPos += 8;
+      
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+      
+      // Create rows for goals
+      for (let i = 0; i < goals.length; i++) {
+        const goal = goals[i];
+        
+        // Add zebra striping
+        if (i % 2 === 0) {
+          doc.setFillColor(240, 240, 240);
+          doc.rect(14, yPos, 180, 8, 'F');
+        }
+        
+        const progress = Math.min(100, Math.round((goal.currentValue / goal.targetValue) * 100));
+        
+        // Limit text length to fit in cells
+        const goalTitle = getGoalTitle(goal);
+        const truncatedTitle = goalTitle.length > 35 ? goalTitle.substring(0, 32) + '...' : goalTitle;
+        
+        doc.text(truncatedTitle, 16, yPos + 5);
+        doc.text(goal.status.charAt(0).toUpperCase() + goal.status.slice(1), 95, yPos + 5);
+        doc.text(`${goal.currentValue} / ${goal.targetValue} ${goal.unit || ''}`, 130, yPos + 5);
+        doc.text(`${progress}%`, 165, yPos + 5);
+        
+        yPos += 8;
+      }
+    } else {
+      doc.text('No goals data available for this period', 14, yPos);
+      yPos += 6;
+    }
+    
+    // Add footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.text('FitTrack Pro - Progress Report', 14, doc.internal.pageSize.height - 10);
+      doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10);
+    }
+    
+    // Save the PDF
+    doc.save(`FitTrack_Progress_Report_${dateRange.label.replace(/\s/g, '_')}.pdf`);
+  } catch (err) {
+    console.error('Error generating PDF:', err);
+    setError('Failed to generate PDF report');
+  } finally {
+    setGeneratingPdf(false);
+  }
+};
   
   // Helper function to generate a human-readable goal title
   const getGoalTitle = (goal) => {
