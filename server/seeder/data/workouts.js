@@ -1,4 +1,3 @@
-// server/seeder/data/workouts.js
 const workouts = [
           {
             name: 'Beginner Full Body Workout',

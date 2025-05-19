@@ -1,4 +1,3 @@
-// server/utils/queryUtils.js
 /**
  * Build a MongoDB filter query from request query parameters
  * @param {Object} reqQuery - Express request.query object
