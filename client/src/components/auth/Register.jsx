@@ -22,7 +22,7 @@ const Register = () => {
     formState: { errors, isValid } 
   } = useForm({
     mode: 'onBlur',
-    reValidateMode: 'onBlur', // Only re-validate on blur, not every change
+    reValidateMode: 'onBlur', // Only re-validate on blur,not every change
     shouldFocusError: false, // Prevent automatic focus which can cause issues
     defaultValues: {
       email: '',
