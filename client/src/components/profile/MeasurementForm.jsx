@@ -1,43 +1,62 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 
 const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
-  const [formData, setFormData] = useState({
-    date: initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    weight: initialData?.weight || '',
-    bodyFat: initialData?.bodyFat || '',
-    chest: initialData?.chest || '',
-    waist: initialData?.waist || '',
-    hips: initialData?.hips || '',
-    arms: initialData?.arms || '',
-    thighs: initialData?.thighs || '',
-    notes: initialData?.notes || ''
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors },
+    reset
+  } = useForm({
+    defaultValues: {
+      date: new Date().toISOString().split('T')[0],
+      weight: '',
+      bodyFat: '',
+      chest: '',
+      waist: '',
+      hips: '',
+      arms: '',
+      thighs: '',
+      notes: ''
+    }
   });
   
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  // Set initial data when editing
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        date: initialData.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        weight: initialData.weight || '',
+        bodyFat: initialData.bodyFat || '',
+        chest: initialData.chest || '',
+        waist: initialData.waist || '',
+        hips: initialData.hips || '',
+        arms: initialData.arms || '',
+        thighs: initialData.thighs || '',
+        notes: initialData.notes || ''
+      });
+    }
+  }, [initialData, reset]);
   
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
+  const onFormSubmit = (data) => {
     // Convert string values to numbers where applicable
     const processedData = {
-      ...formData,
-      weight: formData.weight ? parseFloat(formData.weight) : undefined,
-      bodyFat: formData.bodyFat ? parseFloat(formData.bodyFat) : undefined,
-      chest: formData.chest ? parseFloat(formData.chest) : undefined,
-      waist: formData.waist ? parseFloat(formData.waist) : undefined,
-      hips: formData.hips ? parseFloat(formData.hips) : undefined,
-      arms: formData.arms ? parseFloat(formData.arms) : undefined,
-      thighs: formData.thighs ? parseFloat(formData.thighs) : undefined
+      ...data,
+      weight: data.weight ? parseFloat(data.weight) : undefined,
+      bodyFat: data.bodyFat ? parseFloat(data.bodyFat) : undefined,
+      chest: data.chest ? parseFloat(data.chest) : undefined,
+      waist: data.waist ? parseFloat(data.waist) : undefined,
+      hips: data.hips ? parseFloat(data.hips) : undefined,
+      arms: data.arms ? parseFloat(data.arms) : undefined,
+      thighs: data.thighs ? parseFloat(data.thighs) : undefined
     };
     
     onSubmit(processedData);
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
           <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -45,13 +64,17 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
           </label>
           <input
             type="date"
-            name="date"
             id="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.date ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('date', {
+              required: 'Date is required'
+            })}
           />
+          {errors.date && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date.message}</p>
+          )}
         </div>
         
         <div>
@@ -61,12 +84,24 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
           <input
             type="number"
             step="0.1"
-            name="weight"
             id="weight"
-            value={formData.weight}
-            onChange={handleChange}
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.weight ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('weight', {
+              min: {
+                value: 0,
+                message: 'Weight must be a positive number'
+              },
+              pattern: {
+                value: /^\d*\.?\d*$/,
+                message: 'Please enter a valid number'
+              }
+            })}
           />
+          {errors.weight && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.weight.message}</p>
+          )}
         </div>
         
         <div>
@@ -76,12 +111,28 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
           <input
             type="number"
             step="0.1"
-            name="bodyFat"
             id="bodyFat"
-            value={formData.bodyFat}
-            onChange={handleChange}
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.bodyFat ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('bodyFat', {
+              min: {
+                value: 0,
+                message: 'Body fat must be a positive number'
+              },
+              max: {
+                value: 100,
+                message: 'Body fat cannot exceed 100%'
+              },
+              pattern: {
+                value: /^\d*\.?\d*$/,
+                message: 'Please enter a valid number'
+              }
+            })}
           />
+          {errors.bodyFat && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.bodyFat.message}</p>
+          )}
         </div>
         
         <div>
@@ -91,12 +142,24 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
           <input
             type="number"
             step="0.1"
-            name="chest"
             id="chest"
-            value={formData.chest}
-            onChange={handleChange}
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.chest ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('chest', {
+              min: {
+                value: 0,
+                message: 'Chest measurement must be a positive number'
+              },
+              pattern: {
+                value: /^\d*\.?\d*$/,
+                message: 'Please enter a valid number'
+              }
+            })}
           />
+          {errors.chest && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.chest.message}</p>
+          )}
         </div>
         
         <div>
@@ -106,12 +169,24 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
           <input
             type="number"
             step="0.1"
-            name="waist"
             id="waist"
-            value={formData.waist}
-            onChange={handleChange}
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.waist ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('waist', {
+              min: {
+                value: 0,
+                message: 'Waist measurement must be a positive number'
+              },
+              pattern: {
+                value: /^\d*\.?\d*$/,
+                message: 'Please enter a valid number'
+              }
+            })}
           />
+          {errors.waist && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.waist.message}</p>
+          )}
         </div>
         
         <div>
@@ -121,12 +196,24 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
           <input
             type="number"
             step="0.1"
-            name="hips"
             id="hips"
-            value={formData.hips}
-            onChange={handleChange}
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.hips ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('hips', {
+              min: {
+                value: 0,
+                message: 'Hips measurement must be a positive number'
+              },
+              pattern: {
+                value: /^\d*\.?\d*$/,
+                message: 'Please enter a valid number'
+              }
+            })}
           />
+          {errors.hips && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.hips.message}</p>
+          )}
         </div>
         
         <div>
@@ -136,12 +223,24 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
           <input
             type="number"
             step="0.1"
-            name="arms"
             id="arms"
-            value={formData.arms}
-            onChange={handleChange}
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.arms ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('arms', {
+              min: {
+                value: 0,
+                message: 'Arms measurement must be a positive number'
+              },
+              pattern: {
+                value: /^\d*\.?\d*$/,
+                message: 'Please enter a valid number'
+              }
+            })}
           />
+          {errors.arms && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.arms.message}</p>
+          )}
         </div>
         
         <div>
@@ -151,48 +250,58 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
           <input
             type="number"
             step="0.1"
-            name="thighs"
             id="thighs"
-            value={formData.thighs}
-            onChange={handleChange}
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.thighs ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('thighs', {
+              min: {
+                value: 0,
+                message: 'Thighs measurement must be a positive number'
+              },
+              pattern: {
+                value: /^\d*\.?\d*$/,
+                message: 'Please enter a valid number'
+              }
+            })}
           />
+          {errors.thighs && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.thighs.message}</p>
+          )}
         </div>
-        </div>
-        
-        <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Notes
-          </label>
-          <textarea
-            name="notes"
-            id="notes"
-            rows="3"
-            value={formData.notes}
-            onChange={handleChange}
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
-          ></textarea>
-        </div>
-        
-        <div className="flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50"
-          >
-            {loading ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-        </form>
-        );
-        };
-        
-        export default MeasurementForm;
+      </div>
+      
+      <div>
+        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Notes
+        </label>
+        <textarea
+          id="notes"
+          rows="3"
+          className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+          {...register('notes')}
+        ></textarea>
+      </div>
+      
+      <div className="flex justify-end space-x-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={loading}
+          className="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50"
+        >
+          {loading ? 'Saving...' : 'Save'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default MeasurementForm;

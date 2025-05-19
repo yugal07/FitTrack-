@@ -1,46 +1,43 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
 
 const ChangePassword = () => {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   
   const { changePassword } = useAuth();
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate form
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setError('All fields are required');
-      return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-      setError('New passwords do not match');
-      return;
-    }
-    
-    if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters long');
-      return;
-    }
-    
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    watch,
+    reset,
+    formState: { errors } 
+  } = useForm({
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    },
+    mode: 'onChange'
+  });
+  
+  // For password validation
+  const newPassword = watch('newPassword');
+  
+  const onSubmit = async (data) => {
     try {
       setLoading(true);
       setError('');
       setSuccess(false);
       
-      await changePassword(currentPassword, newPassword);
+      await changePassword(data.currentPassword, data.newPassword);
       
       // Reset form
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      reset();
       
       setSuccess(true);
       
@@ -100,22 +97,26 @@ const ChangePassword = () => {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Current Password
             </label>
             <input
               id="current-password"
-              name="current-password"
               type="password"
               autoComplete="current-password"
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-base"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
+              className={`w-full px-4 py-3 rounded-lg border ${
+                errors.currentPassword ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+              } shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-base`}
               placeholder="Enter your current password"
+              {...register('currentPassword', {
+                required: 'Current password is required'
+              })}
             />
+            {errors.currentPassword && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.currentPassword.message}</p>
+            )}
           </div>
           
           <div>
@@ -124,18 +125,26 @@ const ChangePassword = () => {
             </label>
             <input
               id="new-password"
-              name="new-password"
               type="password"
               autoComplete="new-password"
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-base"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              className={`w-full px-4 py-3 rounded-lg border ${
+                errors.newPassword ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+              } shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-base`}
               placeholder="Enter your new password"
+              {...register('newPassword', {
+                required: 'New password is required',
+                minLength: {
+                  value: 8,
+                  message: 'Password must be at least 8 characters long'
+                }
+              })}
             />
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               Password must be at least 8 characters long
             </p>
+            {errors.newPassword && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.newPassword.message}</p>
+            )}
           </div>
           
           <div>
@@ -144,15 +153,20 @@ const ChangePassword = () => {
             </label>
             <input
               id="confirm-password"
-              name="confirm-password"
               type="password"
               autoComplete="new-password"
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-base"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              className={`w-full px-4 py-3 rounded-lg border ${
+                errors.confirmPassword ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+              } shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-base`}
               placeholder="Confirm your new password"
+              {...register('confirmPassword', {
+                required: 'Please confirm your new password',
+                validate: value => value === newPassword || 'Passwords do not match'
+              })}
             />
+            {errors.confirmPassword && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
+            )}
           </div>
           
           <div className="pt-4">

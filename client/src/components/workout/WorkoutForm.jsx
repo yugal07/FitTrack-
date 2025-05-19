@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
@@ -6,24 +7,36 @@ import Button from '../ui/Button';
 import ExerciseForm from './ExerciseForm';
 
 const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    date: format(new Date(), 'yyyy-MM-dd'),
-    time: format(new Date(), 'HH:mm'),
-    duration: '',
-    type: 'strength',
-    notes: '',
-    exercises: []
-  });
-  
   const [loading, setLoading] = useState(false);
   const [showExerciseForm, setShowExerciseForm] = useState(false);
   const [currentExercise, setCurrentExercise] = useState(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(null);
+  const [exercises, setExercises] = useState([]);
   
   // Get toast functions
   const toast = useToast();
   // Get toast-enabled API
   const api = apiWithToast(toast);
+  
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    setValue,
+    formState: { errors },
+    watch
+  } = useForm({
+    defaultValues: {
+      date: format(new Date(), 'yyyy-MM-dd'),
+      time: format(new Date(), 'HH:mm'),
+      duration: '',
+      type: 'strength',
+      notes: '',
+    }
+  });
+  
+  // For validation and conditional rendering
+  const watchFields = watch();
   
   // Load workout data if editing
   useEffect(() => {
@@ -31,40 +44,33 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
       // Format the date and time
       const workoutDate = new Date(workout.date);
       
-      setFormData({
-        date: format(workoutDate, 'yyyy-MM-dd'),
-        time: format(workoutDate, 'HH:mm'),
-        duration: workout.duration.toString(),
-        type: workout.workoutId?.type || 'strength',
-        notes: workout.notes || '',
-        exercises: workout.completedExercises?.map(ex => ({
-          exerciseId: ex.exerciseId?._id || ex.exerciseId,
-          exerciseName: ex.exerciseId?.name || 'Unknown Exercise',
-          sets: ex.sets?.map(set => ({
-            weight: set.weight?.toString() || '',
-            reps: set.reps?.toString() || '',
-            duration: set.duration?.toString() || '',
-            completed: set.completed !== undefined ? set.completed : true
-          })) || []
+      setValue('date', format(workoutDate, 'yyyy-MM-dd'));
+      setValue('time', format(workoutDate, 'HH:mm'));
+      setValue('duration', workout.duration.toString());
+      setValue('type', workout.workoutId?.type || 'strength');
+      setValue('notes', workout.notes || '');
+      
+      // Set exercises
+      setExercises(workout.completedExercises?.map(ex => ({
+        exerciseId: ex.exerciseId?._id || ex.exerciseId,
+        exerciseName: ex.exerciseId?.name || 'Unknown Exercise',
+        sets: ex.sets?.map(set => ({
+          weight: set.weight?.toString() || '',
+          reps: set.reps?.toString() || '',
+          duration: set.duration?.toString() || '',
+          completed: set.completed !== undefined ? set.completed : true
         })) || []
-      });
+      })) || []);
     }
-  }, [workout]);
+  }, [workout, setValue]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const onFormSubmit = async (formData) => {
     try {
       setLoading(true);
       
-      // Validate form
-      if (!formData.date || !formData.duration || !formData.type) {
-        toast.error('Please fill in all required fields');
+      // Validate exercises
+      if (exercises.length === 0) {
+        toast.error('Please add at least one exercise to your workout');
         setLoading(false);
         return;
       }
@@ -78,7 +84,7 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
         duration: parseInt(formData.duration),
         type: formData.type,
         notes: formData.notes,
-        completedExercises: formData.exercises.map(ex => ({
+        completedExercises: exercises.map(ex => ({
           exerciseId: ex.exerciseId,
           sets: ex.sets.map(set => ({
             weight: set.weight ? parseFloat(set.weight) : undefined,
@@ -97,7 +103,6 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
       // Submit to API
       if (workout) {
         await api.put(`/api/workout-sessions/${workout._id}`, workoutData);
-        // Remove toast.success here
       } else {
         // For new workouts, we need a workoutId
         // If user didn't select a specific workout template, we'll create a custom one
@@ -110,7 +115,7 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
             fitnessLevel: 'intermediate', // Default
             isCustom: true,
             duration: parseInt(formData.duration),
-            exercises: formData.exercises.map((ex, index) => ({
+            exercises: exercises.map((ex, index) => ({
               exerciseId: ex.exerciseId,
               sets: 1,
               reps: 0,
@@ -124,7 +129,6 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
         
         // Now log the workout session
         await api.post('/api/workout-sessions', workoutData);
-        // Remove toast.success here
       }
       
       // Call the onSubmit callback
@@ -145,38 +149,30 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
   };
 
   const handleEditExercise = (index) => {
-    setCurrentExercise(formData.exercises[index]);
+    setCurrentExercise(exercises[index]);
     setCurrentExerciseIndex(index);
     setShowExerciseForm(true);
   };
 
   const handleRemoveExercise = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      exercises: prev.exercises.filter((_, i) => i !== index)
-    }));
+    setExercises(prev => prev.filter((_, i) => i !== index));
     toast.success('Exercise removed');
   };
 
   const handleExerciseSubmit = (exerciseData) => {
-    setFormData(prev => {
-      const updatedExercises = [...prev.exercises];
-      
-      if (currentExerciseIndex !== null) {
-        // Edit existing exercise
-        updatedExercises[currentExerciseIndex] = exerciseData;
-        toast.success('Exercise updated');
-      } else {
-        // Add new exercise
-        updatedExercises.push(exerciseData);
-        toast.success('Exercise added');
-      }
-      
-      return {
-        ...prev,
-        exercises: updatedExercises
-      };
-    });
+    if (currentExerciseIndex !== null) {
+      // Edit existing exercise
+      setExercises(prev => {
+        const updated = [...prev];
+        updated[currentExerciseIndex] = exerciseData;
+        return updated;
+      });
+      toast.success('Exercise updated');
+    } else {
+      // Add new exercise
+      setExercises(prev => [...prev, exerciseData]);
+      toast.success('Exercise added');
+    }
     
     setShowExerciseForm(false);
     setCurrentExercise(null);
@@ -198,7 +194,7 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
           onCancel={handleExerciseCancel}
         />
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
           {/* Date and Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -208,12 +204,16 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
               <input
                 type="date"
                 id="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className={`mt-1 block w-full rounded-md ${
+                  errors.date ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+                } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
+                {...register('date', {
+                  required: 'Date is required'
+                })}
               />
+              {errors.date && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date.message}</p>
+              )}
             </div>
             
             <div>
@@ -223,10 +223,8 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
               <input
                 type="time"
                 id="time"
-                name="time"
-                value={formData.time}
-                onChange={handleChange}
                 className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                {...register('time')}
               />
             </div>
           </div>
@@ -239,11 +237,12 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
               </label>
               <select
                 id="type"
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className={`mt-1 block w-full rounded-md ${
+                  errors.type ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+                } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
+                {...register('type', {
+                  required: 'Workout type is required'
+                })}
               >
                 <option value="strength">Strength</option>
                 <option value="cardio">Cardio</option>
@@ -252,6 +251,9 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
                 <option value="hiit">HIIT</option>
                 <option value="custom">Custom</option>
               </select>
+              {errors.type && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.type.message}</p>
+              )}
             </div>
             
             <div>
@@ -261,13 +263,34 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
               <input
                 type="number"
                 id="duration"
-                name="duration"
-                value={formData.duration}
-                onChange={handleChange}
-                required
                 min="1"
-                className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                onInput={(e) => {
+                  // Prevent negative values by setting to empty if user tries to enter a negative number
+                  if (e.target.value < 0) {
+                    e.target.value = '';
+                  }
+                }}
+                className={`mt-1 block w-full rounded-md ${
+                  errors.duration ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+                } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
+                {...register('duration', {
+                  required: 'Duration is required',
+                  min: {
+                    value: 1,
+                    message: 'Duration must be at least 1 minute'
+                  },
+                  validate: {
+                    positive: value => parseInt(value) > 0 || 'Negative values are not allowed'
+                  },
+                  pattern: {
+                    value: /^[0-9]+$/,
+                    message: 'Duration must be a positive number'
+                  }
+                })}
               />
+              {errors.duration && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.duration.message}</p>
+              )}
             </div>
           </div>
           
@@ -278,12 +301,10 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
             </label>
             <textarea
               id="notes"
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
               rows="3"
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               placeholder="How did the workout feel? Any achievements or challenges?"
+              {...register('notes')}
             ></textarea>
           </div>
           
@@ -300,13 +321,13 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
               </Button>
             </div>
             
-            {formData.exercises.length === 0 ? (
+            {exercises.length === 0 ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 No exercises added yet. Click "Add Exercise" to start building your workout.
               </div>
             ) : (
               <div className="space-y-4">
-                {formData.exercises.map((exercise, index) => (
+                {exercises.map((exercise, index) => (
                   <div 
                     key={index} 
                     className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"

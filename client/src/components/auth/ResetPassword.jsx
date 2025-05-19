@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../ui/ThemeToggle';
 import api from '../../utils/api';
 
 const ResetPassword = () => {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -19,6 +18,23 @@ const ResetPassword = () => {
   const { isDark } = useTheme();
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get('token');
+  
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    watch,
+    formState: { errors } 
+  } = useForm({
+    defaultValues: {
+      password: '',
+      confirmPassword: ''
+    },
+    mode: 'onChange'
+  });
+  
+  // For password validation
+  const password = watch('password');
   
   // Verify token on component mount
   useEffect(() => {
@@ -46,19 +62,7 @@ const ResetPassword = () => {
     verifyToken();
   }, [token]);
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
-    }
-    
+  const onSubmit = async (data) => {
     try {
       setLoading(true);
       setError('');
@@ -66,7 +70,7 @@ const ResetPassword = () => {
       // This endpoint would need to be implemented on the backend
       await api.post('/api/auth/reset-password', { 
         token, 
-        newPassword: password 
+        newPassword: data.password 
       });
       
       setSuccess(true);
@@ -160,22 +164,30 @@ const ResetPassword = () => {
           </div>
         )}
         
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               New Password
             </label>
             <input
               id="password"
-              name="password"
               type="password"
               autoComplete="new-password"
-              required
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              className={`appearance-none relative block w-full px-3 py-2 border ${
+                errors.password ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+              } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
               placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...register('password', {
+                required: 'Password is required',
+                minLength: {
+                  value: 8,
+                  message: 'Password must be at least 8 characters long'
+                }
+              })}
             />
+            {errors.password && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
+            )}
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Password must be at least 8 characters long
             </p>
@@ -187,15 +199,20 @@ const ResetPassword = () => {
             </label>
             <input
               id="confirm-password"
-              name="confirm-password"
               type="password"
               autoComplete="new-password"
-              required
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              className={`appearance-none relative block w-full px-3 py-2 border ${
+                errors.confirmPassword ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+              } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
               placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              {...register('confirmPassword', {
+                required: 'Please confirm your password',
+                validate: value => value === password || 'Passwords do not match'
+              })}
             />
+            {errors.confirmPassword && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
+            )}
           </div>
           
           <div>

@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
 
 const GoalWizard = ({ onClose, onGoalCreated }) => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    type: '',
-    targetValue: '',
-    currentValue: '',
-    unit: '',
-    targetDate: '',
-    status: 'active'
-  });
   const [loading, setLoading] = useState(false);
   
   // Get toast functions
@@ -20,15 +13,38 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
   // Get toast-enabled API
   const api = apiWithToast(toast);
   
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Set default units based on goal type
-    if (name === 'type') {
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    watch, 
+    trigger,
+    setValue,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      type: '',
+      targetValue: '',
+      currentValue: '',
+      unit: '',
+      targetDate: '',
+      status: 'active'
+    },
+    mode: 'onChange'
+  });
+  
+  // Watch form values for conditional logic
+  const watchType = watch('type');
+  const watchTargetValue = watch('targetValue');
+  const watchCurrentValue = watch('currentValue');
+  const watchTargetDate = watch('targetDate');
+  
+  // Set default units based on goal type
+  useEffect(() => {
+    if (watchType) {
       let defaultUnit = '';
       
-      switch(value) {
+      switch(watchType) {
         case 'weight':
           defaultUnit = 'kg';
           break;
@@ -47,36 +63,28 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
         case 'custom':
           defaultUnit = '';
           break;
+        default:
+          defaultUnit = '';
       }
       
-      setFormData(prev => ({ ...prev, unit: defaultUnit }));
+      setValue('unit', defaultUnit);
     }
-  };
+  }, [watchType, setValue]);
   
-  const nextStep = () => {
+  const nextStep = async () => {
     // Validate current step
+    let isValid = false;
+    
     if (step === 1) {
-      if (!formData.type) {
+      isValid = await trigger('type');
+      if (!isValid) {
         toast.error('Please select a goal type');
         return;
       }
     } else if (step === 2) {
-      if (!formData.targetValue) {
-        toast.error('Please enter a target value');
-        return;
-      }
-      if (!formData.unit) {
-        toast.error('Please specify a unit of measurement');
-        return;
-      }
-      
-      if (isNaN(formData.targetValue) || parseFloat(formData.targetValue) <= 0) {
-        toast.error('Target value must be a positive number');
-        return;
-      }
-      
-      if (formData.currentValue && (isNaN(formData.currentValue) || parseFloat(formData.currentValue) < 0)) {
-        toast.error('Current value must be a positive number');
+      isValid = await trigger(['targetValue', 'unit', 'currentValue']);
+      if (!isValid) {
+        // Error messages will be displayed by the form
         return;
       }
     }
@@ -88,31 +96,15 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     setStep(prevStep => prevStep - 1);
   };
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Final validation
-    if (!formData.targetDate) {
-      toast.error('Please select a target date');
-      return;
-    }
-    
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (new Date(formData.targetDate) < today) {
-      toast.error('Target date cannot be in the past');
-      return;
-    }
-    
+  const onFormSubmit = async (data) => {
     try {
       setLoading(true);
       
       // Process data for submission
       const goalData = {
-        ...formData,
-        targetValue: parseFloat(formData.targetValue),
-        currentValue: formData.currentValue ? parseFloat(formData.currentValue) : 0
+        ...data,
+        targetValue: parseFloat(data.targetValue),
+        currentValue: data.currentValue ? parseFloat(data.currentValue) : 0
       };
       
       await api.post('/api/goals', goalData);
@@ -127,7 +119,7 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     }
   };
   
-  // Render Goal Type Selection (Step 1)
+  // Select goal type component (Step 1)
   const renderTypeSelection = () => (
     <div className="space-y-4">
       <h3 className="text-lg font-medium text-gray-900 dark:text-white">Select Goal Type</h3>
@@ -139,8 +131,8 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           title="Weight Goal"
           description="Track body weight changes"
           icon="scale"
-          selected={formData.type === 'weight'}
-          onClick={() => handleChange({ target: { name: 'type', value: 'weight' } })}
+          selected={watchType === 'weight'}
+          onClick={() => setValue('type', 'weight')}
         />
         
         <GoalTypeCard
@@ -148,8 +140,8 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           title="Strength Goal"
           description="Track lifting progress"
           icon="dumbbell"
-          selected={formData.type === 'strength'}
-          onClick={() => handleChange({ target: { name: 'type', value: 'strength' } })}
+          selected={watchType === 'strength'}
+          onClick={() => setValue('type', 'strength')}
         />
         
         <GoalTypeCard
@@ -157,8 +149,8 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           title="Endurance Goal"
           description="Track cardio performance"
           icon="running"
-          selected={formData.type === 'endurance'}
-          onClick={() => handleChange({ target: { name: 'type', value: 'endurance' } })}
+          selected={watchType === 'endurance'}
+          onClick={() => setValue('type', 'endurance')}
         />
         
         <GoalTypeCard
@@ -166,8 +158,8 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           title="Habit Goal"
           description="Track workout consistency"
           icon="calendar"
-          selected={formData.type === 'habit'}
-          onClick={() => handleChange({ target: { name: 'type', value: 'habit' } })}
+          selected={watchType === 'habit'}
+          onClick={() => setValue('type', 'habit')}
         />
         
         <GoalTypeCard
@@ -175,8 +167,8 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           title="Nutrition Goal"
           description="Track dietary habits"
           icon="food"
-          selected={formData.type === 'nutrition'}
-          onClick={() => handleChange({ target: { name: 'type', value: 'nutrition' } })}
+          selected={watchType === 'nutrition'}
+          onClick={() => setValue('type', 'nutrition')}
         />
         
         <GoalTypeCard
@@ -184,14 +176,26 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           title="Custom Goal"
           description="Create your own goal type"
           icon="star"
-          selected={formData.type === 'custom'}
-          onClick={() => handleChange({ target: { name: 'type', value: 'custom' } })}
+          selected={watchType === 'custom'}
+          onClick={() => setValue('type', 'custom')}
         />
       </div>
+      
+      {errors.type && (
+        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.type.message}</p>
+      )}
+      
+      {/* Hidden input for React Hook Form validation */}
+      <input 
+        type="hidden" 
+        {...register('type', { 
+          required: 'Please select a goal type' 
+        })} 
+      />
     </div>
   );
   
-  // Render Goal Details (Step 2)
+  // Goal details component (Step 2)
   const renderGoalDetails = () => (
     <div className="space-y-4">
       <h3 className="text-lg font-medium text-gray-900 dark:text-white">Set Goal Details</h3>
@@ -205,29 +209,45 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           <div className="mt-1 flex rounded-md shadow-sm">
             <input
               type="number"
-              name="targetValue"
               id="targetValue"
               min="0"
               step="0.1"
-              className="flex-grow focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-none rounded-l-md sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              className={`flex-grow focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-none rounded-l-md sm:text-sm ${
+                errors.targetValue ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+              } dark:bg-gray-800 dark:text-white`}
               placeholder="Enter target value"
-              value={formData.targetValue}
-              onChange={handleChange}
-              required
+              {...register('targetValue', {
+                required: 'Target value is required',
+                min: {
+                  value: 0.1,
+                  message: 'Target value must be greater than 0'
+                },
+                pattern: {
+                  value: /^[0-9]*\.?[0-9]+$/,
+                  message: 'Please enter a valid number'
+                }
+              })}
             />
             <div className="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 sm:text-sm">
               <input
                 type="text"
-                name="unit"
                 id="unit"
-                className="border-0 bg-transparent p-0 focus:ring-0"
+                className={`border-0 bg-transparent p-0 focus:ring-0 ${
+                  errors.unit ? 'text-red-500 dark:text-red-400' : ''
+                }`}
                 placeholder="Unit"
-                value={formData.unit}
-                onChange={handleChange}
-                required
+                {...register('unit', {
+                  required: 'Unit is required'
+                })}
               />
             </div>
           </div>
+          {errors.targetValue && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.targetValue.message}</p>
+          )}
+          {errors.unit && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.unit.message}</p>
+          )}
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Example: 150 lbs, 30 minutes, 10 sessions
           </p>
@@ -239,15 +259,33 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           </label>
           <input
             type="number"
-            name="currentValue"
             id="currentValue"
             min="0"
             step="0.1"
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.currentValue ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
             placeholder="Enter current value (optional)"
-            value={formData.currentValue}
-            onChange={handleChange}
+            {...register('currentValue', {
+              min: {
+                value: 0,
+                message: 'Current value cannot be negative'
+              },
+              pattern: {
+                value: /^[0-9]*\.?[0-9]*$/,
+                message: 'Please enter a valid number'
+              },
+              validate: value => {
+                if (value && watchTargetValue) {
+                  return parseFloat(value) <= parseFloat(watchTargetValue) || 'Current value cannot exceed target value';
+                }
+                return true;
+              }
+            })}
           />
+          {errors.currentValue && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.currentValue.message}</p>
+          )}
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Leave blank to start from zero
           </p>
@@ -256,15 +294,11 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     </div>
   );
   
-  // Render Target Date (Step 3)
+  // Target date component (Step 3)
   const renderTargetDate = () => {
     // Calculate minimum date (today)
     const today = new Date();
     const minDate = today.toISOString().split('T')[0];
-    
-    // Calculate default date suggestion (1 month from now)
-    const defaultDate = new Date();
-    defaultDate.setMonth(today.getMonth() + 1);
     
     return (
       <div className="space-y-4">
@@ -277,14 +311,24 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           </label>
           <input
             type="date"
-            name="targetDate"
             id="targetDate"
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.targetDate ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
             min={minDate}
-            value={formData.targetDate}
-            onChange={handleChange}
-            required
+            {...register('targetDate', {
+              required: 'Target date is required',
+              validate: value => {
+                const selectedDate = new Date(value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return selectedDate >= today || 'Target date cannot be in the past';
+              }
+            })}
           />
+          {errors.targetDate && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.targetDate.message}</p>
+          )}
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Select a realistic timeframe for your goal
           </p>
@@ -310,29 +354,30 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     );
   };
   
-  // Render Review and Confirm (Step 4)
+  // Review and confirm (Step 4)
   const renderReview = () => {
     // Convert goal type to human-readable format
     const getGoalTitle = () => {
-      switch (formData.type) {
+      switch (watchType) {
         case 'weight':
-          return `Reach ${formData.targetValue} ${formData.unit} weight`;
+          return `Reach ${watchTargetValue} ${watch('unit')} weight`;
         case 'strength':
-          return `Increase strength to ${formData.targetValue} ${formData.unit}`;
+          return `Increase strength to ${watchTargetValue} ${watch('unit')}`;
         case 'endurance':
-          return `Build endurance to ${formData.targetValue} ${formData.unit}`;
+          return `Build endurance to ${watchTargetValue} ${watch('unit')}`;
         case 'habit':
-          return `Complete ${formData.targetValue} ${formData.unit}`;
+          return `Complete ${watchTargetValue} ${watch('unit')}`;
         case 'nutrition':
-          return `Maintain ${formData.targetValue} ${formData.unit} diet`;
+          return `Maintain ${watchTargetValue} ${watch('unit')} diet`;
         case 'custom':
         default:
-          return `Custom goal: ${formData.targetValue} ${formData.unit}`;
+          return `Custom goal: ${watchTargetValue} ${watch('unit')}`;
       }
     };
     
     // Format date for display
     const formatDate = (dateString) => {
+      if (!dateString) return '';
       return new Date(dateString).toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'long',
@@ -342,12 +387,16 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     
     // Calculate days until target
     const getDaysUntilTarget = () => {
+      if (!watchTargetDate) return 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const target = new Date(formData.targetDate);
+      const target = new Date(watchTargetDate);
       const diffTime = Math.abs(target - today);
       return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
+    
+    const currentValueFormatted = watchCurrentValue || '0';
+    const progressPercentage = Math.round(((parseFloat(currentValueFormatted) || 0) / parseFloat(watchTargetValue || 1)) * 100);
     
     return (
       <div className="space-y-4">
@@ -364,12 +413,12 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Value</h4>
-                <p className="text-gray-900 dark:text-white">{formData.currentValue || '0'} {formData.unit}</p>
+                <p className="text-gray-900 dark:text-white">{currentValueFormatted} {watch('unit')}</p>
               </div>
               
               <div>
                 <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Target Date</h4>
-                <p className="text-gray-900 dark:text-white">{formatDate(formData.targetDate)}</p>
+                <p className="text-gray-900 dark:text-white">{formatDate(watchTargetDate)}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">({getDaysUntilTarget()} days from now)</p>
               </div>
             </div>
@@ -380,16 +429,16 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
               <div className="mt-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-gray-600 dark:text-gray-400">
-                    {formData.currentValue || '0'} / {formData.targetValue} {formData.unit}
+                    {currentValueFormatted} / {watchTargetValue} {watch('unit')}
                   </span>
                   <span className="font-medium text-indigo-600 dark:text-indigo-400">
-                    {Math.round(((formData.currentValue || 0) / formData.targetValue) * 100)}%
+                    {progressPercentage}%
                   </span>
                 </div>
                 <div className="mt-1 w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
                   <div 
                     className="bg-indigo-600 h-2 rounded-full" 
-                    style={{ width: `${Math.min(100, Math.round(((formData.currentValue || 0) / formData.targetValue) * 100))}%` }}
+                    style={{ width: `${Math.min(100, progressPercentage)}%` }}
                   ></div>
                 </div>
               </div>
@@ -494,7 +543,7 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
             ) : (
               <Button 
                 variant="primary" 
-                onClick={handleSubmit}
+                onClick={handleSubmit(onFormSubmit)}
                 disabled={loading}
               >
                 {loading ? 'Creating...' : 'Create Goal'}

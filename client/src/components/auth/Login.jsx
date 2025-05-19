@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -18,34 +17,38 @@ const Login = () => {
   // Get redirect location from state if available
   const from = location.state?.from?.pathname || '/dashboard';
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  if (!email.trim() || !password.trim()) {
-    setError('Please enter both email and password');
-    return;
-  }
-  
-  try {
-    setLoading(true);
-    setError('');
-    const response = await login(email, password);
-
-    console.log(response);
-    
-    // Check if user is admin and redirect appropriately
-    if (response.data.role === 'admin') {
-      navigate('/admin/dashboard', { replace: true });
-    } else {
-      navigate(from, { replace: true });
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors } 
+  } = useForm({
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false
     }
-  } catch (err) {
-    setError(err.error?.message || 'Failed to log in. Please check your credentials.');
-    console.error('Login error:', err);
-  } finally {
-    setLoading(false);
-  }
-};
+  });
+
+  const onSubmit = async (data) => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await login(data.email, data.password);
+      
+      // Check if user is admin and redirect appropriately
+      if (response.data.role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
+    } catch (err) {
+      setError(err.error?.message || 'Failed to log in. Please check your credentials.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-gradient-to-b from-indigo-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors">
@@ -94,7 +97,7 @@ const Login = () => {
             </p>
           </div>
           
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
             {error && (
               <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert">
                 <span className="block sm:inline">{error}</span>
@@ -108,15 +111,23 @@ const Login = () => {
                 </label>
                 <input
                   id="email-address"
-                  name="email"
                   type="email"
                   autoComplete="email"
-                  required
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className={`appearance-none relative block w-full px-3 py-2 border ${
+                    errors.email ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+                  } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                   placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register('email', { 
+                    required: 'Email is required',
+                    pattern: {
+                      value: /\S+@\S+\.\S+/,
+                      message: 'Please enter a valid email address'
+                    }
+                  })}
                 />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
+                )}
               </div>
               
               <div>
@@ -125,15 +136,19 @@ const Login = () => {
                 </label>
                 <input
                   id="password"
-                  name="password"
                   type="password"
                   autoComplete="current-password"
-                  required
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className={`appearance-none relative block w-full px-3 py-2 border ${
+                    errors.password ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+                  } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register('password', { 
+                    required: 'Password is required'
+                  })}
                 />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
+                )}
               </div>
             </div>
 
@@ -141,9 +156,9 @@ const Login = () => {
               <div className="flex items-center">
                 <input
                   id="remember-me"
-                  name="remember-me"
                   type="checkbox"
                   className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-700 rounded dark:bg-gray-800"
+                  {...register('rememberMe')}
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   Remember me

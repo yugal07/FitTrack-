@@ -1,24 +1,32 @@
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 
 const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    category: 'protein',
-    servingSize: 100,
-    servingUnit: 'g',
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0
-  });
-  
-  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors }, 
+    reset 
+  } = useForm({
+    defaultValues: {
+      name: '',
+      category: 'protein',
+      servingSize: 100,
+      servingUnit: 'g',
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    }
+  });
   
   // Initialize form data when editing an existing item
   useEffect(() => {
     if (item) {
-      setFormData({
+      reset({
         name: item.name || '',
         category: item.category || 'protein',
         servingSize: item.servingSize || 100,
@@ -29,68 +37,23 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
         fat: item.fat || 0
       });
     }
-  }, [item]);
+  }, [item, reset]);
   
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'servingSize' || name === 'calories' || name === 'protein' || name === 'carbs' || name === 'fat'
-        ? parseFloat(value) || 0
-        : value
-    }));
-    
-    // Clear validation error for this field
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: null
-      }));
-    }
-  };
-  
-  const validateForm = () => {
-    const newErrors = {};
-    
-    // Required validations
-    if (!formData.name.trim()) {
-      newErrors.name = 'Food name is required';
-    }
-    
-    if (formData.servingSize <= 0) {
-      newErrors.servingSize = 'Serving size must be greater than 0';
-    }
-    
-    if (formData.calories < 0) {
-      newErrors.calories = 'Calories cannot be negative';
-    }
-    
-    if (formData.protein < 0) {
-      newErrors.protein = 'Protein cannot be negative';
-    }
-    
-    if (formData.carbs < 0) {
-      newErrors.carbs = 'Carbs cannot be negative';
-    }
-    
-    if (formData.fat < 0) {
-      newErrors.fat = 'Fat cannot be negative';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
-    setIsSubmitting(true);
+  const onFormSubmit = async (data) => {
     try {
-      await onSubmit(formData);
+      setIsSubmitting(true);
+      
+      // Convert numeric string values to numbers
+      const formattedData = {
+        ...data,
+        servingSize: parseFloat(data.servingSize),
+        calories: parseFloat(data.calories),
+        protein: parseFloat(data.protein),
+        carbs: parseFloat(data.carbs),
+        fat: parseFloat(data.fat)
+      };
+      
+      await onSubmit(formattedData);
     } catch (error) {
       console.error('Error submitting form:', error);
     } finally {
@@ -119,7 +82,7 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
   ];
   
   return (
-    <form onSubmit={handleSubmit} className="p-6">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="p-6">
       <div className="space-y-6">
         <div>
           <h2 className="text-lg font-medium text-gray-900 dark:text-white">
@@ -138,15 +101,16 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
           <div className="mt-1">
             <input
               type="text"
-              name="name"
               id="name"
-              value={formData.name}
-              onChange={handleChange}
               className={`shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md ${errors.name ? 'border-red-300 dark:border-red-700' : ''}`}
+              {...register('name', {
+                required: 'Food name is required',
+                validate: value => value.trim() !== '' || 'Food name cannot be empty'
+              })}
             />
           </div>
           {errors.name && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
           )}
         </div>
         
@@ -159,10 +123,10 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
             <div className="mt-1">
               <select
                 id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
                 className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                {...register('category', {
+                  required: 'Category is required'
+                })}
               >
                 {categoryOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -178,10 +142,10 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
             <div className="mt-1">
               <select
                 id="servingUnit"
-                name="servingUnit"
-                value={formData.servingUnit}
-                onChange={handleChange}
                 className="shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                {...register('servingUnit', {
+                  required: 'Serving unit is required'
+                })}
               >
                 {unitOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -199,20 +163,25 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
           <div className="mt-1">
             <input
               type="number"
-              name="servingSize"
               id="servingSize"
               min="0.1"
               step="0.1"
-              value={formData.servingSize}
-              onChange={handleChange}
               className={`shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md ${errors.servingSize ? 'border-red-300 dark:border-red-700' : ''}`}
+              {...register('servingSize', {
+                required: 'Serving size is required',
+                min: {
+                  value: 0.1,
+                  message: 'Serving size must be greater than 0'
+                },
+                valueAsNumber: true
+              })}
             />
           </div>
           {errors.servingSize && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.servingSize}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.servingSize.message}</p>
           )}
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Amount in {formData.servingUnit}
+            Amount in {unitOptions.find(unit => unit.value === watch('servingUnit'))?.label || 'selected unit'}
           </p>
         </div>
         
@@ -224,17 +193,22 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
           <div className="mt-1">
             <input
               type="number"
-              name="calories"
               id="calories"
               min="0"
               step="1"
-              value={formData.calories}
-              onChange={handleChange}
               className={`shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md ${errors.calories ? 'border-red-300 dark:border-red-700' : ''}`}
+              {...register('calories', {
+                required: 'Calories are required',
+                min: {
+                  value: 0,
+                  message: 'Calories cannot be negative'
+                },
+                valueAsNumber: true
+              })}
             />
           </div>
           {errors.calories && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.calories}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.calories.message}</p>
           )}
         </div>
         
@@ -247,17 +221,22 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
             <div className="mt-1">
               <input
                 type="number"
-                name="protein"
                 id="protein"
                 min="0"
                 step="0.1"
-                value={formData.protein}
-                onChange={handleChange}
                 className={`shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md ${errors.protein ? 'border-red-300 dark:border-red-700' : ''}`}
+                {...register('protein', {
+                  required: 'Protein content is required',
+                  min: {
+                    value: 0,
+                    message: 'Protein cannot be negative'
+                  },
+                  valueAsNumber: true
+                })}
               />
             </div>
             {errors.protein && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.protein}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.protein.message}</p>
             )}
           </div>
           
@@ -268,17 +247,22 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
             <div className="mt-1">
               <input
                 type="number"
-                name="carbs"
                 id="carbs"
                 min="0"
                 step="0.1"
-                value={formData.carbs}
-                onChange={handleChange}
                 className={`shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md ${errors.carbs ? 'border-red-300 dark:border-red-700' : ''}`}
+                {...register('carbs', {
+                  required: 'Carbs content is required',
+                  min: {
+                    value: 0,
+                    message: 'Carbs cannot be negative'
+                  },
+                  valueAsNumber: true
+                })}
               />
             </div>
             {errors.carbs && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.carbs}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.carbs.message}</p>
             )}
           </div>
           
@@ -289,17 +273,22 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
             <div className="mt-1">
               <input
                 type="number"
-                name="fat"
                 id="fat"
                 min="0"
                 step="0.1"
-                value={formData.fat}
-                onChange={handleChange}
                 className={`shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md ${errors.fat ? 'border-red-300 dark:border-red-700' : ''}`}
+                {...register('fat', {
+                  required: 'Fat content is required',
+                  min: {
+                    value: 0,
+                    message: 'Fat cannot be negative'
+                  },
+                  valueAsNumber: true
+                })}
               />
             </div>
             {errors.fat && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.fat}</p>
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.fat.message}</p>
             )}
           </div>
         </div>

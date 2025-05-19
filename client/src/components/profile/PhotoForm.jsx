@@ -1,43 +1,38 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 const PhotoForm = ({ onSubmit, onCancel, loading }) => {
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    category: 'front',
-    notes: '',
-    file: null
-  });
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [error, setError] = useState('');
   
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    setValue,
+    watch,
+    formState: { errors } 
+  } = useForm({
+    defaultValues: {
+      date: new Date().toISOString().split('T')[0],
+      category: 'front',
+      notes: '',
+      file: null
+    }
+  });
+  
+  // Watch file input for preview
+  const watchFile = watch('file');
   
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     
     if (!file) {
-      setFormData(prev => ({ ...prev, file: null }));
+      setValue('file', null);
       setPreviewUrl(null);
       return;
     }
     
-    // Validate file type
-    if (!file.type.match('image.*')) {
-      setError('Please select an image file (jpg, png, etc.)');
-      return;
-    }
-    
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('File size must be less than 5MB');
-      return;
-    }
-    
-    setError('');
-    setFormData(prev => ({ ...prev, file }));
+    // File will be validated by React Hook Form rules
     
     // Create preview
     const reader = new FileReader();
@@ -45,25 +40,25 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
       setPreviewUrl(reader.result);
     };
     reader.readAsDataURL(file);
+    
+    // Set file in form state
+    setValue('file', file);
   };
   
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!formData.file) {
-      setError('Please select a photo to upload');
-      return;
-    }
-    
-    setError('');
-    onSubmit(formData);
+  const removeFile = () => {
+    setValue('file', null);
+    setPreviewUrl(null);
+  };
+  
+  const onFormSubmit = (data) => {
+    onSubmit(data);
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      {errors.file && (
         <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
-          {error}
+          {errors.file.message}
         </div>
       )}
       
@@ -75,13 +70,17 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
             </label>
             <input
               type="date"
-              name="date"
               id="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-              className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+              className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+                errors.date ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+              } dark:bg-gray-800 dark:text-white rounded-md`}
+              {...register('date', {
+                required: 'Date is required'
+              })}
             />
+            {errors.date && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date.message}</p>
+            )}
           </div>
           
           <div className="mb-4">
@@ -90,16 +89,19 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
             </label>
             <select
               id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
               className="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              {...register('category', {
+                required: 'Category is required'
+              })}
             >
               <option value="front">Front View</option>
               <option value="side">Side View</option>
               <option value="back">Back View</option>
               <option value="custom">Custom</option>
             </select>
+            {errors.category && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.category.message}</p>
+            )}
           </div>
           
           <div className="mb-4">
@@ -107,13 +109,11 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
               Notes
             </label>
             <textarea
-              name="notes"
               id="notes"
               rows="3"
-              value={formData.notes}
-              onChange={handleChange}
               className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
               placeholder="Optional notes about this photo"
+              {...register('notes')}
             ></textarea>
           </div>
         </div>
@@ -134,10 +134,7 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
                 <div className="flex justify-center">
                   <button
                     type="button"
-                    onClick={() => {
-                      setFormData(prev => ({ ...prev, file: null }));
-                      setPreviewUrl(null);
-                    }}
+                    onClick={removeFile}
                     className="text-sm text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300"
                   >
                     Remove
@@ -173,6 +170,17 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
                       className="sr-only"
                       accept="image/*"
                       onChange={handleFileChange}
+                      {...register('file', {
+                        required: 'Please select a photo to upload',
+                        validate: {
+                          fileType: file => 
+                            !file || file.type.startsWith('image/') || 
+                            'Please select an image file (jpg, png, etc.)',
+                          fileSize: file => 
+                            !file || file.size <= 5 * 1024 * 1024 || 
+                            'File size must be less than 5MB'
+                        }
+                      })}
                     />
                   </label>
                   <p className="pl-1">or drag and drop</p>
@@ -183,6 +191,9 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
               </div>
             )}
           </div>
+          {errors.file && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.file.message}</p>
+          )}
         </div>
       </div>
       

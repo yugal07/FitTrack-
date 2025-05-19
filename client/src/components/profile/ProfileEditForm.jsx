@@ -1,26 +1,42 @@
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 
 const ProfileEditForm = ({ initialData, onSave, onCancel, loading }) => {
-  const [formData, setFormData] = useState({
-    firstName: initialData?.firstName || '',
-    lastName: initialData?.lastName || '',
-    dateOfBirth: initialData?.dateOfBirth ? new Date(initialData.dateOfBirth).toISOString().split('T')[0] : '',
-    gender: initialData?.gender || '',
-    fitnessLevel: initialData?.fitnessLevel || 'beginner'
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors },
+    reset
+  } = useForm({
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      dateOfBirth: '',
+      gender: '',
+      fitnessLevel: 'beginner'
+    }
   });
   
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  // Initialize form with initial data when available
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        firstName: initialData.firstName || '',
+        lastName: initialData.lastName || '',
+        dateOfBirth: initialData.dateOfBirth ? new Date(initialData.dateOfBirth).toISOString().split('T')[0] : '',
+        gender: initialData.gender || '',
+        fitnessLevel: initialData.fitnessLevel || 'beginner'
+      });
+    }
+  }, [initialData, reset]);
   
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave(formData);
+  const onSubmit = (data) => {
+    onSave(data);
   };
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -28,13 +44,18 @@ const ProfileEditForm = ({ initialData, onSave, onCancel, loading }) => {
           </label>
           <input
             type="text"
-            name="firstName"
             id="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            required
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.firstName ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('firstName', { 
+              required: 'First name is required',
+              validate: value => value.trim() !== '' || 'First name cannot be empty'
+            })}
           />
+          {errors.firstName && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.firstName.message}</p>
+          )}
         </div>
         
         <div>
@@ -43,13 +64,18 @@ const ProfileEditForm = ({ initialData, onSave, onCancel, loading }) => {
           </label>
           <input
             type="text"
-            name="lastName"
             id="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            required
-            className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+              errors.lastName ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } dark:bg-gray-800 dark:text-white rounded-md`}
+            {...register('lastName', { 
+              required: 'Last name is required',
+              validate: value => value.trim() !== '' || 'Last name cannot be empty'
+            })}
           />
+          {errors.lastName && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.lastName.message}</p>
+          )}
         </div>
         
         <div>
@@ -58,12 +84,22 @@ const ProfileEditForm = ({ initialData, onSave, onCancel, loading }) => {
           </label>
           <input
             type="date"
-            name="dateOfBirth"
             id="dateOfBirth"
-            value={formData.dateOfBirth}
-            onChange={handleChange}
             className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md"
+            {...register('dateOfBirth', {
+              validate: value => {
+                if (value) {
+                  const birthDate = new Date(value);
+                  const today = new Date();
+                  return birthDate < today || 'Birth date cannot be in the future';
+                }
+                return true;
+              }
+            })}
           />
+          {errors.dateOfBirth && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.dateOfBirth.message}</p>
+          )}
         </div>
         
         <div>
@@ -72,10 +108,8 @@ const ProfileEditForm = ({ initialData, onSave, onCancel, loading }) => {
           </label>
           <select
             id="gender"
-            name="gender"
-            value={formData.gender}
-            onChange={handleChange}
             className="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            {...register('gender')}
           >
             <option value="">Select gender</option>
             <option value="male">Male</option>
@@ -91,15 +125,18 @@ const ProfileEditForm = ({ initialData, onSave, onCancel, loading }) => {
           </label>
           <select
             id="fitnessLevel"
-            name="fitnessLevel"
-            value={formData.fitnessLevel}
-            onChange={handleChange}
             className="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            {...register('fitnessLevel', {
+              required: 'Fitness level is required'
+            })}
           >
             <option value="beginner">Beginner</option>
             <option value="intermediate">Intermediate</option>
             <option value="advanced">Advanced</option>
           </select>
+          {errors.fitnessLevel && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.fitnessLevel.message}</p>
+          )}
         </div>
       </div>
       

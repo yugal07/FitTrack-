@@ -1,369 +1,69 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import ThemeToggle from '../ui/ThemeToggle';
 
-// Step components with improved UI and dark mode support
-const AccountStep = ({ formData, onChange, onNext, error }) => {
-  const [validationErrors, setValidationErrors] = useState({});
-  
-  const validate = () => {
-    const errors = {};
-    
-    if (!formData.email) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Email is invalid';
-    }
-    
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters long';
-    }
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-  
-  const handleNext = () => {
-    if (validate()) {
-      onNext();
-    }
-  };
-  
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white">Account Information</h3>
-      
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert">
-          <span className="block sm:inline">{error}</span>
-        </div>
-      )}
-      
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Email address<span className="text-red-500 ml-1">*</span>
-        </label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={onChange}
-          required
-          className={`appearance-none relative block w-full px-3 py-2 border ${
-            validationErrors.email ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
-          } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-          placeholder="name@example.com"
-        />
-        {validationErrors.email && (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.email}</p>
-        )}
-      </div>
-      
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Password<span className="text-red-500 ml-1">*</span>
-        </label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          value={formData.password}
-          onChange={onChange}
-          required
-          className={`appearance-none relative block w-full px-3 py-2 border ${
-            validationErrors.password ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
-          } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-          placeholder="••••••••"
-        />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Password must be at least 8 characters long
-        </p>
-        {validationErrors.password && (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.password}</p>
-        )}
-      </div>
-      
-      <div className="pt-4">
-        <button
-          type="button"
-          onClick={handleNext}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors"
-        >
-          Next
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const PersonalInfoStep = ({ formData, onChange, onNext, onBack, error }) => {
-  const [validationErrors, setValidationErrors] = useState({});
-  
-  const validate = () => {
-    const errors = {};
-    
-    if (!formData.firstName) {
-      errors.firstName = 'First name is required';
-    }
-    
-    if (!formData.lastName) {
-      errors.lastName = 'Last name is required';
-    }
-    
-    if (!formData.gender) {
-      errors.gender = 'Please select a gender option';
-    }
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-  
-  const handleNext = () => {
-    if (validate()) {
-      onNext();
-    }
-  };
-  
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h3>
-      
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert">
-          <span className="block sm:inline">{error}</span>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            First name<span className="text-red-500 ml-1">*</span>
-          </label>
-          <input
-            type="text"
-            id="firstName"
-            name="firstName"
-            value={formData.firstName}
-            onChange={onChange}
-            required
-            className={`appearance-none relative block w-full px-3 py-2 border ${
-              validationErrors.firstName ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
-            } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-          />
-          {validationErrors.firstName && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.firstName}</p>
-          )}
-        </div>
-        
-        <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Last name<span className="text-red-500 ml-1">*</span>
-          </label>
-          <input
-            type="text"
-            id="lastName"
-            name="lastName"
-            value={formData.lastName}
-            onChange={onChange}
-            required
-            className={`appearance-none relative block w-full px-3 py-2 border ${
-              validationErrors.lastName ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
-            } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-          />
-          {validationErrors.lastName && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.lastName}</p>
-          )}
-        </div>
-      </div>
-      
-      <div>
-        <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Date of birth
-        </label>
-        <input
-          type="date"
-          id="dateOfBirth"
-          name="dateOfBirth"
-          value={formData.dateOfBirth}
-          onChange={onChange}
-          className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Gender<span className="text-red-500 ml-1">*</span>
-        </label>
-        <select
-          id="gender"
-          name="gender"
-          value={formData.gender}
-          onChange={onChange}
-          required
-          className={`appearance-none relative block w-full px-3 py-2 border ${
-            validationErrors.gender ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
-          } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-        >
-          <option value="">Select gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-          <option value="prefer not to say">Prefer not to say</option>
-        </select>
-        {validationErrors.gender && (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.gender}</p>
-        )}
-      </div>
-      
-      <div className="pt-4 flex justify-between space-x-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="py-2 px-4 w-1/2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors"
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={handleNext}
-          className="py-2 px-4 w-1/2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors"
-        >
-          Next
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const FitnessProfileStep = ({ formData, onChange, onSubmit, onBack, loading, error }) => {
-  return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium text-gray-900 dark:text-white">Fitness Profile</h3>
-      
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert">
-          <span className="block sm:inline">{error}</span>
-        </div>
-      )}
-      
-      <div>
-        <label htmlFor="fitnessLevel" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Fitness level<span className="text-red-500 ml-1">*</span>
-        </label>
-        <select
-          id="fitnessLevel"
-          name="fitnessLevel"
-          value={formData.fitnessLevel}
-          onChange={onChange}
-          required
-          className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
-        >
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Intermediate</option>
-          <option value="advanced">Advanced</option>
-        </select>
-      </div>
-      
-      <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-md p-4">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-          </div>
-          <div className="ml-3 flex-1 md:flex md:justify-between">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              Your fitness level helps us customize workout recommendations to match your experience.
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="pt-4 flex justify-between space-x-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="py-2 px-4 w-1/2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors"
-        >
-          Back
-        </button>
-        <button
-          type="submit"
-          onClick={onSubmit}
-          disabled={loading}
-          className="py-2 px-4 w-1/2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 disabled:opacity-50 transition-colors"
-        >
-          {loading ? (
-            <div className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Creating account...
-            </div>
-          ) : (
-            'Create account'
-          )}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-// Main Register component
 const Register = () => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
-    gender: '',
-    fitnessLevel: 'beginner'
-  });
-  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { register } = useAuth();
+  const { register: registerUser } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
   
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  // React Hook Form setup
+  const { 
+    register, 
+    handleSubmit, 
+    watch, 
+    trigger,
+    formState: { errors, isValid } 
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+      firstName: '',
+      lastName: '',
+      dateOfBirth: '',
+      gender: '',
+      fitnessLevel: 'beginner'
+    }
+  });
   
-  const handleNext = () => {
-    setError('');
-    setStep(prev => prev + 1);
+  // Used to access form values
+  const watchAllFields = watch();
+  
+  // Handle form step navigation
+  const handleNext = async () => {
+    let valid = false;
+    
+    if (step === 1) {
+      valid = await trigger(['email', 'password']);
+    } else if (step === 2) {
+      valid = await trigger(['firstName', 'lastName', 'gender']);
+    }
+    
+    if (valid) {
+      setStep(prev => prev + 1);
+      setError('');
+    }
   };
   
   const handleBack = () => {
-    setError('');
     setStep(prev => prev - 1);
+    setError('');
   };
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Final validation before submission
-    if (!formData.gender) {
-      setError('Gender selection is required to create your account');
-      setStep(2); // Go back to personal info step
-      return;
-    }
-    
+  // Handle form submission
+  const onSubmit = async (data) => {
     try {
       setLoading(true);
       setError('');
-      await register(formData);
+      await registerUser(data);
       navigate('/dashboard');
     } catch (err) {
       setError(err.error?.message || 'Failed to create an account. Please try again.');
@@ -371,6 +71,262 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Step components with improved UI and dark mode support
+  const AccountStep = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Account Information</h3>
+        
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Email address<span className="text-red-500 ml-1">*</span>
+          </label>
+          <input
+            type="email"
+            id="email"
+            className={`appearance-none relative block w-full px-3 py-2 border ${
+              errors.email ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+            placeholder="name@example.com"
+            {...register('email', {
+              required: 'Email is required',
+              pattern: {
+                value: /\S+@\S+\.\S+/,
+                message: 'Email is invalid'
+              }
+            })}
+          />
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
+          )}
+        </div>
+        
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Password<span className="text-red-500 ml-1">*</span>
+          </label>
+          <input
+            type="password"
+            id="password"
+            className={`appearance-none relative block w-full px-3 py-2 border ${
+              errors.password ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+            placeholder="••••••••"
+            {...register('password', {
+              required: 'Password is required',
+              minLength: {
+                value: 8,
+                message: 'Password must be at least 8 characters long'
+              }
+            })}
+          />
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Password must be at least 8 characters long
+          </p>
+          {errors.password && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
+          )}
+        </div>
+        
+        <div className="pt-4">
+          <button
+            type="button"
+            onClick={handleNext}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const PersonalInfoStep = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h3>
+        
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              First name<span className="text-red-500 ml-1">*</span>
+            </label>
+            <input
+              type="text"
+              id="firstName"
+              className={`appearance-none relative block w-full px-3 py-2 border ${
+                errors.firstName ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+              } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+              {...register('firstName', {
+                required: 'First name is required'
+              })}
+            />
+            {errors.firstName && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.firstName.message}</p>
+            )}
+          </div>
+          
+          <div>
+            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Last name<span className="text-red-500 ml-1">*</span>
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              className={`appearance-none relative block w-full px-3 py-2 border ${
+                errors.lastName ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+              } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+              {...register('lastName', {
+                required: 'Last name is required'
+              })}
+            />
+            {errors.lastName && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.lastName.message}</p>
+            )}
+          </div>
+        </div>
+        
+        <div>
+          <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Date of birth
+          </label>
+          <input
+            type="date"
+            id="dateOfBirth"
+            className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            {...register('dateOfBirth')}
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Gender<span className="text-red-500 ml-1">*</span>
+          </label>
+          <select
+            id="gender"
+            className={`appearance-none relative block w-full px-3 py-2 border ${
+              errors.gender ? 'border-red-300 dark:border-red-700' : 'border-gray-300 dark:border-gray-700'
+            } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+            {...register('gender', {
+              required: 'Please select a gender option'
+            })}
+          >
+            <option value="">Select gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+            <option value="prefer not to say">Prefer not to say</option>
+          </select>
+          {errors.gender && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.gender.message}</p>
+          )}
+        </div>
+        
+        <div className="pt-4 flex justify-between space-x-4">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="py-2 px-4 w-1/2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors"
+          >
+            Back
+          </button>
+          <button
+            type="button"
+            onClick={handleNext}
+            className="py-2 px-4 w-1/2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const FitnessProfileStep = () => {
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Fitness Profile</h3>
+        
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg relative" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        
+        <div>
+          <label htmlFor="fitnessLevel" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Fitness level<span className="text-red-500 ml-1">*</span>
+          </label>
+          <select
+            id="fitnessLevel"
+            className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm"
+            {...register('fitnessLevel', {
+              required: 'Please select a fitness level'
+            })}
+          >
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+        </div>
+        
+        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3 flex-1 md:flex md:justify-between">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Your fitness level helps us customize workout recommendations to match your experience.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="pt-4 flex justify-between space-x-4">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="py-2 px-4 w-1/2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors"
+          >
+            Back
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="py-2 px-4 w-1/2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 disabled:opacity-50 transition-colors"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating account...
+              </div>
+            ) : (
+              'Create account'
+            )}
+          </button>
+        </div>
+      </div>
+    );
   };
   
   return (
@@ -459,36 +415,10 @@ const Register = () => {
           
           {/* Form Container with enhanced styling */}
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors">
-            <form onSubmit={handleSubmit}>
-              {step === 1 && (
-                <AccountStep 
-                  formData={formData}
-                  onChange={handleChange}
-                  onNext={handleNext}
-                  error={error}
-                />
-              )}
-              
-              {step === 2 && (
-                <PersonalInfoStep 
-                  formData={formData}
-                  onChange={handleChange}
-                  onNext={handleNext}
-                  onBack={handleBack}
-                  error={error}
-                />
-              )}
-              
-              {step === 3 && (
-                <FitnessProfileStep 
-                  formData={formData}
-                  onChange={handleChange}
-                  onSubmit={handleSubmit}
-                  onBack={handleBack}
-                  loading={loading}
-                  error={error}
-                />
-              )}
+            <form onSubmit={handleSubmit(onSubmit)}>
+              {step === 1 && <AccountStep />}
+              {step === 2 && <PersonalInfoStep />}
+              {step === 3 && <FitnessProfileStep />}
             </form>
           </div>
           
