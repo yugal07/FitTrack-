@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import api from '../../utils/api';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
 
-import Input from '../ui/Input';
 import Button from '../ui/Button';
 
 const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
