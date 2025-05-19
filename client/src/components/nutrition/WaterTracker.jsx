@@ -1,10 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 
 const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
+  const [localWaterIntake, setLocalWaterIntake] = useState(waterIntake);
+  
+  // Set up localStorage key with current date to auto-reset daily
+  const getStorageKey = () => {
+    const today = new Date();
+    return `fittrack_water_${today.toISOString().split('T')[0]}`;
+  };
+  
+  // Initialize from props and localStorage
+  useEffect(() => {
+    const storedWaterIntake = localStorage.getItem(getStorageKey());
+    
+    if (storedWaterIntake !== null) {
+      // If we have data in localStorage, use it
+      setLocalWaterIntake(parseInt(storedWaterIntake, 10));
+    } else if (waterIntake > 0) {
+      // If not, use the prop value and save to localStorage
+      setLocalWaterIntake(waterIntake);
+      localStorage.setItem(getStorageKey(), waterIntake.toString());
+    }
+  }, [waterIntake]);
   
   // Convert ml to cups (1 cup = 240ml)
   const mlToCups = (ml) => {
@@ -17,11 +38,18 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
     return Math.min(percentage, 100);
   };
   
-  // Update water intake
+  // Update water intake - both local state and backend
   const handleUpdateWater = (change) => {
     setIsUpdating(true);
-    const newAmount = Math.max(0, waterIntake + change);
+    const newAmount = Math.max(0, localWaterIntake + change);
     
+    // Update local state immediately for responsive UI
+    setLocalWaterIntake(newAmount);
+    
+    // Save to localStorage
+    localStorage.setItem(getStorageKey(), newAmount.toString());
+    
+    // Update backend
     onUpdate(newAmount)
       .finally(() => {
         setIsUpdating(false);
@@ -31,8 +59,15 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
   // Add preset amounts
   const addPresetAmount = (amount) => {
     setIsUpdating(true);
-    const newAmount = waterIntake + amount;
+    const newAmount = localWaterIntake + amount;
     
+    // Update local state immediately
+    setLocalWaterIntake(newAmount);
+    
+    // Save to localStorage
+    localStorage.setItem(getStorageKey(), newAmount.toString());
+    
+    // Update backend
     onUpdate(newAmount)
       .finally(() => {
         setIsUpdating(false);
@@ -45,8 +80,15 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
     
     setIsUpdating(true);
     const amount = parseInt(customAmount);
-    const newAmount = waterIntake + amount;
+    const newAmount = localWaterIntake + amount;
     
+    // Update local state immediately
+    setLocalWaterIntake(newAmount);
+    
+    // Save to localStorage
+    localStorage.setItem(getStorageKey(), newAmount.toString());
+    
+    // Update backend
     onUpdate(newAmount)
       .finally(() => {
         setIsUpdating(false);
@@ -57,6 +99,14 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
   // Reset water intake
   const resetWater = () => {
     setIsUpdating(true);
+    
+    // Update local state immediately
+    setLocalWaterIntake(0);
+    
+    // Save to localStorage
+    localStorage.setItem(getStorageKey(), '0');
+    
+    // Update backend
     onUpdate(0)
       .finally(() => {
         setIsUpdating(false);
@@ -65,7 +115,7 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
 
   // Get motivation message based on percentage
   const getMotivationMessage = () => {
-    const percentage = calculatePercentage(waterIntake);
+    const percentage = calculatePercentage(localWaterIntake);
     
     if (percentage === 0) return "Start hydrating! 💧";
     if (percentage < 25) return "Keep drinking! Your body needs more water. 💧";
@@ -78,7 +128,7 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
   // Render water droplets
   const renderWaterDroplets = () => {
     const totalDroplets = 8; // 8 cups = 2000ml
-    const filledDroplets = Math.min(Math.ceil((waterIntake / 2000) * totalDroplets), totalDroplets);
+    const filledDroplets = Math.min(Math.ceil((localWaterIntake / 2000) * totalDroplets), totalDroplets);
     
     return (
       <div className="flex justify-center space-x-2 my-4">
@@ -99,7 +149,7 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
   return (
     <Card
       title="Water Intake"
-      subtitle={`${waterIntake} ml (${mlToCups(waterIntake)} cups)`}
+      subtitle={`${localWaterIntake} ml (${mlToCups(localWaterIntake)} cups)`}
     >
       {expanded && renderWaterDroplets()}
       
@@ -108,7 +158,7 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
         <div className="h-12 w-full bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
           <div 
             className="h-full bg-gradient-to-r from-blue-300 to-blue-500 rounded-lg transition-all duration-500 ease-in-out"
-            style={{ width: `${calculatePercentage(waterIntake)}%` }}
+            style={{ width: `${calculatePercentage(localWaterIntake)}%` }}
           >
             <div className="h-full w-full bg-blue-500 bg-opacity-20 bg-wave-pattern"></div>
           </div>
@@ -116,7 +166,7 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
         
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-lg font-bold text-white drop-shadow-md">
-            {Math.round(calculatePercentage(waterIntake))}%
+            {Math.round(calculatePercentage(localWaterIntake))}%
           </span>
         </div>
       </div>
@@ -135,9 +185,9 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
       <div className="mt-6">
         <div className="grid grid-cols-2 gap-3 mb-4">
           <Button
-            variant={waterIntake === 0 ? "ghost" : "outline"}
+            variant={localWaterIntake === 0 ? "ghost" : "outline"}
             onClick={() => handleUpdateWater(-240)}
-            disabled={waterIntake === 0 || isUpdating}
+            disabled={localWaterIntake === 0 || isUpdating}
             fullWidth
           >
             <span className="flex items-center justify-center">
@@ -258,7 +308,7 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
         )}
         
         {/* Reset button */}
-        {waterIntake > 0 && (
+        {localWaterIntake > 0 && (
           <div className="flex justify-center">
             <Button
               variant="ghost"
