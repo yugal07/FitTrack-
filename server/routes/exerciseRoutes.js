@@ -1,4 +1,3 @@
-// server/routes/exerciseRoutes.js (update with admin protection)
 const express = require('express');
 const router = express.Router();
 const { 

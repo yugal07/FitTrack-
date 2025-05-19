@@ -1,4 +1,3 @@
-// server/controllers/adminController.js
 const { User, Exercise, Workout, WorkoutSession, Notification } = require('../models');
 
 // @desc    Get admin dashboard statistics

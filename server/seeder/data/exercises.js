@@ -1,4 +1,3 @@
-// server/seeder/data/exercises.js
 const exercises = [
           {
             name: 'Push-up',
