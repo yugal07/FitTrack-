@@ -80,11 +80,6 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
   } = useForm({
     defaultValues: initialFormState
   });
-  
-  // Set relevant presets based on meal type
-  useEffect(() => {
-    setPresets(foodPresets[formData.type] || []);
-  }, [formData.type]);
 
   // Field array for food items
   const { fields, append, remove } = useFieldArray({
