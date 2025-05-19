@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
@@ -14,15 +14,16 @@ const Register = () => {
   const { isDark } = useTheme();
   const navigate = useNavigate();
   
-  // React Hook Form setup
+  // React Hook Form setup with specialized configuration
   const { 
     register, 
     handleSubmit, 
-    watch, 
     trigger,
     formState: { errors, isValid } 
   } = useForm({
-    mode: 'onChange',
+    mode: 'onBlur',
+    reValidateMode: 'onBlur', // Only re-validate on blur, not every change
+    shouldFocusError: false, // Prevent automatic focus which can cause issues
     defaultValues: {
       email: '',
       password: '',
@@ -34,11 +35,8 @@ const Register = () => {
     }
   });
   
-  // Used to access form values
-  const watchAllFields = watch();
-  
   // Handle form step navigation
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     let valid = false;
     
     if (step === 1) {
@@ -51,15 +49,15 @@ const Register = () => {
       setStep(prev => prev + 1);
       setError('');
     }
-  };
+  }, [step, trigger]);
   
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     setStep(prev => prev - 1);
     setError('');
-  };
+  }, []);
   
   // Handle form submission
-  const onSubmit = async (data) => {
+  const onSubmit = useCallback(async (data) => {
     try {
       setLoading(true);
       setError('');
@@ -71,10 +69,10 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [registerUser, navigate]);
 
   // Step components with improved UI and dark mode support
-  const AccountStep = () => {
+  const AccountStep = memo(() => {
     return (
       <div className="space-y-6">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">Account Information</h3>
@@ -147,9 +145,9 @@ const Register = () => {
         </div>
       </div>
     );
-  };
+  });
 
-  const PersonalInfoStep = () => {
+  const PersonalInfoStep = memo(() => {
     return (
       <div className="space-y-6">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h3>
@@ -254,9 +252,9 @@ const Register = () => {
         </div>
       </div>
     );
-  };
+  });
 
-  const FitnessProfileStep = () => {
+  const FitnessProfileStep = memo(() => {
     return (
       <div className="space-y-6">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">Fitness Profile</h3>
@@ -327,7 +325,7 @@ const Register = () => {
         </div>
       </div>
     );
-  };
+  });
   
   return (
     <div className="min-h-screen flex bg-gradient-to-b from-indigo-50 to-white dark:from-gray-900 dark:to-gray-800 transition-colors">
@@ -415,10 +413,11 @@ const Register = () => {
           
           {/* Form Container with enhanced styling */}
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 border border-gray-200 dark:border-gray-700 transition-colors">
-            <form onSubmit={handleSubmit(onSubmit)}>
-              {step === 1 && <AccountStep />}
-              {step === 2 && <PersonalInfoStep />}
-              {step === 3 && <FitnessProfileStep />}
+            <form onSubmit={handleSubmit(onSubmit)} noValidate>
+              {/* Use key to force re-render of step components */}
+              {step === 1 && <AccountStep key="account-step" />}
+              {step === 2 && <PersonalInfoStep key="personal-step" />}
+              {step === 3 && <FitnessProfileStep key="fitness-step" />}
             </form>
           </div>
           
