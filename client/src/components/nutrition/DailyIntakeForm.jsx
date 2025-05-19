@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import { useEffect, useState } from 'react';
-import api from '../../utils/api';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
 
@@ -81,11 +79,6 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
   } = useForm({
     defaultValues: initialFormState
   });
-  
-  // Set relevant presets based on meal type
-  useEffect(() => {
-    setPresets(foodPresets[formData.type] || []);
-  }, [formData.type]);
 
   // Field array for food items
   const { fields, append, remove } = useFieldArray({
