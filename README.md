@@ -17,10 +17,12 @@ FitTrack is a comprehensive fitness tracking application built with the MERN sta
 
 ### Frontend
 - React (with Vite)
-- Material-UI (MUI)
+- Tailwind CSS
 - React Router
 - Context API for state management
 - Axios for API requests
+- ESLint for code linting
+- Prettier for code formatting
 
 ### Backend
 - Node.js
