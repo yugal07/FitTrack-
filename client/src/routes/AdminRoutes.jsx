@@ -15,21 +15,24 @@ import NotificationHistory from '../components/admin/notifications/NotificationH
 const AdminRoutes = () => {
   return (
     <Routes>
-      <Route path="/admin" element={
-        <AuthGuard requireAdmin={true}>
-          <AdminLayout />
-        </AuthGuard>
-      }>
-        <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="users" element={<UserList />} />
-        <Route path="users/:id" element={<UserDetail />} />
-        <Route path="analytics" element={<AnalyticsDashboard />} />
-        <Route path="exercises" element={<ExerciseManager />} />
-        <Route path="workouts" element={<WorkoutManager />} />
-        <Route path="nutrition" element={<NutritionManager />} />
-        <Route path="announcements" element={<AnnouncementCreator />} />
-        <Route path="notifications" element={<NotificationHistory />} />
+      <Route
+        path='/admin'
+        element={
+          <AuthGuard requireAdmin={true}>
+            <AdminLayout />
+          </AuthGuard>
+        }
+      >
+        <Route index element={<Navigate to='/admin/dashboard' replace />} />
+        <Route path='dashboard' element={<AdminDashboard />} />
+        <Route path='users' element={<UserList />} />
+        <Route path='users/:id' element={<UserDetail />} />
+        <Route path='analytics' element={<AnalyticsDashboard />} />
+        <Route path='exercises' element={<ExerciseManager />} />
+        <Route path='workouts' element={<WorkoutManager />} />
+        <Route path='nutrition' element={<NutritionManager />} />
+        <Route path='announcements' element={<AnnouncementCreator />} />
+        <Route path='notifications' element={<NotificationHistory />} />
       </Route>
     </Routes>
   );

@@ -12,8 +12,8 @@ exports.uploadProgressPhoto = async (req, res) => {
         success: false,
         error: {
           code: 'NO_FILE',
-          message: 'No file uploaded'
-        }
+          message: 'No file uploaded',
+        },
       });
     }
 
@@ -30,8 +30,8 @@ exports.uploadProgressPhoto = async (req, res) => {
         success: false,
         error: {
           code: 'PROFILE_NOT_FOUND',
-          message: 'Profile not found'
-        }
+          message: 'Profile not found',
+        },
       });
     }
 
@@ -43,7 +43,7 @@ exports.uploadProgressPhoto = async (req, res) => {
       date: new Date(),
       photoUrl: filePath,
       category: category || 'front',
-      notes: notes || ''
+      notes: notes || '',
     };
 
     // Add to progress photos array
@@ -56,9 +56,9 @@ exports.uploadProgressPhoto = async (req, res) => {
       success: true,
       data: {
         ...progressPhoto,
-        url: `${req.protocol}://${req.get('host')}/${filePath}`
+        url: `${req.protocol}://${req.get('host')}/${filePath}`,
       },
-      message: 'Progress photo uploaded successfully'
+      message: 'Progress photo uploaded successfully',
     });
   } catch (error) {
     console.error('Error in uploadProgressPhoto:', error);
@@ -72,8 +72,8 @@ exports.uploadProgressPhoto = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -88,8 +88,8 @@ exports.uploadProfilePicture = async (req, res) => {
         success: false,
         error: {
           code: 'NO_FILE',
-          message: 'No file uploaded'
-        }
+          message: 'No file uploaded',
+        },
       });
     }
 
@@ -104,8 +104,8 @@ exports.uploadProfilePicture = async (req, res) => {
         success: false,
         error: {
           code: 'USER_NOT_FOUND',
-          message: 'User not found'
-        }
+          message: 'User not found',
+        },
       });
     }
 
@@ -127,9 +127,9 @@ exports.uploadProfilePicture = async (req, res) => {
       success: true,
       data: {
         profilePicture: filePath,
-        url: `${req.protocol}://${req.get('host')}/${filePath}`
+        url: `${req.protocol}://${req.get('host')}/${filePath}`,
       },
-      message: 'Profile picture updated successfully'
+      message: 'Profile picture updated successfully',
     });
   } catch (error) {
     console.error('Error in uploadProfilePicture:', error);
@@ -143,8 +143,8 @@ exports.uploadProfilePicture = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -161,8 +161,8 @@ exports.deleteProgressPhoto = async (req, res) => {
         success: false,
         error: {
           code: 'PROFILE_NOT_FOUND',
-          message: 'Profile not found'
-        }
+          message: 'Profile not found',
+        },
       });
     }
 
@@ -176,8 +176,8 @@ exports.deleteProgressPhoto = async (req, res) => {
         success: false,
         error: {
           code: 'PHOTO_NOT_FOUND',
-          message: 'Progress photo not found'
-        }
+          message: 'Progress photo not found',
+        },
       });
     }
 
@@ -195,7 +195,7 @@ exports.deleteProgressPhoto = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Progress photo deleted successfully'
+      message: 'Progress photo deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteProgressPhoto:', error);
@@ -203,8 +203,8 @@ exports.deleteProgressPhoto = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -223,8 +223,8 @@ exports.serveFile = (req, res) => {
       success: false,
       error: {
         code: 'INVALID_FOLDER',
-        message: 'Invalid folder specified'
-      }
+        message: 'Invalid folder specified',
+      },
     });
   }
 
@@ -232,15 +232,15 @@ exports.serveFile = (req, res) => {
   const filePath = path.join(__dirname, '../uploads', folder, filename);
 
   // Send file
-  res.sendFile(filePath, (err) => {
+  res.sendFile(filePath, err => {
     if (err) {
       console.error('Error serving file:', err);
       res.status(404).json({
         success: false,
         error: {
           code: 'FILE_NOT_FOUND',
-          message: 'File not found'
-        }
+          message: 'File not found',
+        },
       });
     }
   });

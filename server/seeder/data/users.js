@@ -13,10 +13,10 @@ const users = [
       notifications: {
         workoutReminders: true,
         goalMilestones: true,
-        nutritionReminders: true
+        nutritionReminders: true,
       },
-      measurementUnit: 'metric'
-    }
+      measurementUnit: 'metric',
+    },
   },
   {
     firstName: 'John',
@@ -32,10 +32,10 @@ const users = [
       notifications: {
         workoutReminders: true,
         goalMilestones: true,
-        nutritionReminders: false
+        nutritionReminders: false,
       },
-      measurementUnit: 'imperial'
-    }
+      measurementUnit: 'imperial',
+    },
   },
   {
     firstName: 'Jane',
@@ -51,10 +51,10 @@ const users = [
       notifications: {
         workoutReminders: true,
         goalMilestones: false,
-        nutritionReminders: true
+        nutritionReminders: true,
       },
-      measurementUnit: 'metric'
-    }
+      measurementUnit: 'metric',
+    },
   },
   {
     firstName: 'Alex',
@@ -70,10 +70,10 @@ const users = [
       notifications: {
         workoutReminders: false,
         goalMilestones: true,
-        nutritionReminders: true
+        nutritionReminders: true,
       },
-      measurementUnit: 'metric'
-    }
+      measurementUnit: 'metric',
+    },
   },
   {
     firstName: 'Sarah',
@@ -89,11 +89,11 @@ const users = [
       notifications: {
         workoutReminders: true,
         goalMilestones: true,
-        nutritionReminders: true
+        nutritionReminders: true,
       },
-      measurementUnit: 'imperial'
-    }
-  }
+      measurementUnit: 'imperial',
+    },
+  },
 ];
 
 module.exports = users;

@@ -1,4 +1,3 @@
-
 /**
  * Pagination helper for MongoDB queries
  * @param {Object} req - Express request object
@@ -20,14 +19,14 @@ exports.getPagination = (req, query = {}, options = {}) => {
     page,
     limit,
     startIndex,
-    endIndex
+    endIndex,
   };
 
   // Add next page if available
   if (endIndex < options.totalDocs) {
     pagination.next = {
       page: page + 1,
-      limit
+      limit,
     };
   }
 
@@ -35,7 +34,7 @@ exports.getPagination = (req, query = {}, options = {}) => {
   if (startIndex > 0) {
     pagination.prev = {
       page: page - 1,
-      limit
+      limit,
     };
   }
 
@@ -49,23 +48,23 @@ exports.getPagination = (req, query = {}, options = {}) => {
 };
 
 /**
-         * Apply pagination to a Mongoose query
-         * @param {Object} query - Mongoose query
-         * @param {Object} pagination - Pagination data from getPagination
-         * @returns {Object} Modified query with pagination
-         */
+ * Apply pagination to a Mongoose query
+ * @param {Object} query - Mongoose query
+ * @param {Object} pagination - Pagination data from getPagination
+ * @returns {Object} Modified query with pagination
+ */
 exports.applyPagination = (query, pagination) => {
   return query.skip(pagination.startIndex).limit(pagination.limit);
 };
 
 /**
-         * Complete pagination handler - combining count, pagination and query in one function
-         * @param {Object} req - Express request
-         * @param {Object} Model - Mongoose model
-         * @param {Object} query - Query conditions
-         * @param {Object} options - Additional options
-         * @returns {Promise<Object>} Full pagination result
-         */
+ * Complete pagination handler - combining count, pagination and query in one function
+ * @param {Object} req - Express request
+ * @param {Object} Model - Mongoose model
+ * @param {Object} query - Query conditions
+ * @param {Object} options - Additional options
+ * @returns {Promise<Object>} Full pagination result
+ */
 exports.paginateResults = async (req, Model, query = {}, options = {}) => {
   try {
     // Count total documents
@@ -74,7 +73,7 @@ exports.paginateResults = async (req, Model, query = {}, options = {}) => {
     // Calculate pagination
     const pagination = exports.getPagination(req, query, {
       ...options,
-      totalDocs
+      totalDocs,
     });
 
     // Apply basic pagination to query
@@ -108,9 +107,9 @@ exports.paginateResults = async (req, Model, query = {}, options = {}) => {
       pagination: {
         ...pagination,
         total: totalDocs,
-        pages: Math.ceil(totalDocs / pagination.limit)
+        pages: Math.ceil(totalDocs / pagination.limit),
       },
-      data: results
+      data: results,
     };
   } catch (error) {
     console.error('Pagination error:', error);

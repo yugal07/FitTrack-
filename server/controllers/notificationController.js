@@ -34,14 +34,14 @@ exports.getNotifications = async (req, res) => {
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
-        limit
+        limit,
       };
     }
 
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
-        limit
+        limit,
       };
     }
 
@@ -53,9 +53,9 @@ exports.getNotifications = async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
         page: parseInt(page),
-        limit: parseInt(limit)
+        limit: parseInt(limit),
       },
-      data: notifications
+      data: notifications,
     });
   } catch (error) {
     console.error('Error in getNotifications:', error);
@@ -63,8 +63,8 @@ exports.getNotifications = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -81,8 +81,8 @@ exports.markAsRead = async (req, res) => {
         success: false,
         error: {
           code: 'NOTIFICATION_NOT_FOUND',
-          message: 'Notification not found'
-        }
+          message: 'Notification not found',
+        },
       });
     }
 
@@ -92,8 +92,8 @@ exports.markAsRead = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to access this notification'
-        }
+          message: 'Not authorized to access this notification',
+        },
       });
     }
 
@@ -103,7 +103,7 @@ exports.markAsRead = async (req, res) => {
 
     res.json({
       success: true,
-      data: notification
+      data: notification,
     });
   } catch (error) {
     console.error('Error in markAsRead:', error);
@@ -111,8 +111,8 @@ exports.markAsRead = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -129,7 +129,7 @@ exports.markAllAsRead = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'All notifications marked as read'
+      message: 'All notifications marked as read',
     });
   } catch (error) {
     console.error('Error in markAllAsRead:', error);
@@ -137,8 +137,8 @@ exports.markAllAsRead = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -155,8 +155,8 @@ exports.deleteNotification = async (req, res) => {
         success: false,
         error: {
           code: 'NOTIFICATION_NOT_FOUND',
-          message: 'Notification not found'
-        }
+          message: 'Notification not found',
+        },
       });
     }
 
@@ -166,8 +166,8 @@ exports.deleteNotification = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to delete this notification'
-        }
+          message: 'Not authorized to delete this notification',
+        },
       });
     }
 
@@ -175,7 +175,7 @@ exports.deleteNotification = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Notification deleted successfully'
+      message: 'Notification deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteNotification:', error);
@@ -183,8 +183,8 @@ exports.deleteNotification = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -194,11 +194,7 @@ exports.deleteNotification = async (req, res) => {
 // @access  Private
 exports.updateNotificationPreferences = async (req, res) => {
   try {
-    const {
-      workoutReminders,
-      goalMilestones,
-      nutritionReminders
-    } = req.body;
+    const { workoutReminders, goalMilestones, nutritionReminders } = req.body;
 
     const user = await User.findById(req.user._id);
 
@@ -207,8 +203,8 @@ exports.updateNotificationPreferences = async (req, res) => {
         success: false,
         error: {
           code: 'USER_NOT_FOUND',
-          message: 'User not found'
-        }
+          message: 'User not found',
+        },
       });
     }
 
@@ -230,7 +226,7 @@ exports.updateNotificationPreferences = async (req, res) => {
     res.json({
       success: true,
       data: user.preferences.notifications,
-      message: 'Notification preferences updated successfully'
+      message: 'Notification preferences updated successfully',
     });
   } catch (error) {
     console.error('Error in updateNotificationPreferences:', error);
@@ -238,8 +234,8 @@ exports.updateNotificationPreferences = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -270,7 +266,7 @@ exports.createWorkoutReminder = async (userId, workoutId, scheduledTime) => {
       message: `Time for your ${workout.name} workout`,
       read: false,
       actionLink: `/workouts/${workoutId}`,
-      relatedId: workoutId
+      relatedId: workoutId,
     });
 
     return notification;
@@ -311,7 +307,7 @@ exports.createGoalAchievement = async (userId, goalId) => {
       message: `Congratulations! You've reached your ${goal.type} goal`,
       read: false,
       actionLink: `/goals/${goalId}`,
-      relatedId: goalId
+      relatedId: goalId,
     });
 
     return notification;
@@ -322,7 +318,7 @@ exports.createGoalAchievement = async (userId, goalId) => {
 };
 
 // Create nutrition reminder notification
-exports.createNutritionReminder = async (userId) => {
+exports.createNutritionReminder = async userId => {
   try {
     const user = await User.findById(userId);
 
@@ -335,10 +331,10 @@ exports.createNutritionReminder = async (userId) => {
       userId,
       type: 'nutrition',
       title: 'Nutrition Reminder',
-      message: 'Don\'t forget to log your meals for today',
+      message: "Don't forget to log your meals for today",
       read: false,
       actionLink: '/nutrition',
-      relatedId: null
+      relatedId: null,
     });
 
     return notification;
@@ -362,7 +358,7 @@ exports.createSystemNotification = async (title, message, userId = null) => {
         type: 'system',
         title,
         message,
-        read: false
+        read: false,
       }));
 
       await Notification.insertMany(notifications);
@@ -374,7 +370,7 @@ exports.createSystemNotification = async (title, message, userId = null) => {
         type: 'system',
         title,
         message,
-        read: false
+        read: false,
       });
 
       return notification;

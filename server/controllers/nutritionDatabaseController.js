@@ -5,12 +5,7 @@ const NutritionItem = require('../models/NutritionItem');
 // @access  Private/Admin
 exports.getNutritionItems = async (req, res) => {
   try {
-    const {
-      category,
-      search,
-      page = 1,
-      limit = 10
-    } = req.query;
+    const { category, search, page = 1, limit = 10 } = req.query;
 
     // Build query
     const query = {};
@@ -44,14 +39,14 @@ exports.getNutritionItems = async (req, res) => {
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
-        limit
+        limit,
       };
     }
 
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
-        limit
+        limit,
       };
     }
 
@@ -63,9 +58,9 @@ exports.getNutritionItems = async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
         page: parseInt(page),
-        limit: parseInt(limit)
+        limit: parseInt(limit),
       },
-      data: nutritionItems
+      data: nutritionItems,
     });
   } catch (error) {
     console.error('Error in getNutritionItems:', error);
@@ -73,8 +68,8 @@ exports.getNutritionItems = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -91,14 +86,14 @@ exports.getNutritionItem = async (req, res) => {
         success: false,
         error: {
           code: 'ITEM_NOT_FOUND',
-          message: 'Nutrition item not found'
-        }
+          message: 'Nutrition item not found',
+        },
       });
     }
 
     res.json({
       success: true,
-      data: nutritionItem
+      data: nutritionItem,
     });
   } catch (error) {
     console.error('Error in getNutritionItem:', error);
@@ -106,8 +101,8 @@ exports.getNutritionItem = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -125,7 +120,7 @@ exports.createNutritionItem = async (req, res) => {
       calories,
       protein,
       carbs,
-      fat
+      fat,
     } = req.body;
 
     // Create nutrition item
@@ -138,13 +133,13 @@ exports.createNutritionItem = async (req, res) => {
       protein,
       carbs,
       fat,
-      createdBy: req.user._id
+      createdBy: req.user._id,
     });
 
     res.status(201).json({
       success: true,
       data: nutritionItem,
-      message: 'Nutrition item created successfully'
+      message: 'Nutrition item created successfully',
     });
   } catch (error) {
     console.error('Error in createNutritionItem:', error);
@@ -152,8 +147,8 @@ exports.createNutritionItem = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -171,7 +166,7 @@ exports.updateNutritionItem = async (req, res) => {
       calories,
       protein,
       carbs,
-      fat
+      fat,
     } = req.body;
 
     const nutritionItem = await NutritionItem.findById(req.params.id);
@@ -181,20 +176,36 @@ exports.updateNutritionItem = async (req, res) => {
         success: false,
         error: {
           code: 'ITEM_NOT_FOUND',
-          message: 'Nutrition item not found'
-        }
+          message: 'Nutrition item not found',
+        },
       });
     }
 
     // Update fields
-    if (name) {nutritionItem.name = name;}
-    if (category) {nutritionItem.category = category;}
-    if (servingSize) {nutritionItem.servingSize = servingSize;}
-    if (servingUnit) {nutritionItem.servingUnit = servingUnit;}
-    if (calories !== undefined) {nutritionItem.calories = calories;}
-    if (protein !== undefined) {nutritionItem.protein = protein;}
-    if (carbs !== undefined) {nutritionItem.carbs = carbs;}
-    if (fat !== undefined) {nutritionItem.fat = fat;}
+    if (name) {
+      nutritionItem.name = name;
+    }
+    if (category) {
+      nutritionItem.category = category;
+    }
+    if (servingSize) {
+      nutritionItem.servingSize = servingSize;
+    }
+    if (servingUnit) {
+      nutritionItem.servingUnit = servingUnit;
+    }
+    if (calories !== undefined) {
+      nutritionItem.calories = calories;
+    }
+    if (protein !== undefined) {
+      nutritionItem.protein = protein;
+    }
+    if (carbs !== undefined) {
+      nutritionItem.carbs = carbs;
+    }
+    if (fat !== undefined) {
+      nutritionItem.fat = fat;
+    }
 
     // Save nutrition item
     await nutritionItem.save();
@@ -202,7 +213,7 @@ exports.updateNutritionItem = async (req, res) => {
     res.json({
       success: true,
       data: nutritionItem,
-      message: 'Nutrition item updated successfully'
+      message: 'Nutrition item updated successfully',
     });
   } catch (error) {
     console.error('Error in updateNutritionItem:', error);
@@ -210,8 +221,8 @@ exports.updateNutritionItem = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -228,8 +239,8 @@ exports.deleteNutritionItem = async (req, res) => {
         success: false,
         error: {
           code: 'ITEM_NOT_FOUND',
-          message: 'Nutrition item not found'
-        }
+          message: 'Nutrition item not found',
+        },
       });
     }
 
@@ -237,7 +248,7 @@ exports.deleteNutritionItem = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Nutrition item deleted successfully'
+      message: 'Nutrition item deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteNutritionItem:', error);
@@ -245,9 +256,8 @@ exports.deleteNutritionItem = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
-

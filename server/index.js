@@ -2,10 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
-const { notFound, errorHandler, validationErrorHandler } = require('./middleware/errorMiddleware');
+const {
+  notFound,
+  errorHandler,
+  validationErrorHandler,
+} = require('./middleware/errorMiddleware');
 const path = require('path');
 const morgan = require('morgan');
-const {startNotificationSchedulers} = require('./services/notificationScheduler');
+const {
+  startNotificationSchedulers,
+} = require('./services/notificationScheduler');
 
 dotenv.config();
 
@@ -42,11 +48,11 @@ app.use('/api/goals', goalRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/workouts', workoutRoutes);
 app.use('/api/workout-sessions', workoutSessionRoutes);
-app.use('/api/nutrition' , nutritionRoutes);
-app.use('/api/uploads' , uploadRoutes);
-app.use('/api/notifications' , notificationRoutes);
+app.use('/api/nutrition', nutritionRoutes);
+app.use('/api/uploads', uploadRoutes);
+app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin/nutrition' , adminNutritionRoutes);
+app.use('/api/admin/nutrition', adminNutritionRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'hahaha' });

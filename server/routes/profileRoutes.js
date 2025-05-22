@@ -8,27 +8,26 @@ const {
   getProgressPhotos,
   uploadProgressPhoto,
   deleteProgressPhoto,
-  getPhotoComparison
+  getPhotoComparison,
 } = require('../controllers/profileController');
 const { protect } = require('../middleware/authMiddleware');
 
 // All routes are protected
 router.use(protect);
 
-router.route('/measurements')
-  .get(getMeasurements)
-  .post(addMeasurement);
+router.route('/measurements').get(getMeasurements).post(addMeasurement);
 
-router.route('/measurements/:id')
+router
+  .route('/measurements/:id')
   .put(updateMeasurement)
   .delete(deleteMeasurement);
 
-router.route('/progress-photos')
+router
+  .route('/progress-photos')
   .get(getProgressPhotos)
   .post(uploadProgressPhoto);
 
-router.route('/progress-photos/:id')
-  .delete(deleteProgressPhoto);
+router.route('/progress-photos/:id').delete(deleteProgressPhoto);
 
 router.get('/progress-photos/comparison', getPhotoComparison);
 

@@ -15,5 +15,5 @@ module.exports = {
   WorkoutSession,
   NutritionLog,
   Notification,
-  NutritionItem
+  NutritionItem,
 };

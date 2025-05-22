@@ -5,7 +5,7 @@ const {
   markAsRead,
   markAllAsRead,
   deleteNotification,
-  updateNotificationPreferences
+  updateNotificationPreferences,
 } = require('../controllers/notificationController');
 const { protect, admin } = require('../middleware/authMiddleware');
 

@@ -5,17 +5,25 @@ const bcrypt = require('bcryptjs');
 const { User, Profile } = require('../models');
 
 // Generate JWT token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'your-jwt-secret-key-here', {
-    expiresIn: '30d',
-  });
+const generateToken = id => {
+  return jwt.sign(
+    { id },
+    process.env.JWT_SECRET || 'your-jwt-secret-key-here',
+    {
+      expiresIn: '30d',
+    }
+  );
 };
 
 // Generate refresh token
-const generateRefreshToken = (id) => {
-  return jwt.sign({ id }, process.env.REFRESH_TOKEN_SECRET || 'refresh-secret-key', {
-    expiresIn: '7d', // Refresh token lasts longer
-  });
+const generateRefreshToken = id => {
+  return jwt.sign(
+    { id },
+    process.env.REFRESH_TOKEN_SECRET || 'refresh-secret-key',
+    {
+      expiresIn: '7d', // Refresh token lasts longer
+    }
+  );
 };
 
 // @desc    Register a new user
@@ -23,7 +31,15 @@ const generateRefreshToken = (id) => {
 // @access  Public
 exports.registerUser = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, dateOfBirth, gender, fitnessLevel } = req.body;
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      fitnessLevel,
+    } = req.body;
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -142,7 +158,7 @@ exports.loginUser = async (req, res) => {
         profilePicture: user.profilePicture,
         token: token,
         refreshToken: refreshToken,
-        role: user.role
+        role: user.role,
       },
     });
   } catch (error) {
@@ -255,7 +271,8 @@ exports.forgotPassword = async (req, res) => {
     // For security reasons, don't reveal whether a user exists
     res.json({
       success: true,
-      message: 'If a user with that email exists, a password reset link will be sent',
+      message:
+        'If a user with that email exists, a password reset link will be sent',
     });
   } catch (error) {
     console.error('Error in forgotPassword:', error);

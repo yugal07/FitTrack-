@@ -15,7 +15,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 });
 
 // Hash password helper function
-const hashPassword = async (password) => {
+const hashPassword = async password => {
   const salt = await bcrypt.genSalt(10);
   return bcrypt.hash(password, salt);
 };
@@ -40,18 +40,22 @@ const importData = async () => {
     console.log('Creating seed users...');
 
     // Get existing emails to avoid duplicates
-    const existingEmails = resetUsers ? [] : (await User.find({}).select('email')).map(user => user.email);
+    const existingEmails = resetUsers
+      ? []
+      : (await User.find({}).select('email')).map(user => user.email);
 
     // Filter out users that already exist
-    const newUsers = userData.filter(user => !existingEmails.includes(user.email));
+    const newUsers = userData.filter(
+      user => !existingEmails.includes(user.email)
+    );
 
     // Hash passwords for all new users
     const usersWithHashedPasswords = await Promise.all(
-      newUsers.map(async (user) => {
+      newUsers.map(async user => {
         const hashedPassword = await hashPassword(user.password);
         return {
           ...user,
-          password: hashedPassword
+          password: hashedPassword,
         };
       })
     );
@@ -67,21 +71,25 @@ const importData = async () => {
         userId: user._id,
         goals: [],
         measurements: [],
-        progressPhotos: []
+        progressPhotos: [],
       }));
 
       await Profile.insertMany(profiles);
       console.log(`${profiles.length} user profiles created`);
 
       // Find admin user from created users
-      adminUser = createdUsers.find(user => user.email === 'admin@fittrack.com');
+      adminUser = createdUsers.find(
+        user => user.email === 'admin@fittrack.com'
+      );
     }
 
     // If admin user wasn't created now, try to find existing admin
     if (!adminUser) {
       adminUser = await User.findOne({ email: 'admin@fittrack.com' });
       if (!adminUser) {
-        throw new Error('Admin user not found! Make sure admin@fittrack.com exists in the seed data');
+        throw new Error(
+          'Admin user not found! Make sure admin@fittrack.com exists in the seed data'
+        );
       }
     }
 
@@ -96,7 +104,9 @@ const importData = async () => {
       const updatedExercises = workout.exercises.map((ex, index) => {
         const exercise = createdExercises.find(e => e.name === ex.exerciseName);
         if (!exercise) {
-          throw new Error(`Exercise ${ex.exerciseName} not found in created exercises`);
+          throw new Error(
+            `Exercise ${ex.exerciseName} not found in created exercises`
+          );
         }
         return {
           exerciseId: exercise._id,
@@ -104,14 +114,14 @@ const importData = async () => {
           reps: ex.reps,
           duration: ex.duration,
           restTime: ex.restTime,
-          order: index + 1
+          order: index + 1,
         };
       });
 
       return {
         ...workout,
         exercises: updatedExercises,
-        createdBy: adminUser._id
+        createdBy: adminUser._id,
       };
     });
 
@@ -127,7 +137,9 @@ const importData = async () => {
       console.log('\nSeed users created with the following credentials:');
       userData.forEach(user => {
         if (newUsers.some(newUser => newUser.email === user.email)) {
-          console.log(`- ${user.firstName} ${user.lastName} (${user.email}): password123`);
+          console.log(
+            `- ${user.firstName} ${user.lastName} (${user.email}): password123`
+          );
         }
       });
     }
@@ -144,7 +156,7 @@ const importData = async () => {
 const destroyData = async () => {
   try {
     await Exercise.deleteMany();
-    await Workout.deleteMany({isCustom: false}); // Only delete preset workouts
+    await Workout.deleteMany({ isCustom: false }); // Only delete preset workouts
 
     // Only delete users if flag is provided
     if (process.argv.includes('--reset-users')) {

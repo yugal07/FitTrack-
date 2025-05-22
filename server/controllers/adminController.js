@@ -1,4 +1,10 @@
-const { User, Exercise, Workout, WorkoutSession, Notification } = require('../models');
+const {
+  User,
+  Exercise,
+  Workout,
+  WorkoutSession,
+  Notification,
+} = require('../models');
 
 // @desc    Get admin dashboard statistics
 // @route   GET /api/admin/stats
@@ -13,7 +19,7 @@ exports.getAdminStats = async (req, res) => {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const activeUsers = await WorkoutSession.distinct('userId', {
-      date: { $gte: thirtyDaysAgo }
+      date: { $gte: thirtyDaysAgo },
     }).then(users => users.length);
 
     // Get total exercises
@@ -35,8 +41,8 @@ exports.getAdminStats = async (req, res) => {
         activeUsers,
         totalExercises,
         totalWorkouts,
-        recentSignups
-      }
+        recentSignups,
+      },
     });
   } catch (error) {
     console.error('Error in getAdminStats:', error);
@@ -44,8 +50,8 @@ exports.getAdminStats = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -61,7 +67,7 @@ exports.getUsers = async (req, res) => {
       search,
       role,
       sortBy = 'createdAt',
-      order = 'desc'
+      order = 'desc',
     } = req.query;
 
     // Build query
@@ -77,7 +83,7 @@ exports.getUsers = async (req, res) => {
       query.$or = [
         { firstName: { $regex: search, $options: 'i' } },
         { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
+        { email: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -100,14 +106,14 @@ exports.getUsers = async (req, res) => {
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
-        limit
+        limit,
       };
     }
 
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
-        limit
+        limit,
       };
     }
 
@@ -119,9 +125,9 @@ exports.getUsers = async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
         page: parseInt(page),
-        limit: parseInt(limit)
+        limit: parseInt(limit),
       },
-      data: users
+      data: users,
     });
   } catch (error) {
     console.error('Error in getUsers:', error);
@@ -129,8 +135,8 @@ exports.getUsers = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -147,14 +153,14 @@ exports.getUserById = async (req, res) => {
         success: false,
         error: {
           code: 'USER_NOT_FOUND',
-          message: 'User not found'
-        }
+          message: 'User not found',
+        },
       });
     }
 
     res.json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
     console.error('Error in getUserById:', error);
@@ -162,8 +168,8 @@ exports.getUserById = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -173,14 +179,8 @@ exports.getUserById = async (req, res) => {
 // @access  Private/Admin
 exports.updateUser = async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      email,
-      role,
-      fitnessLevel,
-      isActive
-    } = req.body;
+    const { firstName, lastName, email, role, fitnessLevel, isActive } =
+      req.body;
 
     const user = await User.findById(req.params.id);
 
@@ -189,17 +189,27 @@ exports.updateUser = async (req, res) => {
         success: false,
         error: {
           code: 'USER_NOT_FOUND',
-          message: 'User not found'
-        }
+          message: 'User not found',
+        },
       });
     }
 
     // Update user fields
-    if (firstName) {user.firstName = firstName;}
-    if (lastName) {user.lastName = lastName;}
-    if (email) {user.email = email;}
-    if (role) {user.role = role;}
-    if (fitnessLevel) {user.fitnessLevel = fitnessLevel;}
+    if (firstName) {
+      user.firstName = firstName;
+    }
+    if (lastName) {
+      user.lastName = lastName;
+    }
+    if (email) {
+      user.email = email;
+    }
+    if (role) {
+      user.role = role;
+    }
+    if (fitnessLevel) {
+      user.fitnessLevel = fitnessLevel;
+    }
 
     // Save user
     await user.save();
@@ -207,7 +217,7 @@ exports.updateUser = async (req, res) => {
     res.json({
       success: true,
       data: user,
-      message: 'User updated successfully'
+      message: 'User updated successfully',
     });
   } catch (error) {
     console.error('Error in updateUser:', error);
@@ -215,8 +225,8 @@ exports.updateUser = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -233,8 +243,8 @@ exports.deleteUser = async (req, res) => {
         success: false,
         error: {
           code: 'USER_NOT_FOUND',
-          message: 'User not found'
-        }
+          message: 'User not found',
+        },
       });
     }
 
@@ -247,8 +257,8 @@ exports.deleteUser = async (req, res) => {
           success: false,
           error: {
             code: 'LAST_ADMIN',
-            message: 'Cannot delete the last admin user'
-          }
+            message: 'Cannot delete the last admin user',
+          },
         });
       }
     }
@@ -264,7 +274,7 @@ exports.deleteUser = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'User deleted successfully'
+      message: 'User deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteUser:', error);
@@ -272,8 +282,8 @@ exports.deleteUser = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -304,10 +314,10 @@ exports.getAnalytics = async (req, res) => {
         $group: {
           _id: {
             year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
+            month: { $month: '$createdAt' },
           },
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
       {
@@ -321,14 +331,14 @@ exports.getAnalytics = async (req, res) => {
                 $cond: {
                   if: { $lt: ['$_id.month', 10] },
                   then: { $concat: ['0', { $toString: '$_id.month' }] },
-                  else: { $toString: '$_id.month' }
-                }
-              }
-            ]
+                  else: { $toString: '$_id.month' },
+                },
+              },
+            ],
           },
-          count: 1
-        }
-      }
+          count: 1,
+        },
+      },
     ]);
 
     // Workout activity
@@ -338,12 +348,12 @@ exports.getAnalytics = async (req, res) => {
         $group: {
           _id: {
             year: { $year: '$date' },
-            month: { $month: '$date' }
+            month: { $month: '$date' },
           },
           count: { $sum: 1 },
           avgDuration: { $avg: '$duration' },
-          totalCalories: { $sum: '$caloriesBurned' }
-        }
+          totalCalories: { $sum: '$caloriesBurned' },
+        },
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
       {
@@ -357,16 +367,16 @@ exports.getAnalytics = async (req, res) => {
                 $cond: {
                   if: { $lt: ['$_id.month', 10] },
                   then: { $concat: ['0', { $toString: '$_id.month' }] },
-                  else: { $toString: '$_id.month' }
-                }
-              }
-            ]
+                  else: { $toString: '$_id.month' },
+                },
+              },
+            ],
           },
           count: 1,
           avgDuration: 1,
-          totalCalories: 1
-        }
-      }
+          totalCalories: 1,
+        },
+      },
     ]);
 
     // Popular workouts
@@ -376,8 +386,8 @@ exports.getAnalytics = async (req, res) => {
         $group: {
           _id: '$workoutId',
           count: { $sum: 1 },
-          avgRating: { $avg: '$rating' }
-        }
+          avgRating: { $avg: '$rating' },
+        },
       },
       { $sort: { count: -1 } },
       { $limit: 10 },
@@ -386,8 +396,8 @@ exports.getAnalytics = async (req, res) => {
           from: 'workouts',
           localField: '_id',
           foreignField: '_id',
-          as: 'workout'
-        }
+          as: 'workout',
+        },
       },
       { $unwind: '$workout' },
       {
@@ -397,9 +407,9 @@ exports.getAnalytics = async (req, res) => {
           name: '$workout.name',
           type: '$workout.type',
           count: 1,
-          avgRating: 1
-        }
-      }
+          avgRating: 1,
+        },
+      },
     ]);
 
     // User stats by fitness level
@@ -408,10 +418,10 @@ exports.getAnalytics = async (req, res) => {
       {
         $group: {
           _id: '$fitnessLevel',
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
-      { $sort: { _id: 1 } }
+      { $sort: { _id: 1 } },
     ]);
 
     res.json({
@@ -420,8 +430,8 @@ exports.getAnalytics = async (req, res) => {
         userGrowth,
         workoutActivity,
         popularWorkouts,
-        usersByFitnessLevel
-      }
+        usersByFitnessLevel,
+      },
     });
   } catch (error) {
     console.error('Error in getAnalytics:', error);
@@ -429,8 +439,8 @@ exports.getAnalytics = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -447,8 +457,8 @@ exports.sendAnnouncement = async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_DATA',
-          message: 'Title and message are required'
-        }
+          message: 'Title and message are required',
+        },
       });
     }
 
@@ -456,7 +466,11 @@ exports.sendAnnouncement = async (req, res) => {
 
     // Target specific users if specified
     if (targetUsers) {
-      if (targetUsers === 'beginner' || targetUsers === 'intermediate' || targetUsers === 'advanced') {
+      if (
+        targetUsers === 'beginner' ||
+        targetUsers === 'intermediate' ||
+        targetUsers === 'advanced'
+      ) {
         userQuery.fitnessLevel = targetUsers;
       } else if (targetUsers !== 'all') {
         userQuery._id = { $in: targetUsers };
@@ -472,7 +486,7 @@ exports.sendAnnouncement = async (req, res) => {
       type: 'system',
       title,
       message,
-      read: false
+      read: false,
     }));
 
     // Insert notifications in bulk
@@ -481,7 +495,7 @@ exports.sendAnnouncement = async (req, res) => {
     res.status(201).json({
       success: true,
       message: `Announcement sent to ${users.length} users successfully`,
-      count: users.length
+      count: users.length,
     });
   } catch (error) {
     console.error('Error in sendAnnouncement:', error);
@@ -489,8 +503,8 @@ exports.sendAnnouncement = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -500,13 +514,7 @@ exports.sendAnnouncement = async (req, res) => {
 // @access  Private/Admin
 exports.getNotifications = async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 20,
-      type,
-      startDate,
-      endDate
-    } = req.query;
+    const { page = 1, limit = 20, type, startDate, endDate } = req.query;
 
     // Build query
     const query = {};
@@ -546,14 +554,14 @@ exports.getNotifications = async (req, res) => {
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
-        limit
+        limit,
       };
     }
 
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
-        limit
+        limit,
       };
     }
 
@@ -565,9 +573,9 @@ exports.getNotifications = async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
         page: parseInt(page),
-        limit: parseInt(limit)
+        limit: parseInt(limit),
       },
-      data: notifications
+      data: notifications,
     });
   } catch (error) {
     console.error('Error in getNotifications:', error);
@@ -575,12 +583,11 @@ exports.getNotifications = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
-
 
 /**
  * Get admin system overview
@@ -596,7 +603,7 @@ exports.getSystemOverview = async (req, res) => {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const activeUsers = await WorkoutSession.distinct('userId', {
-      date: { $gte: thirtyDaysAgo }
+      date: { $gte: thirtyDaysAgo },
     }).then(users => users.length);
 
     // Get user growth by month
@@ -605,10 +612,10 @@ exports.getSystemOverview = async (req, res) => {
         $group: {
           _id: {
             year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
+            month: { $month: '$createdAt' },
           },
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
       {
@@ -622,15 +629,15 @@ exports.getSystemOverview = async (req, res) => {
                 $cond: {
                   if: { $lt: ['$_id.month', 10] },
                   then: { $concat: ['0', { $toString: '$_id.month' }] },
-                  else: { $toString: '$_id.month' }
-                }
-              }
-            ]
+                  else: { $toString: '$_id.month' },
+                },
+              },
+            ],
           },
-          count: 1
-        }
+          count: 1,
+        },
       },
-      { $limit: 12 } // Last 12 months
+      { $limit: 12 }, // Last 12 months
     ]);
 
     // Get recent signups
@@ -643,15 +650,15 @@ exports.getSystemOverview = async (req, res) => {
     const totalExercises = await Exercise.countDocuments();
     const exercisesByMuscleGroup = await Exercise.aggregate([
       {
-        $unwind: '$muscleGroups'
+        $unwind: '$muscleGroups',
       },
       {
         $group: {
           _id: '$muscleGroups',
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
-      { $sort: { count: -1 } }
+      { $sort: { count: -1 } },
     ]);
 
     // Get workout stats
@@ -660,10 +667,10 @@ exports.getSystemOverview = async (req, res) => {
       {
         $group: {
           _id: '$type',
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
-      { $sort: { count: -1 } }
+      { $sort: { count: -1 } },
     ]);
 
     // Get completed workout sessions
@@ -673,10 +680,10 @@ exports.getSystemOverview = async (req, res) => {
         $group: {
           _id: {
             year: { $year: '$date' },
-            month: { $month: '$date' }
+            month: { $month: '$date' },
           },
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
       {
@@ -690,15 +697,15 @@ exports.getSystemOverview = async (req, res) => {
                 $cond: {
                   if: { $lt: ['$_id.month', 10] },
                   then: { $concat: ['0', { $toString: '$_id.month' }] },
-                  else: { $toString: '$_id.month' }
-                }
-              }
-            ]
+                  else: { $toString: '$_id.month' },
+                },
+              },
+            ],
           },
-          count: 1
-        }
+          count: 1,
+        },
       },
-      { $limit: 12 } // Last 12 months
+      { $limit: 12 }, // Last 12 months
     ]);
 
     // Get most popular workouts
@@ -706,8 +713,8 @@ exports.getSystemOverview = async (req, res) => {
       {
         $group: {
           _id: '$workoutId',
-          count: { $sum: 1 }
-        }
+          count: { $sum: 1 },
+        },
       },
       { $sort: { count: -1 } },
       { $limit: 5 },
@@ -716,8 +723,8 @@ exports.getSystemOverview = async (req, res) => {
           from: 'workouts',
           localField: '_id',
           foreignField: '_id',
-          as: 'workout'
-        }
+          as: 'workout',
+        },
       },
       { $unwind: '$workout' },
       {
@@ -725,9 +732,9 @@ exports.getSystemOverview = async (req, res) => {
           _id: 0,
           name: '$workout.name',
           type: '$workout.type',
-          count: 1
-        }
-      }
+          count: 1,
+        },
+      },
     ]);
 
     // Aggregate all data
@@ -736,24 +743,24 @@ exports.getSystemOverview = async (req, res) => {
         total: userCount,
         active: activeUsers,
         growth: userGrowth,
-        recent: recentSignups
+        recent: recentSignups,
       },
       exercises: {
         total: totalExercises,
-        byMuscleGroup: exercisesByMuscleGroup
+        byMuscleGroup: exercisesByMuscleGroup,
       },
       workouts: {
         total: totalWorkouts,
         byType: workoutsByType,
         completed: totalCompletedWorkouts,
         activity: workoutActivity,
-        popular: popularWorkouts
-      }
+        popular: popularWorkouts,
+      },
     };
 
     res.json({
       success: true,
-      data: systemOverview
+      data: systemOverview,
     });
   } catch (error) {
     console.error('Error in getSystemOverview:', error);
@@ -761,8 +768,8 @@ exports.getSystemOverview = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };

@@ -4,92 +4,95 @@ const foodSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   quantity: {
     type: Number,
     required: true,
-    default: 1
+    default: 1,
   },
   unit: {
     type: String,
-    required: true
+    required: true,
   },
   calories: {
     type: Number,
-    required: true
+    required: true,
   },
   protein: {
     type: Number,
-    default: 0
+    default: 0,
   },
   carbs: {
     type: Number,
-    default: 0
+    default: 0,
   },
   fat: {
     type: Number,
-    default: 0
-  }
+    default: 0,
+  },
 });
 
 const mealSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['breakfast', 'lunch', 'dinner', 'snack']
+    enum: ['breakfast', 'lunch', 'dinner', 'snack'],
   },
   time: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   foods: [foodSchema],
   notes: {
-    type: String
-  }
+    type: String,
+  },
 });
 
-const nutritionLogSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const nutritionLogSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    date: {
+      type: Date,
+      default: Date.now,
+      required: true,
+    },
+    meals: [mealSchema],
+    waterIntake: {
+      type: Number, // in ml
+      default: 0,
+    },
+    totalCalories: {
+      type: Number,
+      default: 0,
+    },
+    totalProtein: {
+      type: Number,
+      default: 0,
+    },
+    totalCarbs: {
+      type: Number,
+      default: 0,
+    },
+    totalFat: {
+      type: Number,
+      default: 0,
+    },
+    notes: {
+      type: String,
+    },
   },
-  date: {
-    type: Date,
-    default: Date.now,
-    required: true
-  },
-  meals: [mealSchema],
-  waterIntake: {
-    type: Number, // in ml
-    default: 0
-  },
-  totalCalories: {
-    type: Number,
-    default: 0
-  },
-  totalProtein: {
-    type: Number,
-    default: 0
-  },
-  totalCarbs: {
-    type: Number,
-    default: 0
-  },
-  totalFat: {
-    type: Number,
-    default: 0
-  },
-  notes: {
-    type: String
+  {
+    timestamps: true,
   }
-}, {
-  timestamps: true
-});
+);
 
 // Calculate totals before saving
-nutritionLogSchema.pre('save', function(next) {
+nutritionLogSchema.pre('save', function (next) {
   let calories = 0;
   let protein = 0;
   let carbs = 0;

@@ -21,7 +21,7 @@ const getUsers = async (params = {}) => {
 };
 
 // Get user by ID
-const getUserById = async (userId) => {
+const getUserById = async userId => {
   try {
     const response = await api.get(`/api/admin/users/${userId}`);
     return response.data;
@@ -41,7 +41,7 @@ const updateUser = async (userId, userData) => {
 };
 
 // Delete user
-const deleteUser = async (userId) => {
+const deleteUser = async userId => {
   try {
     const response = await api.delete(`/api/admin/users/${userId}`);
     return response.data;
@@ -70,7 +70,7 @@ const getExercises = async (params = {}) => {
   }
 };
 
-const getExerciseById = async (exerciseId) => {
+const getExerciseById = async exerciseId => {
   try {
     const response = await api.get(`/api/exercises/${exerciseId}`);
     return response.data;
@@ -79,7 +79,7 @@ const getExerciseById = async (exerciseId) => {
   }
 };
 
-const createExercise = async (exerciseData) => {
+const createExercise = async exerciseData => {
   try {
     const response = await api.post('/api/exercises', exerciseData);
     return response.data;
@@ -90,14 +90,17 @@ const createExercise = async (exerciseData) => {
 
 const updateExercise = async (exerciseId, exerciseData) => {
   try {
-    const response = await api.put(`/api/exercises/${exerciseId}`, exerciseData);
+    const response = await api.put(
+      `/api/exercises/${exerciseId}`,
+      exerciseData
+    );
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
   }
 };
 
-const deleteExercise = async (exerciseId) => {
+const deleteExercise = async exerciseId => {
   try {
     const response = await api.delete(`/api/exercises/${exerciseId}`);
     return response.data;
@@ -116,7 +119,7 @@ const getWorkouts = async (params = {}) => {
   }
 };
 
-const getWorkoutById = async (workoutId) => {
+const getWorkoutById = async workoutId => {
   try {
     const response = await api.get(`/api/workouts/${workoutId}`);
     return response.data;
@@ -125,7 +128,7 @@ const getWorkoutById = async (workoutId) => {
   }
 };
 
-const createWorkout = async (workoutData) => {
+const createWorkout = async workoutData => {
   try {
     const response = await api.post('/api/workouts', workoutData);
     return response.data;
@@ -143,7 +146,7 @@ const updateWorkout = async (workoutId, workoutData) => {
   }
 };
 
-const deleteWorkout = async (workoutId) => {
+const deleteWorkout = async workoutId => {
   try {
     const response = await api.delete(`/api/workouts/${workoutId}`);
     return response.data;
@@ -153,9 +156,12 @@ const deleteWorkout = async (workoutId) => {
 };
 
 // Announcement management
-const sendAnnouncement = async (announcementData) => {
+const sendAnnouncement = async announcementData => {
   try {
-    const response = await api.post('/api/admin/announcements', announcementData);
+    const response = await api.post(
+      '/api/admin/announcements',
+      announcementData
+    );
     return response.data;
   } catch (error) {
     throw error.response?.data || error;
@@ -182,7 +188,7 @@ const getNutritionItems = async (params = {}) => {
 };
 
 // Get nutrition item by ID
-const getNutritionItemById = async (itemId) => {
+const getNutritionItemById = async itemId => {
   try {
     const response = await api.get(`/api/admin/nutrition/${itemId}`);
     return response.data;
@@ -192,7 +198,7 @@ const getNutritionItemById = async (itemId) => {
 };
 
 // Create nutrition item
-const createNutritionItem = async (itemData) => {
+const createNutritionItem = async itemData => {
   try {
     const response = await api.post('/api/admin/nutrition', itemData);
     return response.data;
@@ -212,7 +218,7 @@ const updateNutritionItem = async (itemId, itemData) => {
 };
 
 // Delete nutrition item
-const deleteNutritionItem = async (itemId) => {
+const deleteNutritionItem = async itemId => {
   try {
     const response = await api.delete(`/api/admin/nutrition/${itemId}`);
     return response.data;
@@ -240,11 +246,11 @@ const adminService = {
   deleteWorkout,
   sendAnnouncement,
   getNotifications,
-   getNutritionItems,
+  getNutritionItems,
   getNutritionItemById,
   createNutritionItem,
   updateNutritionItem,
-  deleteNutritionItem
+  deleteNutritionItem,
 };
 
 export default adminService;

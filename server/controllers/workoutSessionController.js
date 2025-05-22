@@ -42,14 +42,14 @@ exports.getWorkoutSessions = async (req, res) => {
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
-        limit
+        limit,
       };
     }
 
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
-        limit
+        limit,
       };
     }
 
@@ -61,9 +61,9 @@ exports.getWorkoutSessions = async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
         page: parseInt(page),
-        limit: parseInt(limit)
+        limit: parseInt(limit),
       },
-      data: workoutSessions
+      data: workoutSessions,
     });
   } catch (error) {
     console.error('Error in getWorkoutSessions:', error);
@@ -71,8 +71,8 @@ exports.getWorkoutSessions = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -91,8 +91,8 @@ exports.getWorkoutSession = async (req, res) => {
         success: false,
         error: {
           code: 'SESSION_NOT_FOUND',
-          message: 'Workout session not found'
-        }
+          message: 'Workout session not found',
+        },
       });
     }
 
@@ -102,14 +102,14 @@ exports.getWorkoutSession = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to access this workout session'
-        }
+          message: 'Not authorized to access this workout session',
+        },
       });
     }
 
     res.json({
       success: true,
-      data: workoutSession
+      data: workoutSession,
     });
   } catch (error) {
     console.error('Error in getWorkoutSession:', error);
@@ -117,8 +117,8 @@ exports.getWorkoutSession = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -137,7 +137,7 @@ exports.logWorkoutSession = async (req, res) => {
       rating,
       difficulty,
       notes,
-      mood
+      mood,
     } = req.body;
 
     // Validate workoutId
@@ -147,8 +147,8 @@ exports.logWorkoutSession = async (req, res) => {
         success: false,
         error: {
           code: 'WORKOUT_NOT_FOUND',
-          message: 'Workout not found'
-        }
+          message: 'Workout not found',
+        },
       });
     }
 
@@ -163,13 +163,13 @@ exports.logWorkoutSession = async (req, res) => {
       rating,
       difficulty,
       notes,
-      mood
+      mood,
     });
 
     res.status(201).json({
       success: true,
       data: workoutSession,
-      message: 'Workout session logged successfully'
+      message: 'Workout session logged successfully',
     });
   } catch (error) {
     console.error('Error in logWorkoutSession:', error);
@@ -177,8 +177,8 @@ exports.logWorkoutSession = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -196,7 +196,7 @@ exports.updateWorkoutSession = async (req, res) => {
       rating,
       difficulty,
       notes,
-      mood
+      mood,
     } = req.body;
 
     const workoutSession = await WorkoutSession.findById(req.params.id);
@@ -206,8 +206,8 @@ exports.updateWorkoutSession = async (req, res) => {
         success: false,
         error: {
           code: 'SESSION_NOT_FOUND',
-          message: 'Workout session not found'
-        }
+          message: 'Workout session not found',
+        },
       });
     }
 
@@ -217,20 +217,36 @@ exports.updateWorkoutSession = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to update this workout session'
-        }
+          message: 'Not authorized to update this workout session',
+        },
       });
     }
 
     // Update fields
-    if (date) {workoutSession.date = date;}
-    if (duration) {workoutSession.duration = duration;}
-    if (completedExercises) {workoutSession.completedExercises = completedExercises;}
-    if (caloriesBurned !== undefined) {workoutSession.caloriesBurned = caloriesBurned;}
-    if (rating) {workoutSession.rating = rating;}
-    if (difficulty) {workoutSession.difficulty = difficulty;}
-    if (notes !== undefined) {workoutSession.notes = notes;}
-    if (mood) {workoutSession.mood = mood;}
+    if (date) {
+      workoutSession.date = date;
+    }
+    if (duration) {
+      workoutSession.duration = duration;
+    }
+    if (completedExercises) {
+      workoutSession.completedExercises = completedExercises;
+    }
+    if (caloriesBurned !== undefined) {
+      workoutSession.caloriesBurned = caloriesBurned;
+    }
+    if (rating) {
+      workoutSession.rating = rating;
+    }
+    if (difficulty) {
+      workoutSession.difficulty = difficulty;
+    }
+    if (notes !== undefined) {
+      workoutSession.notes = notes;
+    }
+    if (mood) {
+      workoutSession.mood = mood;
+    }
 
     // Save changes
     await workoutSession.save();
@@ -238,7 +254,7 @@ exports.updateWorkoutSession = async (req, res) => {
     res.json({
       success: true,
       data: workoutSession,
-      message: 'Workout session updated successfully'
+      message: 'Workout session updated successfully',
     });
   } catch (error) {
     console.error('Error in updateWorkoutSession:', error);
@@ -246,8 +262,8 @@ exports.updateWorkoutSession = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -264,8 +280,8 @@ exports.deleteWorkoutSession = async (req, res) => {
         success: false,
         error: {
           code: 'SESSION_NOT_FOUND',
-          message: 'Workout session not found'
-        }
+          message: 'Workout session not found',
+        },
       });
     }
 
@@ -275,8 +291,8 @@ exports.deleteWorkoutSession = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to delete this workout session'
-        }
+          message: 'Not authorized to delete this workout session',
+        },
       });
     }
 
@@ -284,7 +300,7 @@ exports.deleteWorkoutSession = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Workout session deleted successfully'
+      message: 'Workout session deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteWorkoutSession:', error);
@@ -292,8 +308,8 @@ exports.deleteWorkoutSession = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -326,9 +342,10 @@ exports.getWorkoutStats = async (req, res) => {
     // Total duration
     const durationResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $group: { _id: null, total: { $sum: '$duration' } } }
+      { $group: { _id: null, total: { $sum: '$duration' } } },
     ]);
-    const totalDuration = durationResult.length > 0 ? durationResult[0].total : 0;
+    const totalDuration =
+      durationResult.length > 0 ? durationResult[0].total : 0;
 
     // Average workout duration
     const avgDuration = totalWorkouts > 0 ? totalDuration / totalWorkouts : 0;
@@ -336,55 +353,67 @@ exports.getWorkoutStats = async (req, res) => {
     // Total calories burned
     const caloriesResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $group: { _id: null, total: { $sum: '$caloriesBurned' } } }
+      { $group: { _id: null, total: { $sum: '$caloriesBurned' } } },
     ]);
-    const totalCalories = caloriesResult.length > 0 ? caloriesResult[0].total : 0;
+    const totalCalories =
+      caloriesResult.length > 0 ? caloriesResult[0].total : 0;
 
     // Average difficulty
     const difficultyResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $group: { _id: null, avg: { $avg: '$difficulty' } } }
+      { $group: { _id: null, avg: { $avg: '$difficulty' } } },
     ]);
-    const avgDifficulty = difficultyResult.length > 0 ? difficultyResult[0].avg : 0;
+    const avgDifficulty =
+      difficultyResult.length > 0 ? difficultyResult[0].avg : 0;
 
     // Average rating
     const ratingResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $group: { _id: null, avg: { $avg: '$rating' } } }
+      { $group: { _id: null, avg: { $avg: '$rating' } } },
     ]);
     const avgRating = ratingResult.length > 0 ? ratingResult[0].avg : 0;
 
     // Workouts by type
     const workoutsByType = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $lookup: {
-        from: 'workouts',
-        localField: 'workoutId',
-        foreignField: '_id',
-        as: 'workout'
-      }
+      {
+        $lookup: {
+          from: 'workouts',
+          localField: 'workoutId',
+          foreignField: '_id',
+          as: 'workout',
+        },
       },
       { $unwind: '$workout' },
       { $group: { _id: '$workout.type', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
+      { $sort: { count: -1 } },
     ]);
 
     // Workout frequency by day of week
     const workoutsByDay = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $group: {
-        _id: { $dayOfWeek: '$date' },
-        count: { $sum: 1 }
-      }
+      {
+        $group: {
+          _id: { $dayOfWeek: '$date' },
+          count: { $sum: 1 },
+        },
       },
-      { $sort: { _id: 1 } }
+      { $sort: { _id: 1 } },
     ]);
 
     // Map day numbers to names (1=Sunday, 2=Monday, etc.)
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayNames = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
     const workoutFrequencyByDay = workoutsByDay.map(item => ({
       day: dayNames[item._id - 1],
-      count: item.count
+      count: item.count,
     }));
 
     res.json({
@@ -397,8 +426,8 @@ exports.getWorkoutStats = async (req, res) => {
         avgDifficulty,
         avgRating,
         workoutsByType,
-        workoutFrequencyByDay
-      }
+        workoutFrequencyByDay,
+      },
     });
   } catch (error) {
     console.error('Error in getWorkoutStats:', error);
@@ -406,8 +435,8 @@ exports.getWorkoutStats = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };

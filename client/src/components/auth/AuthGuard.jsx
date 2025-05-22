@@ -14,18 +14,18 @@ const AuthGuard = ({ children, requireAdmin = false }) => {
   // If user is not authenticated, redirect to login
   if (!isAuthenticated()) {
     // Store the last location to redirect back after login
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to='/login' state={{ from: location }} replace />;
   }
-  
+
   // Check if route requires admin and user is not admin
   if (requireAdmin && !isAdmin()) {
     // Redirect to dashboard if user is not admin
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to='/dashboard' replace />;
   }
 
   // If this is the dashboard route and the user is an admin, redirect to admin dashboard
   if (location.pathname === '/dashboard' && isAdmin()) {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to='/admin/dashboard' replace />;
   }
 
   // User is authenticated and has appropriate permissions, render the children

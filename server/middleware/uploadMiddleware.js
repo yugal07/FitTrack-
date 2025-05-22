@@ -29,7 +29,7 @@ createUploadDirs();
 
 // Storage configuration
 const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
+  destination: function (req, file, cb) {
     // Determine destination based on file type
     let uploadPath;
 
@@ -43,12 +43,12 @@ const storage = multer.diskStorage({
 
     cb(null, uploadPath);
   },
-  filename: function(req, file, cb) {
+  filename: function (req, file, cb) {
     // Generate a unique filename with original extension
     const randomString = crypto.randomBytes(16).toString('hex');
     const fileExt = path.extname(file.originalname);
     cb(null, `${randomString}${fileExt}`);
-  }
+  },
 });
 
 // File filter - check if file type is allowed
@@ -64,13 +64,13 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 5 * 1024 * 1024, // 5MB limit
   },
-  fileFilter: fileFilter
+  fileFilter: fileFilter,
 });
 
 // Middleware to set upload type
-exports.setUploadType = (type) => (req, res, next) => {
+exports.setUploadType = type => (req, res, next) => {
   req.uploadType = type;
   next();
 };
@@ -86,8 +86,8 @@ exports.handleUploadError = (err, req, res, next) => {
         success: false,
         error: {
           code: 'FILE_TOO_LARGE',
-          message: 'File is too large. Maximum size is 5MB.'
-        }
+          message: 'File is too large. Maximum size is 5MB.',
+        },
       });
     }
 
@@ -95,8 +95,8 @@ exports.handleUploadError = (err, req, res, next) => {
       success: false,
       error: {
         code: 'UPLOAD_ERROR',
-        message: err.message
-      }
+        message: err.message,
+      },
     });
   }
 
@@ -105,8 +105,8 @@ exports.handleUploadError = (err, req, res, next) => {
       success: false,
       error: {
         code: 'INVALID_FILE',
-        message: err.message
-      }
+        message: err.message,
+      },
     });
   }
 
@@ -114,7 +114,7 @@ exports.handleUploadError = (err, req, res, next) => {
 };
 
 // Delete file helper
-exports.deleteFile = (filePath) => {
+exports.deleteFile = filePath => {
   const fullPath = path.join(__dirname, '../', filePath);
 
   if (fs.existsSync(fullPath)) {

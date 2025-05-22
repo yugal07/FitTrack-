@@ -148,7 +148,8 @@ exports.getGoal = async (req, res) => {
 // @access  Private
 exports.updateGoal = async (req, res) => {
   try {
-    const { type, targetValue, currentValue, unit, targetDate, status } = req.body;
+    const { type, targetValue, currentValue, unit, targetDate, status } =
+      req.body;
 
     const profile = await Profile.findOne({ userId: req.user._id });
 
@@ -164,7 +165,7 @@ exports.updateGoal = async (req, res) => {
 
     // Find goal index
     const goalIndex = profile.goals.findIndex(
-      (g) => g._id.toString() === req.params.id
+      g => g._id.toString() === req.params.id
     );
 
     if (goalIndex === -1) {
@@ -178,15 +179,30 @@ exports.updateGoal = async (req, res) => {
     }
 
     // Update goal fields
-    if (type) {profile.goals[goalIndex].type = type;}
-    if (targetValue !== undefined) {profile.goals[goalIndex].targetValue = targetValue;}
-    if (currentValue !== undefined) {profile.goals[goalIndex].currentValue = currentValue;}
-    if (unit) {profile.goals[goalIndex].unit = unit;}
-    if (targetDate) {profile.goals[goalIndex].targetDate = new Date(targetDate);}
-    if (status) {profile.goals[goalIndex].status = status;}
+    if (type) {
+      profile.goals[goalIndex].type = type;
+    }
+    if (targetValue !== undefined) {
+      profile.goals[goalIndex].targetValue = targetValue;
+    }
+    if (currentValue !== undefined) {
+      profile.goals[goalIndex].currentValue = currentValue;
+    }
+    if (unit) {
+      profile.goals[goalIndex].unit = unit;
+    }
+    if (targetDate) {
+      profile.goals[goalIndex].targetDate = new Date(targetDate);
+    }
+    if (status) {
+      profile.goals[goalIndex].status = status;
+    }
 
     // Auto-update status if goal is met
-    if (profile.goals[goalIndex].currentValue >= profile.goals[goalIndex].targetValue) {
+    if (
+      profile.goals[goalIndex].currentValue >=
+      profile.goals[goalIndex].targetValue
+    ) {
       profile.goals[goalIndex].status = 'completed';
     }
 
@@ -229,7 +245,7 @@ exports.deleteGoal = async (req, res) => {
 
     // Find goal by ID
     const goalIndex = profile.goals.findIndex(
-      (g) => g._id.toString() === req.params.id
+      g => g._id.toString() === req.params.id
     );
 
     if (goalIndex === -1) {
@@ -295,7 +311,7 @@ exports.updateGoalProgress = async (req, res) => {
 
     // Find goal index
     const goalIndex = profile.goals.findIndex(
-      (g) => g._id.toString() === req.params.id
+      g => g._id.toString() === req.params.id
     );
 
     if (goalIndex === -1) {

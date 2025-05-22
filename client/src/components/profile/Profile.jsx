@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import ProfileInfo from './ProfileInfo';
 import MeasurementsTracker from './MeasurementsTracker';
@@ -7,12 +6,12 @@ import ChangePassword from '../auth/ChangePassword';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('info');
-  
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex -mb-px">
+    <div className='space-y-6'>
+      <div className='bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden'>
+        <div className='border-b border-gray-200 dark:border-gray-700'>
+          <nav className='flex -mb-px'>
             <button
               onClick={() => setActiveTab('info')}
               className={`px-6 py-3 font-medium text-sm border-b-2 ${
@@ -56,14 +55,16 @@ const Profile = () => {
           </nav>
         </div>
       </div>
-      
+
       <div>
         {activeTab === 'info' && <ProfileInfo />}
         {activeTab === 'measurements' && <MeasurementsTracker />}
         {activeTab === 'photos' && <ProgressPhotos />}
         {activeTab === 'security' && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Security Settings</h2>
+          <div className='space-y-6'>
+            <h2 className='text-2xl font-bold text-gray-900 dark:text-white'>
+              Security Settings
+            </h2>
             <ChangePassword />
           </div>
         )}

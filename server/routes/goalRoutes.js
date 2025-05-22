@@ -6,7 +6,7 @@ const {
   getGoal,
   updateGoal,
   deleteGoal,
-  updateGoalProgress
+  updateGoalProgress,
 } = require('../controllers/goalController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -14,14 +14,9 @@ const { protect } = require('../middleware/authMiddleware');
 router.use(protect);
 
 // Standard CRUD routes
-router.route('/')
-  .get(getGoals)
-  .post(createGoal);
+router.route('/').get(getGoals).post(createGoal);
 
-router.route('/:id')
-  .get(getGoal)
-  .put(updateGoal)
-  .delete(deleteGoal);
+router.route('/:id').get(getGoal).put(updateGoal).delete(deleteGoal);
 
 // Progress update route
 router.patch('/:id/progress', updateGoalProgress);
