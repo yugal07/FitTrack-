@@ -9,7 +9,9 @@
     "seed": "node seeder/index.js",
     "seed:destroy": "node seeder/index.js -d",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,json,md}\""
   },
   "keywords": [],
   "author": "",
@@ -30,6 +32,9 @@
   "devDependencies": {
     "@eslint/js": "^9.27.0",
     "eslint": "^9.27.0",
-    "nodemon": "^3.1.9"
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.0",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.5.3"
   }
 }
