@@ -7,7 +7,9 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node seeder/index.js",
-    "seed:destroy": "node seeder/index.js -d"
+    "seed:destroy": "node seeder/index.js -d",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": [],
   "author": "",
@@ -26,6 +28,8 @@
     "node-cron": "^3.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.27.0",
+    "eslint": "^9.27.0",
     "nodemon": "^3.1.9"
   }
 }
