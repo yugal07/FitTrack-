@@ -6,45 +6,45 @@ const { Notification, User, Profile, Workout, Goal } = require('../models');
 exports.getNotifications = async (req, res) => {
   try {
     const { page = 1, limit = 20, read } = req.query;
-    
+
     // Build query
     const query = { userId: req.user._id };
-    
+
     // Filter by read status if provided
     if (read !== undefined) {
       query.read = read === 'true';
     }
-    
+
     // Pagination
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
-    
+
     // Count total documents
     const total = await Notification.countDocuments(query);
-    
+
     // Get notifications
     const notifications = await Notification.find(query)
       .skip(startIndex)
       .limit(limit)
       .sort({ createdAt: -1 });
-    
+
     // Pagination result
     const pagination = {};
-    
+
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
         limit
       };
     }
-    
+
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
         limit
       };
     }
-    
+
     res.json({
       success: true,
       count: notifications.length,
@@ -75,7 +75,7 @@ exports.getNotifications = async (req, res) => {
 exports.markAsRead = async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
-    
+
     if (!notification) {
       return res.status(404).json({
         success: false,
@@ -85,7 +85,7 @@ exports.markAsRead = async (req, res) => {
         }
       });
     }
-    
+
     // Check if notification belongs to user
     if (notification.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
@@ -96,11 +96,11 @@ exports.markAsRead = async (req, res) => {
         }
       });
     }
-    
+
     // Mark as read
     notification.read = true;
     await notification.save();
-    
+
     res.json({
       success: true,
       data: notification
@@ -126,7 +126,7 @@ exports.markAllAsRead = async (req, res) => {
       { userId: req.user._id, read: false },
       { read: true }
     );
-    
+
     res.json({
       success: true,
       message: 'All notifications marked as read'
@@ -149,7 +149,7 @@ exports.markAllAsRead = async (req, res) => {
 exports.deleteNotification = async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
-    
+
     if (!notification) {
       return res.status(404).json({
         success: false,
@@ -159,7 +159,7 @@ exports.deleteNotification = async (req, res) => {
         }
       });
     }
-    
+
     // Check if notification belongs to user
     if (notification.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({
@@ -170,9 +170,9 @@ exports.deleteNotification = async (req, res) => {
         }
       });
     }
-    
+
     await notification.deleteOne();
-    
+
     res.json({
       success: true,
       message: 'Notification deleted successfully'
@@ -194,14 +194,14 @@ exports.deleteNotification = async (req, res) => {
 // @access  Private
 exports.updateNotificationPreferences = async (req, res) => {
   try {
-    const { 
-      workoutReminders, 
-      goalMilestones, 
-      nutritionReminders 
+    const {
+      workoutReminders,
+      goalMilestones,
+      nutritionReminders
     } = req.body;
-    
+
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -211,22 +211,22 @@ exports.updateNotificationPreferences = async (req, res) => {
         }
       });
     }
-    
+
     // Update notification preferences
     if (workoutReminders !== undefined) {
       user.preferences.notifications.workoutReminders = workoutReminders;
     }
-    
+
     if (goalMilestones !== undefined) {
       user.preferences.notifications.goalMilestones = goalMilestones;
     }
-    
+
     if (nutritionReminders !== undefined) {
       user.preferences.notifications.nutritionReminders = nutritionReminders;
     }
-    
+
     await user.save();
-    
+
     res.json({
       success: true,
       data: user.preferences.notifications,
@@ -250,19 +250,19 @@ exports.updateNotificationPreferences = async (req, res) => {
 exports.createWorkoutReminder = async (userId, workoutId, scheduledTime) => {
   try {
     const workout = await Workout.findById(workoutId);
-    
+
     if (!workout) {
       console.error('Workout not found for reminder');
       return null;
     }
-    
+
     const user = await User.findById(userId);
-    
+
     if (!user || !user.preferences.notifications.workoutReminders) {
       // User doesn't exist or has disabled workout reminders
       return null;
     }
-    
+
     const notification = await Notification.create({
       userId,
       type: 'workout',
@@ -272,7 +272,7 @@ exports.createWorkoutReminder = async (userId, workoutId, scheduledTime) => {
       actionLink: `/workouts/${workoutId}`,
       relatedId: workoutId
     });
-    
+
     return notification;
   } catch (error) {
     console.error('Error creating workout reminder:', error);
@@ -284,26 +284,26 @@ exports.createWorkoutReminder = async (userId, workoutId, scheduledTime) => {
 exports.createGoalAchievement = async (userId, goalId) => {
   try {
     const profile = await Profile.findOne({ userId });
-    
+
     if (!profile) {
       console.error('Profile not found for goal achievement');
       return null;
     }
-    
+
     const goal = profile.goals.id(goalId);
-    
+
     if (!goal) {
       console.error('Goal not found for achievement');
       return null;
     }
-    
+
     const user = await User.findById(userId);
-    
+
     if (!user || !user.preferences.notifications.goalMilestones) {
       // User doesn't exist or has disabled goal milestone notifications
       return null;
     }
-    
+
     const notification = await Notification.create({
       userId,
       type: 'goal',
@@ -313,7 +313,7 @@ exports.createGoalAchievement = async (userId, goalId) => {
       actionLink: `/goals/${goalId}`,
       relatedId: goalId
     });
-    
+
     return notification;
   } catch (error) {
     console.error('Error creating goal achievement notification:', error);
@@ -325,12 +325,12 @@ exports.createGoalAchievement = async (userId, goalId) => {
 exports.createNutritionReminder = async (userId) => {
   try {
     const user = await User.findById(userId);
-    
+
     if (!user || !user.preferences.notifications.nutritionReminders) {
       // User doesn't exist or has disabled nutrition reminders
       return null;
     }
-    
+
     const notification = await Notification.create({
       userId,
       type: 'nutrition',
@@ -340,7 +340,7 @@ exports.createNutritionReminder = async (userId) => {
       actionLink: '/nutrition',
       relatedId: null
     });
-    
+
     return notification;
   } catch (error) {
     console.error('Error creating nutrition reminder:', error);
@@ -355,7 +355,7 @@ exports.createSystemNotification = async (title, message, userId = null) => {
     if (!userId) {
       // Get all users
       const users = await User.find({});
-      
+
       // Create notifications in bulk
       const notifications = users.map(user => ({
         userId: user._id,
@@ -364,7 +364,7 @@ exports.createSystemNotification = async (title, message, userId = null) => {
         message,
         read: false
       }));
-      
+
       await Notification.insertMany(notifications);
       return { count: notifications.length };
     } else {
@@ -376,7 +376,7 @@ exports.createSystemNotification = async (title, message, userId = null) => {
         message,
         read: false
       });
-      
+
       return notification;
     }
   } catch (error) {

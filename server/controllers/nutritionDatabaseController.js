@@ -1,14 +1,14 @@
-const NutritionItem = require("../models/NutritionItem");
+const NutritionItem = require('../models/NutritionItem');
 
 // @desc    Get all nutrition items
 // @route   GET /api/admin/nutrition
 // @access  Private/Admin
 exports.getNutritionItems = async (req, res) => {
   try {
-    const { 
-      category, 
-      search, 
-      page = 1, 
+    const {
+      category,
+      search,
+      page = 1,
       limit = 10
     } = req.query;
 
@@ -20,7 +20,7 @@ exports.getNutritionItems = async (req, res) => {
       query.category = category;
     }
 
-    // Search by name 
+    // Search by name
     if (search) {
       query.name = { $regex: search, $options: 'i' };
     }
@@ -85,7 +85,7 @@ exports.getNutritionItems = async (req, res) => {
 exports.getNutritionItem = async (req, res) => {
   try {
     const nutritionItem = await NutritionItem.findById(req.params.id);
-    
+
     if (!nutritionItem) {
       return res.status(404).json({
         success: false,
@@ -117,11 +117,11 @@ exports.getNutritionItem = async (req, res) => {
 // @access  Private/Admin
 exports.createNutritionItem = async (req, res) => {
   try {
-    const { 
-      name, 
-      category, 
-      servingSize, 
-      servingUnit, 
+    const {
+      name,
+      category,
+      servingSize,
+      servingUnit,
       calories,
       protein,
       carbs,
@@ -163,19 +163,19 @@ exports.createNutritionItem = async (req, res) => {
 // @access  Private/Admin
 exports.updateNutritionItem = async (req, res) => {
   try {
-    const { 
-      name, 
-      category, 
-      servingSize, 
-      servingUnit, 
+    const {
+      name,
+      category,
+      servingSize,
+      servingUnit,
       calories,
       protein,
       carbs,
       fat
     } = req.body;
 
-    let nutritionItem = await NutritionItem.findById(req.params.id);
-    
+    const nutritionItem = await NutritionItem.findById(req.params.id);
+
     if (!nutritionItem) {
       return res.status(404).json({
         success: false,
@@ -187,14 +187,14 @@ exports.updateNutritionItem = async (req, res) => {
     }
 
     // Update fields
-    if (name) nutritionItem.name = name;
-    if (category) nutritionItem.category = category;
-    if (servingSize) nutritionItem.servingSize = servingSize;
-    if (servingUnit) nutritionItem.servingUnit = servingUnit;
-    if (calories !== undefined) nutritionItem.calories = calories;
-    if (protein !== undefined) nutritionItem.protein = protein;
-    if (carbs !== undefined) nutritionItem.carbs = carbs;
-    if (fat !== undefined) nutritionItem.fat = fat;
+    if (name) {nutritionItem.name = name;}
+    if (category) {nutritionItem.category = category;}
+    if (servingSize) {nutritionItem.servingSize = servingSize;}
+    if (servingUnit) {nutritionItem.servingUnit = servingUnit;}
+    if (calories !== undefined) {nutritionItem.calories = calories;}
+    if (protein !== undefined) {nutritionItem.protein = protein;}
+    if (carbs !== undefined) {nutritionItem.carbs = carbs;}
+    if (fat !== undefined) {nutritionItem.fat = fat;}
 
     // Save nutrition item
     await nutritionItem.save();
@@ -222,7 +222,7 @@ exports.updateNutritionItem = async (req, res) => {
 exports.deleteNutritionItem = async (req, res) => {
   try {
     const nutritionItem = await NutritionItem.findById(req.params.id);
-    
+
     if (!nutritionItem) {
       return res.status(404).json({
         success: false,

@@ -1,16 +1,16 @@
 
 const express = require('express');
 const router = express.Router();
-const { 
+const {
   uploadProgressPhoto,
   uploadProfilePicture,
   deleteProgressPhoto,
   serveFile
 } = require('../controllers/uploadController');
-const { 
-  setUploadType, 
-  uploadSingle, 
-  handleUploadError 
+const {
+  setUploadType,
+  uploadSingle,
+  handleUploadError
 } = require('../middleware/uploadMiddleware');
 const { protect } = require('../middleware/authMiddleware');
 

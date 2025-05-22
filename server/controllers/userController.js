@@ -8,7 +8,7 @@ const { User, Profile } = require('../models');
 exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -72,12 +72,12 @@ exports.updateUserProfile = async (req, res) => {
     }
 
     // Update user fields
-    if (firstName) user.firstName = firstName;
-    if (lastName) user.lastName = lastName;
-    if (dateOfBirth) user.dateOfBirth = dateOfBirth;
-    if (gender) user.gender = gender;
-    if (fitnessLevel) user.fitnessLevel = fitnessLevel;
-    if (profilePicture) user.profilePicture = profilePicture;
+    if (firstName) {user.firstName = firstName;}
+    if (lastName) {user.lastName = lastName;}
+    if (dateOfBirth) {user.dateOfBirth = dateOfBirth;}
+    if (gender) {user.gender = gender;}
+    if (fitnessLevel) {user.fitnessLevel = fitnessLevel;}
+    if (profilePicture) {user.profilePicture = profilePicture;}
 
     // Save updated user
     await user.save();
@@ -129,18 +129,18 @@ exports.updateUserPreferences = async (req, res) => {
     }
 
     // Update preferences
-    if (darkMode !== undefined) user.preferences.darkMode = darkMode;
-    
+    if (darkMode !== undefined) {user.preferences.darkMode = darkMode;}
+
     if (notifications) {
-      if (notifications.workoutReminders !== undefined) 
-        user.preferences.notifications.workoutReminders = notifications.workoutReminders;
-      if (notifications.goalMilestones !== undefined) 
-        user.preferences.notifications.goalMilestones = notifications.goalMilestones;
-      if (notifications.nutritionReminders !== undefined) 
-        user.preferences.notifications.nutritionReminders = notifications.nutritionReminders;
+      if (notifications.workoutReminders !== undefined)
+      {user.preferences.notifications.workoutReminders = notifications.workoutReminders;}
+      if (notifications.goalMilestones !== undefined)
+      {user.preferences.notifications.goalMilestones = notifications.goalMilestones;}
+      if (notifications.nutritionReminders !== undefined)
+      {user.preferences.notifications.nutritionReminders = notifications.nutritionReminders;}
     }
-    
-    if (measurementUnit) user.preferences.measurementUnit = measurementUnit;
+
+    if (measurementUnit) {user.preferences.measurementUnit = measurementUnit;}
 
     // Save updated user
     await user.save();
@@ -181,7 +181,7 @@ exports.deleteUserAccount = async (req, res) => {
 
     // Delete user profile
     await Profile.findOneAndDelete({ userId: req.user._id });
-    
+
     // Delete user
     await user.deleteOne();
 

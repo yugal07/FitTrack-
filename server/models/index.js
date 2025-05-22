@@ -5,7 +5,7 @@ const Workout = require('./workoutModel');
 const WorkoutSession = require('./workoutSessionModel');
 const NutritionLog = require('./nutritionLogModel');
 const Notification = require('./notificationModel');
-const NutritionItem = require("./NutritionItem");
+const NutritionItem = require('./NutritionItem');
 
 module.exports = {
   User,

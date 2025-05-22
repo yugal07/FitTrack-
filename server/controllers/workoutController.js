@@ -6,11 +6,11 @@ const { Workout, Exercise } = require('../models');
 // @access  Private
 exports.getWorkouts = async (req, res) => {
   try {
-    const { 
-      fitnessLevel, 
-      type, 
-      search, 
-      page = 1, 
+    const {
+      fitnessLevel,
+      type,
+      search,
+      page = 1,
       limit = 10,
       isCustom
     } = req.query;
@@ -31,7 +31,7 @@ exports.getWorkouts = async (req, res) => {
     // Filter by custom/preset
     if (isCustom !== undefined) {
       query.isCustom = isCustom === 'true';
-      
+
       // If looking for custom workouts, only show the user's own
       if (query.isCustom) {
         query.createdBy = req.user._id;
@@ -111,7 +111,7 @@ exports.getWorkout = async (req, res) => {
     const workout = await Workout.findById(req.params.id)
       .populate('createdBy', 'firstName lastName')
       .populate('exercises.exerciseId');
-    
+
     if (!workout) {
       return res.status(404).json({
         success: false,
@@ -143,12 +143,12 @@ exports.getWorkout = async (req, res) => {
 // @access  Private
 exports.createWorkout = async (req, res) => {
   try {
-    const { 
-      name, 
-      description, 
-      type, 
-      fitnessLevel, 
-      duration, 
+    const {
+      name,
+      description,
+      type,
+      fitnessLevel,
+      duration,
       exercises,
       tags = []
     } = req.body;
@@ -220,18 +220,18 @@ exports.createWorkout = async (req, res) => {
 // @access  Private
 exports.updateWorkout = async (req, res) => {
   try {
-    const { 
-      name, 
-      description, 
-      type, 
-      fitnessLevel, 
-      duration, 
+    const {
+      name,
+      description,
+      type,
+      fitnessLevel,
+      duration,
       exercises,
       tags
     } = req.body;
 
-    let workout = await Workout.findById(req.params.id);
-    
+    const workout = await Workout.findById(req.params.id);
+
     if (!workout) {
       return res.status(404).json({
         success: false,
@@ -281,12 +281,12 @@ exports.updateWorkout = async (req, res) => {
     }
 
     // Update other fields
-    if (name) workout.name = name;
-    if (description) workout.description = description;
-    if (type) workout.type = type;
-    if (fitnessLevel) workout.fitnessLevel = fitnessLevel;
-    if (duration) workout.duration = duration;
-    if (tags) workout.tags = tags;
+    if (name) {workout.name = name;}
+    if (description) {workout.description = description;}
+    if (type) {workout.type = type;}
+    if (fitnessLevel) {workout.fitnessLevel = fitnessLevel;}
+    if (duration) {workout.duration = duration;}
+    if (tags) {workout.tags = tags;}
 
     // Save workout
     await workout.save();
@@ -314,7 +314,7 @@ exports.updateWorkout = async (req, res) => {
 exports.deleteWorkout = async (req, res) => {
   try {
     const workout = await Workout.findById(req.params.id);
-    
+
     if (!workout) {
       return res.status(404).json({
         success: false,
@@ -372,7 +372,7 @@ exports.rateWorkout = async (req, res) => {
     }
 
     const workout = await Workout.findById(req.params.id);
-    
+
     if (!workout) {
       return res.status(404).json({
         success: false,
@@ -435,7 +435,7 @@ exports.rateWorkout = async (req, res) => {
 exports.getRecommendedWorkouts = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -451,14 +451,14 @@ exports.getRecommendedWorkouts = async (req, res) => {
       fitnessLevel: user.fitnessLevel,
       isCustom: false // Only recommend pre-defined workouts
     })
-    .limit(5)
-    .populate('exercises.exerciseId', 'name muscleGroups difficulty')
-    .sort({ averageRating: -1 });
+      .limit(5)
+      .populate('exercises.exerciseId', 'name muscleGroups difficulty')
+      .sort({ averageRating: -1 });
 
     // If not enough recommendations, add some workouts from adjacent fitness levels
     if (recommendations.length < 5) {
       let adjacentLevel;
-      
+
       if (user.fitnessLevel === 'beginner') {
         adjacentLevel = 'intermediate';
       } else if (user.fitnessLevel === 'advanced') {
@@ -473,9 +473,9 @@ exports.getRecommendedWorkouts = async (req, res) => {
         isCustom: false,
         _id: { $nin: recommendations.map(r => r._id) }
       })
-      .limit(5 - recommendations.length)
-      .populate('exercises.exerciseId', 'name muscleGroups difficulty')
-      .sort({ averageRating: -1 });
+        .limit(5 - recommendations.length)
+        .populate('exercises.exerciseId', 'name muscleGroups difficulty')
+        .sort({ averageRating: -1 });
 
       recommendations = [...recommendations, ...additionalWorkouts];
     }
