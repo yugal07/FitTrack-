@@ -1,5 +1,5 @@
 // workout Controllers
-const { Workout, Exercise } = require('../models');
+const { Workout, Exercise, User } = require('../models');
 
 // @desc    Get all workouts
 // @route   GET /api/workouts
