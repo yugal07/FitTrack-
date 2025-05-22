@@ -178,12 +178,12 @@ exports.updateGoal = async (req, res) => {
     }
 
     // Update goal fields
-    if (type) profile.goals[goalIndex].type = type;
-    if (targetValue !== undefined) profile.goals[goalIndex].targetValue = targetValue;
-    if (currentValue !== undefined) profile.goals[goalIndex].currentValue = currentValue;
-    if (unit) profile.goals[goalIndex].unit = unit;
-    if (targetDate) profile.goals[goalIndex].targetDate = new Date(targetDate);
-    if (status) profile.goals[goalIndex].status = status;
+    if (type) {profile.goals[goalIndex].type = type;}
+    if (targetValue !== undefined) {profile.goals[goalIndex].targetValue = targetValue;}
+    if (currentValue !== undefined) {profile.goals[goalIndex].currentValue = currentValue;}
+    if (unit) {profile.goals[goalIndex].unit = unit;}
+    if (targetDate) {profile.goals[goalIndex].targetDate = new Date(targetDate);}
+    if (status) {profile.goals[goalIndex].status = status;}
 
     // Auto-update status if goal is met
     if (profile.goals[goalIndex].currentValue >= profile.goals[goalIndex].targetValue) {

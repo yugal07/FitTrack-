@@ -288,7 +288,7 @@ exports.refreshToken = async (req, res) => {
 
     // Verify refresh token
     const decoded = jwt.verify(
-      refreshToken, 
+      refreshToken,
       process.env.REFRESH_TOKEN_SECRET || 'refresh-secret-key'
     );
 
@@ -318,7 +318,7 @@ exports.refreshToken = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in refreshToken:', error);
-    
+
     // Handle token verification errors
     if (error instanceof jwt.TokenExpiredError) {
       return res.status(401).json({
@@ -329,7 +329,7 @@ exports.refreshToken = async (req, res) => {
         },
       });
     }
-    
+
     if (error instanceof jwt.JsonWebTokenError) {
       return res.status(401).json({
         success: false,
@@ -339,7 +339,7 @@ exports.refreshToken = async (req, res) => {
         },
       });
     }
-    
+
     res.status(500).json({
       success: false,
       error: {

@@ -5,13 +5,13 @@ const { Exercise } = require('../models');
 // @access  Private
 exports.getExercises = async (req, res) => {
   try {
-    const { 
-      muscleGroup, 
-      difficulty, 
-      search, 
+    const {
+      muscleGroup,
+      difficulty,
+      search,
       equipment,
-      page = 1, 
-      limit = 20 
+      page = 1,
+      limit = 20
     } = req.query;
 
     // Build query
@@ -100,7 +100,7 @@ exports.getExercises = async (req, res) => {
 exports.getExercise = async (req, res) => {
   try {
     const exercise = await Exercise.findById(req.params.id);
-    
+
     if (!exercise) {
       return res.status(404).json({
         success: false,
@@ -132,11 +132,11 @@ exports.getExercise = async (req, res) => {
 // @access  Private/Admin
 exports.createExercise = async (req, res) => {
   try {
-    const { 
-      name, 
-      description, 
-      muscleGroups, 
-      difficulty, 
+    const {
+      name,
+      description,
+      muscleGroups,
+      difficulty,
       instructions,
       videoUrl,
       imageUrl,
@@ -190,19 +190,19 @@ exports.createExercise = async (req, res) => {
 // @access  Private/Admin
 exports.updateExercise = async (req, res) => {
   try {
-    const { 
-      name, 
-      description, 
-      muscleGroups, 
-      difficulty, 
+    const {
+      name,
+      description,
+      muscleGroups,
+      difficulty,
       instructions,
       videoUrl,
       imageUrl,
       equipment
     } = req.body;
 
-    let exercise = await Exercise.findById(req.params.id);
-    
+    const exercise = await Exercise.findById(req.params.id);
+
     if (!exercise) {
       return res.status(404).json({
         success: false,
@@ -216,7 +216,7 @@ exports.updateExercise = async (req, res) => {
     // Check if updating to an existing name
     if (name && name !== exercise.name) {
       const existingExercise = await Exercise.findOne({ name });
-      
+
       if (existingExercise) {
         return res.status(400).json({
           success: false,
@@ -229,14 +229,14 @@ exports.updateExercise = async (req, res) => {
     }
 
     // Update fields
-    if (name) exercise.name = name;
-    if (description) exercise.description = description;
-    if (muscleGroups) exercise.muscleGroups = muscleGroups;
-    if (difficulty) exercise.difficulty = difficulty;
-    if (instructions) exercise.instructions = instructions;
-    if (videoUrl !== undefined) exercise.videoUrl = videoUrl;
-    if (imageUrl !== undefined) exercise.imageUrl = imageUrl;
-    if (equipment) exercise.equipment = equipment;
+    if (name) {exercise.name = name;}
+    if (description) {exercise.description = description;}
+    if (muscleGroups) {exercise.muscleGroups = muscleGroups;}
+    if (difficulty) {exercise.difficulty = difficulty;}
+    if (instructions) {exercise.instructions = instructions;}
+    if (videoUrl !== undefined) {exercise.videoUrl = videoUrl;}
+    if (imageUrl !== undefined) {exercise.imageUrl = imageUrl;}
+    if (equipment) {exercise.equipment = equipment;}
 
     // Save exercise
     await exercise.save();
@@ -264,7 +264,7 @@ exports.updateExercise = async (req, res) => {
 exports.deleteExercise = async (req, res) => {
   try {
     const exercise = await Exercise.findById(req.params.id);
-    
+
     if (!exercise) {
       return res.status(404).json({
         success: false,
@@ -311,7 +311,7 @@ exports.rateExercise = async (req, res) => {
     }
 
     const exercise = await Exercise.findById(req.params.id);
-    
+
     if (!exercise) {
       return res.status(404).json({
         success: false,
@@ -374,7 +374,7 @@ exports.rateExercise = async (req, res) => {
 exports.getExercisesByMuscleGroup = async (req, res) => {
   try {
     const muscleGroup = req.params.group;
-    
+
     if (!muscleGroup) {
       return res.status(400).json({
         success: false,

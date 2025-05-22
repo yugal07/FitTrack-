@@ -176,7 +176,7 @@ exports.updateNutritionLog = async (req, res) => {
   try {
     const { date, meals, waterIntake, notes } = req.body;
 
-    let nutritionLog = await NutritionLog.findById(req.params.id);
+    const nutritionLog = await NutritionLog.findById(req.params.id);
 
     if (!nutritionLog) {
       return res.status(404).json({
@@ -200,10 +200,10 @@ exports.updateNutritionLog = async (req, res) => {
     }
 
     // Update fields
-    if (date) nutritionLog.date = date;
-    if (meals) nutritionLog.meals = meals;
-    if (waterIntake !== undefined) nutritionLog.waterIntake = waterIntake;
-    if (notes !== undefined) nutritionLog.notes = notes;
+    if (date) {nutritionLog.date = date;}
+    if (meals) {nutritionLog.meals = meals;}
+    if (waterIntake !== undefined) {nutritionLog.waterIntake = waterIntake;}
+    if (notes !== undefined) {nutritionLog.notes = notes;}
 
     // Save changes
     await nutritionLog.save();
@@ -389,10 +389,10 @@ exports.updateMeal = async (req, res) => {
     }
 
     // Update meal fields
-    if (type) nutritionLog.meals[mealIndex].type = type;
-    if (time) nutritionLog.meals[mealIndex].time = time;
-    if (foods) nutritionLog.meals[mealIndex].foods = foods;
-    if (notes !== undefined) nutritionLog.meals[mealIndex].notes = notes;
+    if (type) {nutritionLog.meals[mealIndex].type = type;}
+    if (time) {nutritionLog.meals[mealIndex].time = time;}
+    if (foods) {nutritionLog.meals[mealIndex].foods = foods;}
+    if (notes !== undefined) {nutritionLog.meals[mealIndex].notes = notes;}
 
     // Save changes
     await nutritionLog.save();
@@ -567,13 +567,13 @@ exports.getNutritionStats = async (req, res) => {
     const dailyAverages = await NutritionLog.aggregate([
       { $match: baseQuery },
       { $group: {
-          _id: null,
-          avgCalories: { $avg: "$totalCalories" },
-          avgProtein: { $avg: "$totalProtein" },
-          avgCarbs: { $avg: "$totalCarbs" },
-          avgFat: { $avg: "$totalFat" },
-          avgWaterIntake: { $avg: "$waterIntake" }
-        }
+        _id: null,
+        avgCalories: { $avg: '$totalCalories' },
+        avgProtein: { $avg: '$totalProtein' },
+        avgCarbs: { $avg: '$totalCarbs' },
+        avgFat: { $avg: '$totalFat' },
+        avgWaterIntake: { $avg: '$waterIntake' }
+      }
       }
     ]);
 
@@ -582,9 +582,9 @@ exports.getNutritionStats = async (req, res) => {
       { $match: baseQuery },
       { $sort: { date: 1 } },
       { $project: {
-          date: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-          calories: "$totalCalories"
-        }
+        date: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+        calories: '$totalCalories'
+      }
       }
     ]);
 
@@ -592,30 +592,30 @@ exports.getNutritionStats = async (req, res) => {
     const macroDistribution = await NutritionLog.aggregate([
       { $match: baseQuery },
       { $group: {
-          _id: null,
-          totalProtein: { $sum: "$totalProtein" },
-          totalCarbs: { $sum: "$totalCarbs" },
-          totalFat: { $sum: "$totalFat" }
-        }
+        _id: null,
+        totalProtein: { $sum: '$totalProtein' },
+        totalCarbs: { $sum: '$totalCarbs' },
+        totalFat: { $sum: '$totalFat' }
+      }
       },
       { $project: {
-          _id: 0,
-          protein: "$totalProtein",
-          carbs: "$totalCarbs",
-          fat: "$totalFat"
-        }
+        _id: 0,
+        protein: '$totalProtein',
+        carbs: '$totalCarbs',
+        fat: '$totalFat'
+      }
       }
     ]);
 
     // Meal type distribution
     const mealTypeDistribution = await NutritionLog.aggregate([
       { $match: baseQuery },
-      { $unwind: "$meals" },
+      { $unwind: '$meals' },
       { $group: {
-          _id: "$meals.type",
-          count: { $sum: 1 },
-          avgCalories: { $avg: { $sum: "$meals.foods.calories" } }
-        }
+        _id: '$meals.type',
+        count: { $sum: 1 },
+        avgCalories: { $avg: { $sum: '$meals.foods.calories' } }
+      }
       },
       { $sort: { count: -1 } }
     ]);

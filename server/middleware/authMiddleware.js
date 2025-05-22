@@ -35,7 +35,7 @@ exports.protect = async (req, res, next) => {
       next();
     } catch (error) {
       console.error('Error in protect middleware:', error);
-      
+
       // Handle different types of JWT errors
       if (error instanceof jwt.TokenExpiredError) {
         return res.status(401).json({
@@ -46,7 +46,7 @@ exports.protect = async (req, res, next) => {
           },
         });
       }
-      
+
       if (error instanceof jwt.JsonWebTokenError) {
         return res.status(401).json({
           success: false,
@@ -56,7 +56,7 @@ exports.protect = async (req, res, next) => {
           },
         });
       }
-      
+
       res.status(401).json({
         success: false,
         error: {

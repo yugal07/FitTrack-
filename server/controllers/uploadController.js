@@ -25,7 +25,7 @@ exports.uploadProgressPhoto = async (req, res) => {
     if (!profile) {
       // Delete the uploaded file
       deleteFile(req.file.path);
-      
+
       return res.status(404).json({
         success: false,
         error: {
@@ -62,12 +62,12 @@ exports.uploadProgressPhoto = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in uploadProgressPhoto:', error);
-    
+
     // Delete the uploaded file if there was an error
     if (req.file) {
       deleteFile(req.file.path);
     }
-    
+
     res.status(500).json({
       success: false,
       error: {
@@ -99,7 +99,7 @@ exports.uploadProfilePicture = async (req, res) => {
     if (!user) {
       // Delete the uploaded file
       deleteFile(req.file.path);
-      
+
       return res.status(404).json({
         success: false,
         error: {
@@ -133,12 +133,12 @@ exports.uploadProfilePicture = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in uploadProfilePicture:', error);
-    
+
     // Delete the uploaded file if there was an error
     if (req.file) {
       deleteFile(req.file.path);
     }
-    
+
     res.status(500).json({
       success: false,
       error: {
@@ -214,10 +214,10 @@ exports.deleteProgressPhoto = async (req, res) => {
 // @access  Public
 exports.serveFile = (req, res) => {
   const { folder, filename } = req.params;
-  
+
   // Validate folder to prevent directory traversal
   const allowedFolders = ['progress-photos', 'profile-pics'];
-  
+
   if (!allowedFolders.includes(folder)) {
     return res.status(400).json({
       success: false,
@@ -227,10 +227,10 @@ exports.serveFile = (req, res) => {
       }
     });
   }
-  
+
   // Construct file path
   const filePath = path.join(__dirname, '../uploads', folder, filename);
-  
+
   // Send file
   res.sendFile(filePath, (err) => {
     if (err) {

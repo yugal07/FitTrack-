@@ -128,16 +128,16 @@ exports.getWorkoutSession = async (req, res) => {
 // @access  Private
 exports.logWorkoutSession = async (req, res) => {
   try {
-    const { 
-      workoutId, 
-      date, 
-      duration, 
-      completedExercises, 
-      caloriesBurned, 
-      rating, 
-      difficulty, 
-      notes, 
-      mood 
+    const {
+      workoutId,
+      date,
+      duration,
+      completedExercises,
+      caloriesBurned,
+      rating,
+      difficulty,
+      notes,
+      mood
     } = req.body;
 
     // Validate workoutId
@@ -188,18 +188,18 @@ exports.logWorkoutSession = async (req, res) => {
 // @access  Private
 exports.updateWorkoutSession = async (req, res) => {
   try {
-    const { 
-      date, 
-      duration, 
-      completedExercises, 
-      caloriesBurned, 
-      rating, 
-      difficulty, 
-      notes, 
-      mood 
+    const {
+      date,
+      duration,
+      completedExercises,
+      caloriesBurned,
+      rating,
+      difficulty,
+      notes,
+      mood
     } = req.body;
 
-    let workoutSession = await WorkoutSession.findById(req.params.id);
+    const workoutSession = await WorkoutSession.findById(req.params.id);
 
     if (!workoutSession) {
       return res.status(404).json({
@@ -223,14 +223,14 @@ exports.updateWorkoutSession = async (req, res) => {
     }
 
     // Update fields
-    if (date) workoutSession.date = date;
-    if (duration) workoutSession.duration = duration;
-    if (completedExercises) workoutSession.completedExercises = completedExercises;
-    if (caloriesBurned !== undefined) workoutSession.caloriesBurned = caloriesBurned;
-    if (rating) workoutSession.rating = rating;
-    if (difficulty) workoutSession.difficulty = difficulty;
-    if (notes !== undefined) workoutSession.notes = notes;
-    if (mood) workoutSession.mood = mood;
+    if (date) {workoutSession.date = date;}
+    if (duration) {workoutSession.duration = duration;}
+    if (completedExercises) {workoutSession.completedExercises = completedExercises;}
+    if (caloriesBurned !== undefined) {workoutSession.caloriesBurned = caloriesBurned;}
+    if (rating) {workoutSession.rating = rating;}
+    if (difficulty) {workoutSession.difficulty = difficulty;}
+    if (notes !== undefined) {workoutSession.notes = notes;}
+    if (mood) {workoutSession.mood = mood;}
 
     // Save changes
     await workoutSession.save();
@@ -326,7 +326,7 @@ exports.getWorkoutStats = async (req, res) => {
     // Total duration
     const durationResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $group: { _id: null, total: { $sum: "$duration" } } }
+      { $group: { _id: null, total: { $sum: '$duration' } } }
     ]);
     const totalDuration = durationResult.length > 0 ? durationResult[0].total : 0;
 
@@ -336,21 +336,21 @@ exports.getWorkoutStats = async (req, res) => {
     // Total calories burned
     const caloriesResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $group: { _id: null, total: { $sum: "$caloriesBurned" } } }
+      { $group: { _id: null, total: { $sum: '$caloriesBurned' } } }
     ]);
     const totalCalories = caloriesResult.length > 0 ? caloriesResult[0].total : 0;
 
     // Average difficulty
     const difficultyResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $group: { _id: null, avg: { $avg: "$difficulty" } } }
+      { $group: { _id: null, avg: { $avg: '$difficulty' } } }
     ]);
     const avgDifficulty = difficultyResult.length > 0 ? difficultyResult[0].avg : 0;
 
     // Average rating
     const ratingResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
-      { $group: { _id: null, avg: { $avg: "$rating" } } }
+      { $group: { _id: null, avg: { $avg: '$rating' } } }
     ]);
     const avgRating = ratingResult.length > 0 ? ratingResult[0].avg : 0;
 
@@ -358,11 +358,11 @@ exports.getWorkoutStats = async (req, res) => {
     const workoutsByType = await WorkoutSession.aggregate([
       { $match: baseQuery },
       { $lookup: {
-          from: 'workouts',
-          localField: 'workoutId',
-          foreignField: '_id',
-          as: 'workout'
-        }
+        from: 'workouts',
+        localField: 'workoutId',
+        foreignField: '_id',
+        as: 'workout'
+      }
       },
       { $unwind: '$workout' },
       { $group: { _id: '$workout.type', count: { $sum: 1 } } },
@@ -373,9 +373,9 @@ exports.getWorkoutStats = async (req, res) => {
     const workoutsByDay = await WorkoutSession.aggregate([
       { $match: baseQuery },
       { $group: {
-          _id: { $dayOfWeek: '$date' },
-          count: { $sum: 1 }
-        }
+        _id: { $dayOfWeek: '$date' },
+        count: { $sum: 1 }
+      }
       },
       { $sort: { _id: 1 } }
     ]);

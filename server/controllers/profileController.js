@@ -38,9 +38,9 @@ exports.getMeasurements = async (req, res) => {
 // @access  Private
 exports.addMeasurement = async (req, res) => {
   try {
-    const { 
-      weight, height, bodyFat, chest, waist, 
-      hips, arms, thighs, notes, date 
+    const {
+      weight, height, bodyFat, chest, waist,
+      hips, arms, thighs, notes, date
     } = req.body;
 
     const profile = await Profile.findOne({ userId: req.user._id });
@@ -97,9 +97,9 @@ exports.addMeasurement = async (req, res) => {
 // @access  Private
 exports.updateMeasurement = async (req, res) => {
   try {
-    const { 
-      weight, height, bodyFat, chest, waist, 
-      hips, arms, thighs, notes, date 
+    const {
+      weight, height, bodyFat, chest, waist,
+      hips, arms, thighs, notes, date
     } = req.body;
 
     const profile = await Profile.findOne({ userId: req.user._id });
@@ -130,16 +130,16 @@ exports.updateMeasurement = async (req, res) => {
     }
 
     // Update measurement fields
-    if (date) profile.measurements[measurementIndex].date = date;
-    if (weight !== undefined) profile.measurements[measurementIndex].weight = weight;
-    if (height !== undefined) profile.measurements[measurementIndex].height = height;
-    if (bodyFat !== undefined) profile.measurements[measurementIndex].bodyFat = bodyFat;
-    if (chest !== undefined) profile.measurements[measurementIndex].chest = chest;
-    if (waist !== undefined) profile.measurements[measurementIndex].waist = waist;
-    if (hips !== undefined) profile.measurements[measurementIndex].hips = hips;
-    if (arms !== undefined) profile.measurements[measurementIndex].arms = arms;
-    if (thighs !== undefined) profile.measurements[measurementIndex].thighs = thighs;
-    if (notes !== undefined) profile.measurements[measurementIndex].notes = notes;
+    if (date) {profile.measurements[measurementIndex].date = date;}
+    if (weight !== undefined) {profile.measurements[measurementIndex].weight = weight;}
+    if (height !== undefined) {profile.measurements[measurementIndex].height = height;}
+    if (bodyFat !== undefined) {profile.measurements[measurementIndex].bodyFat = bodyFat;}
+    if (chest !== undefined) {profile.measurements[measurementIndex].chest = chest;}
+    if (waist !== undefined) {profile.measurements[measurementIndex].waist = waist;}
+    if (hips !== undefined) {profile.measurements[measurementIndex].hips = hips;}
+    if (arms !== undefined) {profile.measurements[measurementIndex].arms = arms;}
+    if (thighs !== undefined) {profile.measurements[measurementIndex].thighs = thighs;}
+    if (notes !== undefined) {profile.measurements[measurementIndex].notes = notes;}
 
     // Save profile
     await profile.save();
@@ -394,7 +394,7 @@ exports.getPhotoComparison = async (req, res) => {
     let beforePhoto, afterPhoto;
 
     if (beforeDate) {
-      beforePhoto = filteredPhotos.find(p => 
+      beforePhoto = filteredPhotos.find(p =>
         new Date(p.date).toISOString().split('T')[0] === beforeDate
       );
     } else {
@@ -403,7 +403,7 @@ exports.getPhotoComparison = async (req, res) => {
     }
 
     if (afterDate) {
-      afterPhoto = filteredPhotos.find(p => 
+      afterPhoto = filteredPhotos.find(p =>
         new Date(p.date).toISOString().split('T')[0] === afterDate
       );
     } else {

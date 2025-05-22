@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  registerUser, 
-  loginUser, 
-  getCurrentUser, 
-  updatePassword, 
+const {
+  registerUser,
+  loginUser,
+  getCurrentUser,
+  updatePassword,
   forgotPassword ,
   refreshToken
 } = require('../controllers/authController');

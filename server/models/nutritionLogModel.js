@@ -94,7 +94,7 @@ nutritionLogSchema.pre('save', function(next) {
   let protein = 0;
   let carbs = 0;
   let fat = 0;
-  
+
   this.meals.forEach(meal => {
     meal.foods.forEach(food => {
       calories += food.calories * food.quantity;
@@ -103,12 +103,12 @@ nutritionLogSchema.pre('save', function(next) {
       fat += food.fat * food.quantity;
     });
   });
-  
+
   this.totalCalories = calories;
   this.totalProtein = protein;
   this.totalCarbs = carbs;
   this.totalFat = fat;
-  
+
   next();
 });
 

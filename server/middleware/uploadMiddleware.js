@@ -8,17 +8,17 @@ const createUploadDirs = () => {
   const uploadDir = path.join(__dirname, '../uploads');
   const progressPhotosDir = path.join(uploadDir, 'progress-photos');
   const profilePicsDir = path.join(uploadDir, 'profile-pics');
-  
+
   // Create main uploads directory
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
   }
-  
+
   // Create subdirectories
   if (!fs.existsSync(progressPhotosDir)) {
     fs.mkdirSync(progressPhotosDir);
   }
-  
+
   if (!fs.existsSync(profilePicsDir)) {
     fs.mkdirSync(profilePicsDir);
   }
@@ -32,7 +32,7 @@ const storage = multer.diskStorage({
   destination: function(req, file, cb) {
     // Determine destination based on file type
     let uploadPath;
-    
+
     if (req.uploadType === 'profile-pic') {
       uploadPath = path.join(__dirname, '../uploads/profile-pics');
     } else if (req.uploadType === 'progress-photo') {
@@ -40,7 +40,7 @@ const storage = multer.diskStorage({
     } else {
       uploadPath = path.join(__dirname, '../uploads');
     }
-    
+
     cb(null, uploadPath);
   },
   filename: function(req, file, cb) {
@@ -90,7 +90,7 @@ exports.handleUploadError = (err, req, res, next) => {
         }
       });
     }
-    
+
     return res.status(400).json({
       success: false,
       error: {
@@ -99,7 +99,7 @@ exports.handleUploadError = (err, req, res, next) => {
       }
     });
   }
-  
+
   if (err) {
     return res.status(400).json({
       success: false,
@@ -109,18 +109,18 @@ exports.handleUploadError = (err, req, res, next) => {
       }
     });
   }
-  
+
   next();
 };
 
 // Delete file helper
 exports.deleteFile = (filePath) => {
   const fullPath = path.join(__dirname, '../', filePath);
-  
+
   if (fs.existsSync(fullPath)) {
     fs.unlinkSync(fullPath);
     return true;
   }
-  
+
   return false;
 };
