@@ -179,7 +179,6 @@ const getNotifications = async (params = {}) => {
 
 // Get nutrition items with filtering
 const getNutritionItems = async (params = {}) => {
-  // conifnoaind
   try {
     const response = await api.get('/api/admin/nutrition', { params });
     return response.data;
