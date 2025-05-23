@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
-import { format, subDays, startOfWeek, startOfMonth } from 'date-fns';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import { 
+  PieChart, Pie, Cell, 
+  BarChart, Bar, 
+  XAxis, YAxis, 
+  CartesianGrid, Tooltip, 
+  Legend, ResponsiveContainer,
+  Line, LineChart, ReferenceLine
+} from 'recharts';
 
 const NutritionStats = () => {
   const [timeframe, setTimeframe] = useState('week');
@@ -29,20 +36,24 @@ const NutritionStats = () => {
 
       switch (timeframe) {
         case 'week':
-          startDate = subDays(today, 7);
+          startDate = new Date(today);
+          startDate.setDate(today.getDate() - 7);
           break;
         case 'month':
-          startDate = subDays(today, 30);
+          startDate = new Date(today);
+          startDate.setDate(today.getDate() - 30);
           break;
         case '3months':
-          startDate = subDays(today, 90);
+          startDate = new Date(today);
+          startDate.setDate(today.getDate() - 90);
           break;
         default:
-          startDate = subDays(today, 7);
+          startDate = new Date(today);
+          startDate.setDate(today.getDate() - 7);
       }
 
-      const formattedStartDate = format(startDate, 'yyyy-MM-dd');
-      const formattedEndDate = format(today, 'yyyy-MM-dd');
+      const formattedStartDate = formatDate(startDate);
+      const formattedEndDate = formatDate(today);
 
       const response = await api.get('/api/nutrition/stats', {
         params: {
@@ -60,74 +71,142 @@ const NutritionStats = () => {
     }
   };
 
-  // Function to render macro distribution chart
+  // Helper function to format date as YYYY-MM-DD
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Helper function to format date for display
+  const formatDisplayDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'short' });
+    return `${day} ${month}`;
+  };
+
+  // Chart colors
+  const MACRO_COLORS = ['#3b82f6', '#f59e0b', '#ef4444']; // blue, yellow, red for protein, carbs, fat
+  const MEAL_COLORS = ['#f59e0b', '#10b981', '#8b5cf6', '#3b82f6']; // yellow, green, purple, blue for breakfast, lunch, dinner, snack
+  const CALORIE_COLOR = '#6366f1'; // indigo
+  
+  // Function to prepare macro distribution data for pie chart
+  const prepareMacroData = () => {
+    if (!stats || !stats.macroDistribution) return [];
+
+    const { protein, carbs, fat } = stats.macroDistribution;
+    
+    return [
+      { name: 'Protein', value: protein || 0, color: MACRO_COLORS[0] },
+      { name: 'Carbs', value: carbs || 0, color: MACRO_COLORS[1] },
+      { name: 'Fat', value: fat || 0, color: MACRO_COLORS[2] }
+    ];
+  };
+
+  // Function to prepare calories trend data for bar chart
+  const prepareCaloriesTrendData = () => {
+    if (!stats || !stats.caloriesTrend || stats.caloriesTrend.length === 0) return [];
+
+    // Sort by date and get the last 7 or fewer entries
+    return [...stats.caloriesTrend]
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(-7)
+      .map(day => ({
+        name: formatDisplayDate(day.date),
+        calories: day.calories || 0
+      }));
+  };
+
+  // Function to prepare meal type distribution data for charts
+  const prepareMealTypeData = () => {
+    if (!stats || !stats.mealTypeDistribution || stats.mealTypeDistribution.length === 0) return [];
+
+    const mealOrder = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 };
+
+    // Sort by meal type to ensure consistent ordering
+    return [...stats.mealTypeDistribution]
+      .sort((a, b) => mealOrder[a._id] - mealOrder[b._id])
+      .map((meal, index) => ({
+        name: meal._id.charAt(0).toUpperCase() + meal._id.slice(1),
+        count: meal.count || 0,
+        avgCalories: Math.round(meal.avgCalories || 0),
+        color: MEAL_COLORS[index % MEAL_COLORS.length]
+      }));
+  };
+
+  // Custom label for the pie chart
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
+  // Function to render macro distribution pie chart
   const renderMacroChart = () => {
     if (!stats || !stats.macroDistribution) return null;
 
-    const { protein, carbs, fat } = stats.macroDistribution;
-    const total = protein + carbs + fat;
+    const data = prepareMacroData();
+    const total = data.reduce((sum, item) => sum + item.value, 0);
     
-    const proteinPercent = Math.round((protein / total) * 100) || 0;
-    const carbsPercent = Math.round((carbs / total) * 100) || 0;
-    const fatPercent = Math.round((fat / total) * 100) || 0;
-
     return (
       <div className="mt-4">
         <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-3">Macronutrient Distribution</h3>
         
-        {/* Visual percentage bars */}
-        <div className="flex h-8 w-full rounded-lg overflow-hidden shadow-inner mb-2">
-          <div 
-            className="bg-blue-500 transition-all duration-300 ease-in-out relative group" 
-            style={{ width: `${proteinPercent}%` }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">
-              {proteinPercent}%
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="h-64 flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  innerRadius={40}
+                  dataKey="value"
+                  label={renderCustomizedLabel}
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value) => [`${value}g`, 'Amount']}
+                  labelFormatter={(name) => `${name}`}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
-          <div 
-            className="bg-yellow-500 transition-all duration-300 ease-in-out relative group" 
-            style={{ width: `${carbsPercent}%` }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">
-              {carbsPercent}%
-            </div>
-          </div>
-          <div 
-            className="bg-red-500 transition-all duration-300 ease-in-out relative group" 
-            style={{ width: `${fatPercent}%` }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold">
-              {fatPercent}%
-            </div>
-          </div>
-        </div>
-        
-        {/* Legend and actual grams */}
-        <div className="grid grid-cols-3 gap-4 text-center mt-4">
-          <div className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="flex items-center justify-center mb-1">
-              <div className="w-3 h-3 bg-blue-500 rounded-full mr-1"></div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Protein</span>
-            </div>
-            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{Math.round(protein)}g</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">{proteinPercent}% of total</div>
-          </div>
-          <div className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="flex items-center justify-center mb-1">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Carbs</span>
-            </div>
-            <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">{Math.round(carbs)}g</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">{carbsPercent}% of total</div>
-          </div>
-          <div className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="flex items-center justify-center mb-1">
-              <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Fat</span>
-            </div>
-            <div className="text-lg font-bold text-red-600 dark:text-red-400">{Math.round(fat)}g</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">{fatPercent}% of total</div>
+          
+          <div className="grid grid-cols-3 gap-4 text-center">
+            {data.map((item, index) => (
+              <div key={index} className="p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
+                <div className="flex items-center justify-center mb-1">
+                  <div className="w-3 h-3 rounded-full mr-1" style={{ backgroundColor: item.color }}></div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.name}</span>
+                </div>
+                <div className="text-lg font-bold" style={{ color: item.color }}>{Math.round(item.value)}g</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {total > 0 ? Math.round((item.value / total) * 100) : 0}% of total
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -138,158 +217,106 @@ const NutritionStats = () => {
   const renderCaloriesTrend = () => {
     if (!stats || !stats.caloriesTrend || stats.caloriesTrend.length === 0) return null;
 
-    // Sort by date and get the last 7 or fewer entries
-    const sortedData = [...stats.caloriesTrend]
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .slice(-7);
-
-    const maxCalories = Math.max(...sortedData.map(d => d.calories || 0), 2000);
+    const data = prepareCaloriesTrendData();
     
     return (
       <div className="mt-8">
         <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-3">Calorie Intake Trend</h3>
         
-        <div className="relative h-64 mt-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow overflow-hidden">
-          {/* Y-axis labels */}
-          <div className="absolute inset-y-4 left-0 w-12 flex flex-col justify-between">
-            <span className="text-xs text-gray-500 dark:text-gray-400">{maxCalories}</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">{Math.round(maxCalories / 2)}</span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">0</span>
-          </div>
-          
-          {/* Chart area */}
-          <div className="absolute inset-y-4 left-12 right-4 flex items-end justify-around">
-            {sortedData.map((day, index) => {
-              const height = day.calories ? (day.calories / maxCalories) * 100 : 0;
-              const date = new Date(day.date);
-              const dayLabel = format(date, 'd');
-              const monthLabel = index === 0 || dayLabel === '1' ? format(date, 'MMM') : '';
-              
-              return (
-                <div key={day.date} className="flex flex-col items-center w-full max-w-20">
-                  <div className="relative w-full flex justify-center">
-                    <div 
-                      className="w-12 bg-gradient-to-t from-indigo-500 to-blue-500 rounded-t-md"
-                      style={{ height: `${height}%` }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{dayLabel}</div>
-                  {monthLabel && (
-                    <div className="text-xs font-medium text-gray-700 dark:text-gray-300">{monthLabel}</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          
-          {/* Target calorie line */}
-          <div 
-            className="absolute left-12 right-4 border-t-2 border-dashed border-green-500 dark:border-green-400 flex items-center justify-end"
-            style={{ top: `${Math.max(10, 100 - ((2000 / maxCalories) * 100))}%` }}
-          >
-            <span className="text-xs text-green-600 dark:text-green-400 bg-white dark:bg-gray-800 px-1">
-              Target: 2000
-            </span>
-          </div>
+        <div className="h-64 mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{
+                top: 5,
+                right: 30,
+                left: 20,
+                bottom: 5,
+              }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip formatter={(value) => [`${value} kcal`, 'Calories']} />
+              <Legend />
+              <Bar dataKey="calories" fill={CALORIE_COLOR} name="Calories" />
+              <ReferenceLine y={2000} stroke="#22c55e" strokeDasharray="5 5" label="Target: 2000 kcal" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     );
   };
 
-  // Function to render meal type distribution
+  // Function to render meal type distribution charts
   const renderMealTypeDistribution = () => {
     if (!stats || !stats.mealTypeDistribution || stats.mealTypeDistribution.length === 0) return null;
 
+    const data = prepareMealTypeData();
+    
     return (
       <div className="mt-8">
         <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-3">Meal Type Analysis</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Meal Frequency Chart */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Meal Frequency</h4>
-            <div className="space-y-3">
-              {stats.mealTypeDistribution.map(meal => {
-                const percentage = meal.count / stats.mealTypeDistribution.reduce((sum, m) => sum + m.count, 0) * 100;
-                
-                return (
-                  <div key={meal._id} className="relative">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm capitalize text-gray-700 dark:text-gray-300">
-                        {meal._id}
-                      </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {meal.count} meals
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div
-                        className={`h-full rounded-full ${getMealColor(meal._id)}`}
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={70}
+                    dataKey="count"
+                    nameKey="name"
+                    label={renderCustomizedLabel}
+                  >
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value} meals`, 'Count']} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </div>
           
+          {/* Average Calories by Meal Chart */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Average Calories by Meal</h4>
-            <div className="space-y-3">
-              {stats.mealTypeDistribution.map(meal => {
-                const maxCalories = Math.max(...stats.mealTypeDistribution.map(m => m.avgCalories || 0));
-                const percentage = maxCalories > 0 ? (meal.avgCalories / maxCalories) * 100 : 0;
-                
-                return (
-                  <div key={meal._id} className="relative">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm capitalize text-gray-700 dark:text-gray-300">
-                        {meal._id}
-                      </span>
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {Math.round(meal.avgCalories || 0)} calories
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                      <div
-                        className={`h-full rounded-full ${getMealColor(meal._id, true)}`}
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={data}
+                  margin={{
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [`${value} kcal`, 'Calories']} />
+                  <Legend />
+                  <Bar dataKey="avgCalories" name="Avg Calories">
+                    {data.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
       </div>
     );
-  };
-
-  // Helper to get color for meal type
-  const getMealColor = (type, gradient = false) => {
-    switch (type) {
-      case 'breakfast':
-        return gradient 
-          ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' 
-          : 'bg-yellow-500';
-      case 'lunch':
-        return gradient 
-          ? 'bg-gradient-to-r from-green-400 to-green-500' 
-          : 'bg-green-500';
-      case 'dinner':
-        return gradient 
-          ? 'bg-gradient-to-r from-purple-400 to-purple-500' 
-          : 'bg-purple-500';
-      case 'snack':
-        return gradient 
-          ? 'bg-gradient-to-r from-blue-400 to-blue-500' 
-          : 'bg-blue-500';
-      default:
-        return gradient 
-          ? 'bg-gradient-to-r from-gray-400 to-gray-500' 
-          : 'bg-gray-500';
-    }
   };
 
   // Function to render daily averages
