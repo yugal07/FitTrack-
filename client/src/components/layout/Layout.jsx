@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import NotificationBell from '../notifications/NotificationBell';
 import ThemeToggle from '../ui/ThemeToggle';
 
 const Layout = ({ children }) => {
@@ -312,11 +313,13 @@ const Layout = ({ children }) => {
             </svg>
           </button>
           <div className='absolute right-4 top-3'>
+            <NotificationBell />
             <ThemeToggle />
           </div>
         </div>
 
         <div className='hidden md:block absolute top-4 right-4'>
+          <NotificationBell />
           <ThemeToggle />
         </div>
 
