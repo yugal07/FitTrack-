@@ -20,6 +20,7 @@ const Dashboard = () => {
   });
   const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [upcomingWorkouts, setUpcomingWorkouts] = useState([]);
+  const [scheduledWorkoutsLoading, setScheduledWorkoutsLoading] = useState(true);
   const [goals, setGoals] = useState([]);
   const [nutritionData, setNutritionData] = useState(null);
   const [measurements, setMeasurements] = useState([]);
@@ -55,18 +56,8 @@ const Dashboard = () => {
         });
         
         setRecentWorkouts(recentWorkoutsRes.data.data || []);
-        
-        // Mock upcoming workouts for now
-        // In a real implementation, this would come from scheduled workouts
-        setUpcomingWorkouts([
-          { id: 1, name: 'Strength Training', scheduledFor: new Date(Date.now() + 86400000) },
-          { id: 2, name: 'HIIT Cardio', scheduledFor: new Date(Date.now() + 86400000 * 3) }
-        ]);
-        
         setGoals(goalsRes.data.data || []);
-        
         setNutritionData(nutritionRes.data.data[0] || null);
-        
         setMeasurements(measurementsRes.data.data.slice(-3) || []);
         
       } catch (err) {
@@ -78,6 +69,24 @@ const Dashboard = () => {
     };
     
     fetchDashboardData();
+  }, []);
+
+  // Fetch scheduled workouts in a separate useEffect
+  useEffect(() => {
+    const fetchScheduledWorkouts = async () => {
+      try {
+        setScheduledWorkoutsLoading(true);
+        // Fetch upcoming workouts with limit=3 and only those not completed
+        const response = await api.get('/api/scheduled-workouts?limit=3&completed=false');
+        setUpcomingWorkouts(response.data.data || []);
+      } catch (err) {
+        console.error('Error fetching scheduled workouts:', err);
+      } finally {
+        setScheduledWorkoutsLoading(false);
+      }
+    };
+
+    fetchScheduledWorkouts();
   }, []);
 
   if (loading) {
@@ -144,8 +153,11 @@ const Dashboard = () => {
         
         {/* Right column */}
         <div className="space-y-6">
-          {/* Upcoming workouts */}
-          <UpcomingWorkouts workouts={upcomingWorkouts} />
+          {/* Upcoming workouts - Now using real data */}
+          <UpcomingWorkouts 
+            workouts={upcomingWorkouts} 
+            isLoading={scheduledWorkoutsLoading} 
+          />
           
           {/* Nutrition summary */}
           <NutritionSummary nutritionData={nutritionData} />

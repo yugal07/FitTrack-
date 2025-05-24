@@ -6,6 +6,8 @@ const { notFound, errorHandler, validationErrorHandler } = require('./middleware
 const path = require("path")
 const morgan = require("morgan")
 const {startNotificationSchedulers} = require("./services/notificationScheduler");
+const scheduledWorkoutRoutes = require('./routes/scheduledWorkoutRoutes');
+
 
 dotenv.config();
 
@@ -42,6 +44,7 @@ app.use('/api/goals', goalRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/workouts', workoutRoutes);
 app.use('/api/workout-sessions', workoutSessionRoutes);
+app.use('/api/scheduled-workouts', scheduledWorkoutRoutes);
 app.use('/api/nutrition' , nutritionRoutes);
 app.use('/api/uploads' , uploadRoutes);
 app.use('/api/notifications' , notificationRoutes);
