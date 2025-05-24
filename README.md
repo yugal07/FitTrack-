@@ -14,7 +14,7 @@
 - **Workout Creation**: Create custom workout routines or choose from pre-built templates
 - **Workout Logging**: Track completed workouts with sets, reps, weights, and duration
 - **Progress Tracking**: Monitor workout frequency, intensity, and improvements over time
-- **Smart Recommendations**: AI-powered workout suggestions based on fitness level and preferences
+- **Smart Recommendations**: workout suggestions based on fitness level and preferences
 
 ### 🥗 Nutrition Tracking
 
