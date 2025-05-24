@@ -3,6 +3,7 @@ import { format, addDays, startOfWeek } from 'date-fns';
 import { useToast } from '../../contexts/ToastContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import ConfirmModal from '../ui/ConfirmModal';
 
 const MealPlanner = () => {
   const [currentWeekStart, setCurrentWeekStart] = useState(
@@ -13,6 +14,14 @@ const MealPlanner = () => {
   const [editingMeal, setEditingMeal] = useState(null);
   const [editText, setEditText] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // State for delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    day: null,
+    meal: null,
+    loading: false,
+  });
 
   // Get toast functions
   const toast = useToast();
@@ -43,11 +52,9 @@ const MealPlanner = () => {
   }, [currentWeekStart]);
 
   // Navigate to previous week
-
   const goToPreviousWeek = () => setCurrentWeekStart(prev => addDays(prev, -7));
 
   // Navigate to next week
-
   const goToNextWeek = () => setCurrentWeekStart(prev => addDays(prev, 7));
 
   // Start editing a specific meal
@@ -96,19 +103,59 @@ const MealPlanner = () => {
     setEditText('');
   };
 
-  // Clear a meal
-  const handleClearMeal = (day, meal) => {
-    if (window.confirm('Are you sure you want to clear this meal?')) {
+  // Show clear meal confirmation
+  const handleClearMealClick = (day, meal) => {
+    const mealName = meal.charAt(0).toUpperCase() + meal.slice(1);
+    const dayName = format(new Date(day), 'EEEE, MMM d');
+
+    setDeleteConfirm({
+      isOpen: true,
+      day,
+      meal,
+      loading: false,
+    });
+  };
+
+  // Confirm clear meal
+  const handleClearMealConfirm = async () => {
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       // Update the meal plan
       setMealPlan(prev => ({
         ...prev,
-        [day]: {
-          ...prev[day],
-          [meal]: '',
+        [deleteConfirm.day]: {
+          ...prev[deleteConfirm.day],
+          [deleteConfirm.meal]: '',
         },
       }));
 
       toast.success('Meal cleared');
+
+      setDeleteConfirm({
+        isOpen: false,
+        day: null,
+        meal: null,
+        loading: false,
+      });
+    } catch (err) {
+      toast.error('Failed to clear meal. Please try again.');
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Cancel clear meal
+  const handleClearMealCancel = () => {
+    if (!deleteConfirm.loading) {
+      setDeleteConfirm({
+        isOpen: false,
+        day: null,
+        meal: null,
+        loading: false,
+      });
     }
   };
 
@@ -176,6 +223,14 @@ const MealPlanner = () => {
     };
 
     return meals[mealType][Math.floor(Math.random() * meals[mealType].length)];
+  };
+
+  const getMealDisplayName = meal => {
+    return meal.charAt(0).toUpperCase() + meal.slice(1);
+  };
+
+  const getDayDisplayName = day => {
+    return format(new Date(day), 'EEEE, MMM d');
   };
 
   return (
@@ -342,7 +397,7 @@ const MealPlanner = () => {
                             {dayMeals[mealType] && (
                               <button
                                 onClick={() =>
-                                  handleClearMeal(dayStr, mealType)
+                                  handleClearMealClick(dayStr, mealType)
                                 }
                                 className='p-1 rounded-full bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800'
                               >
@@ -428,6 +483,19 @@ const MealPlanner = () => {
           </div>
         </div>
       </Card>
+
+      {/* Clear Meal Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleClearMealCancel}
+        onConfirm={handleClearMealConfirm}
+        title='Clear Meal'
+        message={`Are you sure you want to clear ${getMealDisplayName(deleteConfirm.meal)} for ${getDayDisplayName(deleteConfirm.day)}? This action cannot be undone.`}
+        confirmText='Clear Meal'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </div>
   );
 };
