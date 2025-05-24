@@ -1,22 +1,30 @@
 import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
+import api from '../../utils/api';
 import { useToast } from '../../contexts/ToastContext';
-import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
-import ExerciseForm from './ExerciseForm';
+import ExerciseForm from './ExerciseForm'; // Assuming this component exists
+import {
+  startScheduledWorkout,
+  completeScheduledWorkout,
+} from '../../services/scheduledWorkoutService';
 
 const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  // State management
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [availableExercises, setAvailableExercises] = useState([]);
+  const [scheduledWorkoutId, setScheduledWorkoutId] = useState(null);
   const [showExerciseForm, setShowExerciseForm] = useState(false);
   const [currentExercise, setCurrentExercise] = useState(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(null);
   const [exercises, setExercises] = useState([]);
-
-  // Get toast functions
-  const toast = useToast();
-  // Get toast-enabled API
-  const api = apiWithToast(toast);
 
   // React Hook Form setup
   const {
@@ -37,6 +45,26 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
 
   // For validation and conditional rendering
   const watchFields = watch();
+
+  // Fetch exercises and handle workout loading
+  useEffect(() => {
+    const fetchExercises = async () => {
+      try {
+        const response = await api.get('/api/exercises');
+        setAvailableExercises(response.data.data || []);
+      } catch (err) {
+        console.error('Error fetching exercises:', err);
+        toast.error('Failed to load exercises');
+      }
+    };
+
+    fetchExercises();
+
+    // Check if we're starting from a scheduled workout
+    if (location.state?.workoutId && location.state?.scheduledWorkoutId) {
+      loadScheduledWorkout(location.state.scheduledWorkoutId);
+    }
+  }, [location.state]); // Remove toast from dependencies
 
   // Load workout data if editing
   useEffect(() => {
@@ -67,14 +95,46 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
     }
   }, [workout, setValue]);
 
+  const loadScheduledWorkout = async scheduledWorkoutId => {
+    setLoading(true);
+    try {
+      const result = await startScheduledWorkout(scheduledWorkoutId);
+
+      if (result.success) {
+        // Set the form data from the scheduled workout
+        const formData = result.data.formData;
+
+        setValue('date', formData.date || format(new Date(), 'yyyy-MM-dd'));
+        setValue('time', formData.time || format(new Date(), 'HH:mm'));
+        setValue('duration', formData.duration?.toString() || '');
+        setValue('type', formData.type || 'strength');
+        setValue('notes', formData.notes || '');
+
+        if (formData.exercises) {
+          setExercises(formData.exercises);
+        }
+
+        // Store the scheduled workout ID for later use
+        setScheduledWorkoutId(scheduledWorkoutId);
+        toast.success('Scheduled workout loaded successfully');
+      } else {
+        toast.error(result.error || 'Failed to load scheduled workout');
+      }
+    } catch (err) {
+      console.error('Error loading scheduled workout:', err);
+      toast.error('Failed to load scheduled workout');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onFormSubmit = async formData => {
     try {
-      setLoading(true);
+      setSubmitting(true);
 
       // Validate exercises
       if (exercises.length === 0) {
         toast.error('Please add at least one exercise to your workout');
-        setLoading(false);
         return;
       }
 
@@ -103,9 +163,15 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
         workoutData.workoutId = workout.workoutId?._id || workout.workoutId;
       }
 
+      let workoutSessionId;
+
       // Submit to API
       if (workout) {
-        await api.put(`/api/workout-sessions/${workout._id}`, workoutData);
+        const response = await api.put(
+          `/api/workout-sessions/${workout._id}`,
+          workoutData
+        );
+        workoutSessionId = response.data.data._id;
       } else {
         // For new workouts, we need a workoutId
         // If user didn't select a specific workout template, we'll create a custom one
@@ -134,16 +200,33 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
         }
 
         // Now log the workout session
-        await api.post('/api/workout-sessions', workoutData);
+        const response = await api.post('/api/workout-sessions', workoutData);
+        workoutSessionId = response.data.data._id;
+      }
+
+      // If this was a scheduled workout, mark it as completed
+      if (scheduledWorkoutId) {
+        await completeScheduledWorkout(scheduledWorkoutId, workoutSessionId);
+        toast.success('Scheduled workout completed!');
+      } else {
+        toast.success(
+          workout
+            ? 'Workout updated successfully!'
+            : 'Workout logged successfully!'
+        );
       }
 
       // Call the onSubmit callback
-      onSubmit();
+      if (onSubmit) {
+        onSubmit();
+      } else {
+        navigate('/workouts');
+      }
     } catch (err) {
-      // Error is handled by the API interceptor
       console.error('Error saving workout:', err);
+      toast.error('Failed to save workout');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
@@ -190,8 +273,49 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
     setCurrentExerciseIndex(null);
   };
 
+  if (loading) {
+    return (
+      <div className='flex justify-center items-center py-12'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600'></div>
+      </div>
+    );
+  }
+
   return (
     <div>
+      {/* Form header - show if it's a scheduled workout */}
+      {scheduledWorkoutId && (
+        <div className='bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 rounded-md p-4 mb-6'>
+          <div className='flex'>
+            <div className='flex-shrink-0'>
+              <svg
+                className='h-5 w-5 text-blue-400'
+                xmlns='http://www.w3.org/2000/svg'
+                viewBox='0 0 20 20'
+                fill='currentColor'
+              >
+                <path
+                  fillRule='evenodd'
+                  d='M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z'
+                  clipRule='evenodd'
+                />
+              </svg>
+            </div>
+            <div className='ml-3'>
+              <h3 className='text-sm font-medium text-blue-800 dark:text-blue-200'>
+                Scheduled Workout
+              </h3>
+              <div className='mt-2 text-sm text-blue-700 dark:text-blue-300'>
+                <p>
+                  You're logging a workout from your schedule. When you submit
+                  this form, the workout will be marked as completed.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showExerciseForm ? (
         <ExerciseForm
           exercise={currentExercise}
@@ -442,12 +566,38 @@ const WorkoutForm = ({ workout = null, onSubmit, onCancel }) => {
             <Button type='button' variant='outline' onClick={onCancel}>
               Cancel
             </Button>
-            <Button type='submit' variant='primary' disabled={loading}>
-              {loading
-                ? 'Saving...'
-                : workout
-                  ? 'Update Workout'
-                  : 'Log Workout'}
+            <Button type='submit' variant='primary' disabled={submitting}>
+              {submitting ? (
+                <>
+                  <svg
+                    className='animate-spin -ml-1 mr-2 h-4 w-4 text-white'
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                  >
+                    <circle
+                      className='opacity-25'
+                      cx='12'
+                      cy='12'
+                      r='10'
+                      stroke='currentColor'
+                      strokeWidth='4'
+                    ></circle>
+                    <path
+                      className='opacity-75'
+                      fill='currentColor'
+                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                    ></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : scheduledWorkoutId ? (
+                'Complete Workout'
+              ) : workout ? (
+                'Update Workout'
+              ) : (
+                'Log Workout'
+              )}
             </Button>
           </div>
         </form>

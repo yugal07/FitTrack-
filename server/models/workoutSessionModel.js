@@ -14,6 +14,13 @@ const setSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  restTime: {
+    type: Number, // rest time in seconds - added for WorkoutLogger
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now, // added for WorkoutLogger
+  }
 });
 
 const completedExerciseSchema = new mongoose.Schema({
@@ -26,6 +33,23 @@ const completedExerciseSchema = new mongoose.Schema({
   notes: {
     type: String,
   },
+  // Added fields for WorkoutLogger compatibility
+  isCompleted: {
+    type: Boolean,
+    default: false,
+  },
+  targetSets: {
+    type: Number,
+    default: 0,
+  },
+  targetReps: {
+    type: Number,
+    default: 0,
+  },
+  targetWeight: {
+    type: Number,
+    default: 0,
+  }
 });
 
 const workoutSessionSchema = new mongoose.Schema(
@@ -38,7 +62,18 @@ const workoutSessionSchema = new mongoose.Schema(
     workoutId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Workout',
-      required: true,
+      required: false, // Changed from true to false
+      default: null,   // Added default null
+    },
+    // Added fields for WorkoutLogger
+    name: {
+      type: String,
+      default: '',
+    },
+    type: {
+      type: String,
+      enum: ['strength', 'cardio', 'hiit', 'flexibility', 'hybrid', 'custom'],
+      default: 'custom',
     },
     date: {
       type: Date,
@@ -79,11 +114,32 @@ const workoutSessionSchema = new mongoose.Schema(
         'disappointed',
       ],
     },
+    // Added for WorkoutLogger compatibility
+    feeling: {
+      type: Number, // 1-5 scale, maps to difficulty
+      min: 1,
+      max: 5,
+    },
+    // Metadata for scheduled workouts
+    scheduledWorkoutId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ScheduledWorkout',
+      default: null,
+    },
+    source: {
+      type: String,
+      enum: ['manual', 'scheduled', 'logger', 'imported'],
+      default: 'manual',
+    }
   },
   {
     timestamps: true,
   }
 );
+
+// Index for better query performance
+workoutSessionSchema.index({ userId: 1, date: -1 });
+workoutSessionSchema.index({ userId: 1, workoutId: 1 });
 
 const WorkoutSession = mongoose.model('WorkoutSession', workoutSessionSchema);
 
