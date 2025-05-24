@@ -349,10 +349,6 @@ We welcome contributions! Please follow these steps:
 - Use meaningful commit messages
 - Ensure all tests pass before submitting
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - [React](https://reactjs.org/) - Frontend framework
@@ -365,7 +361,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues or have questions:
 
-1. Check the [Issues](https://github.com/yourusername/fittrack/issues) page
+1. Check the [Issues](https://github.com/yugal07/FitTrack-/issues) page
 2. Create a new issue with detailed information
 3. Join our community discussions
 
