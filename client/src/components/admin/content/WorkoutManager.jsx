@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import adminService from '../../../services/adminService';
 import WorkoutForm from './WorkoutForm';
+import ConfirmModal from '../../ui/ConfirmModal';
+import { useToast } from '../../../contexts/ToastContext';
 
 const WorkoutManager = () => {
   const [workouts, setWorkouts] = useState([]);
@@ -19,10 +21,21 @@ const WorkoutManager = () => {
   // State for managing modal visibility
   const [showFormModal, setShowFormModal] = useState(false);
 
+  // State for delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    workoutId: null,
+    workoutName: '',
+    loading: false,
+  });
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [type, setType] = useState('');
   const [difficulty, setDifficulty] = useState('');
+
+  // Toast hook
+  const { success, error: showError } = useToast();
 
   const fetchWorkouts = async (page = 1) => {
     try {
@@ -79,24 +92,45 @@ const WorkoutManager = () => {
     setShowFormModal(true);
   };
 
-  const handleDeleteWorkout = async workoutId => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this workout template? This action cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const handleDeleteClick = workout => {
+    setDeleteConfirm({
+      isOpen: true,
+      workoutId: workout._id,
+      workoutName: workout.name,
+      loading: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
 
     try {
-      await adminService.deleteWorkout(workoutId);
-      // Refresh the workout list
+      await adminService.deleteWorkout(deleteConfirm.workoutId);
+      success('Workout template deleted successfully');
       fetchWorkouts(pagination.page);
+      setDeleteConfirm({
+        isOpen: false,
+        workoutId: null,
+        workoutName: '',
+        loading: false,
+      });
     } catch (err) {
       console.error('Failed to delete workout:', err);
-      alert(
+      showError(
         err.error?.message || 'Failed to delete workout. Please try again.'
       );
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleteConfirm.loading) {
+      setDeleteConfirm({
+        isOpen: false,
+        workoutId: null,
+        workoutName: '',
+        loading: false,
+      });
     }
   };
 
@@ -104,15 +138,19 @@ const WorkoutManager = () => {
     try {
       if (editingWorkout) {
         await adminService.updateWorkout(editingWorkout._id, workoutData);
+        success('Workout template updated successfully');
       } else {
         await adminService.createWorkout(workoutData);
+        success('Workout template created successfully');
       }
 
       setShowFormModal(false);
       fetchWorkouts(pagination.page);
     } catch (err) {
       console.error('Failed to save workout:', err);
-      alert(err.error?.message || 'Failed to save workout. Please try again.');
+      showError(
+        err.error?.message || 'Failed to save workout. Please try again.'
+      );
       return false;
     }
 
@@ -399,7 +437,7 @@ const WorkoutManager = () => {
                             Edit
                           </button>
                           <button
-                            onClick={() => handleDeleteWorkout(workout._id)}
+                            onClick={() => handleDeleteClick(workout)}
                             className='text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300'
                           >
                             Delete
@@ -551,6 +589,19 @@ const WorkoutManager = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title='Delete Workout Template'
+        message={`Are you sure you want to delete "${deleteConfirm.workoutName}"? This action cannot be undone and will remove this workout template from the system. Users who have saved this workout will lose access to it, and any scheduled workouts using this template will be affected.`}
+        confirmText='Delete Template'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </div>
   );
 };

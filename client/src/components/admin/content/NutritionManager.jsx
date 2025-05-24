@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import adminService from '../../../services/adminService';
 import NutritionItemForm from './NutritionItemForm';
+import ConfirmModal from '../../ui/ConfirmModal';
+import { useToast } from '../../../contexts/ToastContext';
 
 const NutritionManager = () => {
   const [nutritionItems, setNutritionItems] = useState([]);
@@ -19,9 +21,20 @@ const NutritionManager = () => {
   // State for managing modal visibility
   const [showFormModal, setShowFormModal] = useState(false);
 
+  // State for delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    itemId: null,
+    itemName: '',
+    loading: false,
+  });
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('');
+
+  // Toast hook
+  const { success, error: showError } = useToast();
 
   const fetchNutritionItems = async (page = 1) => {
     try {
@@ -71,25 +84,46 @@ const NutritionManager = () => {
     setShowFormModal(true);
   };
 
-  const handleDeleteItem = async itemId => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this nutrition item? This action cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const handleDeleteClick = item => {
+    setDeleteConfirm({
+      isOpen: true,
+      itemId: item._id,
+      itemName: item.name,
+      loading: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
 
     try {
-      await adminService.deleteNutritionItem(itemId);
-      // Refresh the list
+      await adminService.deleteNutritionItem(deleteConfirm.itemId);
+      success('Nutrition item deleted successfully');
       fetchNutritionItems(pagination.page);
+      setDeleteConfirm({
+        isOpen: false,
+        itemId: null,
+        itemName: '',
+        loading: false,
+      });
     } catch (err) {
       console.error('Failed to delete nutrition item:', err);
-      alert(
+      showError(
         err.error?.message ||
           'Failed to delete nutrition item. Please try again.'
       );
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleteConfirm.loading) {
+      setDeleteConfirm({
+        isOpen: false,
+        itemId: null,
+        itemName: '',
+        loading: false,
+      });
     }
   };
 
@@ -97,15 +131,17 @@ const NutritionManager = () => {
     try {
       if (editingItem) {
         await adminService.updateNutritionItem(editingItem._id, nutritionData);
+        success('Nutrition item updated successfully');
       } else {
         await adminService.createNutritionItem(nutritionData);
+        success('Nutrition item created successfully');
       }
 
       setShowFormModal(false);
       fetchNutritionItems(pagination.page);
     } catch (err) {
       console.error('Failed to save nutrition item:', err);
-      alert(
+      showError(
         err.error?.message || 'Failed to save nutrition item. Please try again.'
       );
       return false;
@@ -348,7 +384,7 @@ const NutritionManager = () => {
                             Edit
                           </button>
                           <button
-                            onClick={() => handleDeleteItem(item._id)}
+                            onClick={() => handleDeleteClick(item)}
                             className='text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300'
                           >
                             Delete
@@ -500,6 +536,19 @@ const NutritionManager = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title='Delete Nutrition Item'
+        message={`Are you sure you want to delete "${deleteConfirm.itemName}"? This action cannot be undone and will remove this food item from the nutrition database. Users will no longer be able to log this item in their meal tracking.`}
+        confirmText='Delete Item'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </div>
   );
 };

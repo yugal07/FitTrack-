@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import adminService from '../../../services/adminService';
+import ConfirmModal from '../../ui/ConfirmModal';
+import { useToast } from '../../../contexts/ToastContext';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -18,6 +20,17 @@ const UserList = () => {
   const [role, setRole] = useState('');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
+
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    userId: null,
+    userName: '',
+    loading: false,
+  });
+
+  // Toast hook
+  const { success, error: showError } = useToast();
 
   const fetchUsers = async (page = 1) => {
     try {
@@ -69,22 +82,45 @@ const UserList = () => {
     fetchUsers(newPage);
   };
 
-  const handleDeleteUser = async userId => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this user? This action cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const handleDeleteClick = user => {
+    setDeleteConfirm({
+      isOpen: true,
+      userId: user._id,
+      userName: `${user.firstName} ${user.lastName}`,
+      loading: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
 
     try {
-      await adminService.deleteUser(userId);
-      // Refresh the user list
+      await adminService.deleteUser(deleteConfirm.userId);
+      success('User deleted successfully');
       fetchUsers(pagination.page);
+      setDeleteConfirm({
+        isOpen: false,
+        userId: null,
+        userName: '',
+        loading: false,
+      });
     } catch (err) {
       console.error('Failed to delete user:', err);
-      alert(err.error?.message || 'Failed to delete user. Please try again.');
+      showError(
+        err.error?.message || 'Failed to delete user. Please try again.'
+      );
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleteConfirm.loading) {
+      setDeleteConfirm({
+        isOpen: false,
+        userId: null,
+        userName: '',
+        loading: false,
+      });
     }
   };
 
@@ -309,7 +345,7 @@ const UserList = () => {
                             View
                           </Link>
                           <button
-                            onClick={() => handleDeleteUser(user._id)}
+                            onClick={() => handleDeleteClick(user)}
                             className='text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
                           >
                             Delete
@@ -433,6 +469,19 @@ const UserList = () => {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title='Delete User'
+        message={`Are you sure you want to delete ${deleteConfirm.userName}? This action cannot be undone and will permanently remove all user data, workout history, and progress.`}
+        confirmText='Delete User'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </div>
   );
 };
