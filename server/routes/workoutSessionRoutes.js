@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { 
+const {
   getWorkoutSessions,
   getWorkoutSession,
   logWorkoutSession,
   updateWorkoutSession,
   deleteWorkoutSession,
-  getWorkoutStats
+  getWorkoutStats,
 } = require('../controllers/workoutSessionController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -17,11 +17,10 @@ router.use(protect);
 router.get('/stats', getWorkoutStats);
 
 // Standard CRUD routes
-router.route('/')
-  .get(getWorkoutSessions)
-  .post(logWorkoutSession);
+router.route('/').get(getWorkoutSessions).post(logWorkoutSession);
 
-router.route('/:id')
+router
+  .route('/:id')
   .get(getWorkoutSession)
   .put(updateWorkoutSession)
   .delete(deleteWorkoutSession);

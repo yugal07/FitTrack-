@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { 
+const {
   getExercises,
   getExercise,
   createExercise,
   updateExercise,
   deleteExercise,
   rateExercise,
-  getExercisesByMuscleGroup
+  getExercisesByMuscleGroup,
 } = require('../controllers/exerciseController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -15,11 +15,13 @@ const { protect, admin } = require('../middleware/authMiddleware');
 router.get('/muscle-groups/:group', protect, getExercisesByMuscleGroup);
 
 // Standard CRUD routes
-router.route('/')
+router
+  .route('/')
   .get(protect, getExercises)
   .post(protect, admin, createExercise); // Admin only
 
-router.route('/:id')
+router
+  .route('/:id')
   .get(protect, getExercise)
   .put(protect, admin, updateExercise) // Admin only
   .delete(protect, admin, deleteExercise); // Admin only

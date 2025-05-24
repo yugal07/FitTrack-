@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { 
+const {
   getScheduledWorkouts,
   getScheduledWorkout,
   createScheduledWorkout,
   updateScheduledWorkout,
   deleteScheduledWorkout,
-  completeScheduledWorkout
+  completeScheduledWorkout,
 } = require('../controllers/scheduledWorkoutController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -14,11 +14,10 @@ const { protect } = require('../middleware/authMiddleware');
 router.use(protect);
 
 // Standard CRUD routes
-router.route('/')
-  .get(getScheduledWorkouts)
-  .post(createScheduledWorkout);
+router.route('/').get(getScheduledWorkouts).post(createScheduledWorkout);
 
-router.route('/:id')
+router
+  .route('/:id')
   .get(getScheduledWorkout)
   .put(updateScheduledWorkout)
   .delete(deleteScheduledWorkout);

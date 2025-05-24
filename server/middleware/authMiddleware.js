@@ -17,7 +17,10 @@ exports.protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
 
       // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key-here');
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || 'your-jwt-secret-key-here'
+      );
 
       // Get user from the token (exclude password)
       req.user = await User.findById(decoded.id).select('-password');
@@ -35,7 +38,7 @@ exports.protect = async (req, res, next) => {
       next();
     } catch (error) {
       console.error('Error in protect middleware:', error);
-      
+
       // Handle different types of JWT errors
       if (error instanceof jwt.TokenExpiredError) {
         return res.status(401).json({
@@ -46,7 +49,7 @@ exports.protect = async (req, res, next) => {
           },
         });
       }
-      
+
       if (error instanceof jwt.JsonWebTokenError) {
         return res.status(401).json({
           success: false,
@@ -56,7 +59,7 @@ exports.protect = async (req, res, next) => {
           },
         });
       }
-      
+
       res.status(401).json({
         success: false,
         error: {

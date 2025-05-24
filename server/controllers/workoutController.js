@@ -1,18 +1,18 @@
 // workout Controllers
-const { Workout, Exercise } = require('../models');
+const { Workout, Exercise, User } = require('../models');
 
 // @desc    Get all workouts
 // @route   GET /api/workouts
 // @access  Private
 exports.getWorkouts = async (req, res) => {
   try {
-    const { 
-      fitnessLevel, 
-      type, 
-      search, 
-      page = 1, 
+    const {
+      fitnessLevel,
+      type,
+      search,
+      page = 1,
       limit = 10,
-      isCustom
+      isCustom,
     } = req.query;
 
     // Build query
@@ -31,7 +31,7 @@ exports.getWorkouts = async (req, res) => {
     // Filter by custom/preset
     if (isCustom !== undefined) {
       query.isCustom = isCustom === 'true';
-      
+
       // If looking for custom workouts, only show the user's own
       if (query.isCustom) {
         query.createdBy = req.user._id;
@@ -43,7 +43,7 @@ exports.getWorkouts = async (req, res) => {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { tags: { $in: [new RegExp(search, 'i')] } },
       ];
     }
 
@@ -68,14 +68,14 @@ exports.getWorkouts = async (req, res) => {
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
-        limit
+        limit,
       };
     }
 
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
-        limit
+        limit,
       };
     }
 
@@ -87,9 +87,9 @@ exports.getWorkouts = async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
         page: parseInt(page),
-        limit: parseInt(limit)
+        limit: parseInt(limit),
       },
-      data: workouts
+      data: workouts,
     });
   } catch (error) {
     console.error('Error in getWorkouts:', error);
@@ -97,8 +97,8 @@ exports.getWorkouts = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -111,20 +111,20 @@ exports.getWorkout = async (req, res) => {
     const workout = await Workout.findById(req.params.id)
       .populate('createdBy', 'firstName lastName')
       .populate('exercises.exerciseId');
-    
+
     if (!workout) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'WORKOUT_NOT_FOUND',
-          message: 'Workout not found'
-        }
+          message: 'Workout not found',
+        },
       });
     }
 
     res.json({
       success: true,
-      data: workout
+      data: workout,
     });
   } catch (error) {
     console.error('Error in getWorkout:', error);
@@ -132,8 +132,8 @@ exports.getWorkout = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -143,14 +143,14 @@ exports.getWorkout = async (req, res) => {
 // @access  Private
 exports.createWorkout = async (req, res) => {
   try {
-    const { 
-      name, 
-      description, 
-      type, 
-      fitnessLevel, 
-      duration, 
+    const {
+      name,
+      description,
+      type,
+      fitnessLevel,
+      duration,
       exercises,
-      tags = []
+      tags = [],
     } = req.body;
 
     // Validate exercises
@@ -159,22 +159,24 @@ exports.createWorkout = async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_DATA',
-          message: 'At least one exercise is required'
-        }
+          message: 'At least one exercise is required',
+        },
       });
     }
 
     // Check if all exercises exist
     const exerciseIds = exercises.map(ex => ex.exerciseId);
-    const existingExercises = await Exercise.find({ _id: { $in: exerciseIds } });
+    const existingExercises = await Exercise.find({
+      _id: { $in: exerciseIds },
+    });
 
     if (existingExercises.length !== exerciseIds.length) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'INVALID_EXERCISES',
-          message: 'One or more exercises do not exist'
-        }
+          message: 'One or more exercises do not exist',
+        },
       });
     }
 
@@ -193,15 +195,15 @@ exports.createWorkout = async (req, res) => {
         reps: ex.reps || 10,
         duration: ex.duration,
         restTime: ex.restTime || 60,
-        order: ex.order || index + 1
+        order: ex.order || index + 1,
       })),
-      tags
+      tags,
     });
 
     res.status(201).json({
       success: true,
       data: workout,
-      message: 'Workout created successfully'
+      message: 'Workout created successfully',
     });
   } catch (error) {
     console.error('Error in createWorkout:', error);
@@ -209,8 +211,8 @@ exports.createWorkout = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -220,36 +222,32 @@ exports.createWorkout = async (req, res) => {
 // @access  Private
 exports.updateWorkout = async (req, res) => {
   try {
-    const { 
-      name, 
-      description, 
-      type, 
-      fitnessLevel, 
-      duration, 
-      exercises,
-      tags
-    } = req.body;
+    const { name, description, type, fitnessLevel, duration, exercises, tags } =
+      req.body;
 
-    let workout = await Workout.findById(req.params.id);
-    
+    const workout = await Workout.findById(req.params.id);
+
     if (!workout) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'WORKOUT_NOT_FOUND',
-          message: 'Workout not found'
-        }
+          message: 'Workout not found',
+        },
       });
     }
 
     // Check if user owns the workout or is admin
-    if (workout.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (
+      workout.createdBy.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
       return res.status(403).json({
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to update this workout'
-        }
+          message: 'Not authorized to update this workout',
+        },
       });
     }
 
@@ -257,15 +255,17 @@ exports.updateWorkout = async (req, res) => {
     if (exercises && Array.isArray(exercises) && exercises.length > 0) {
       // Check if all exercises exist
       const exerciseIds = exercises.map(ex => ex.exerciseId);
-      const existingExercises = await Exercise.find({ _id: { $in: exerciseIds } });
+      const existingExercises = await Exercise.find({
+        _id: { $in: exerciseIds },
+      });
 
       if (existingExercises.length !== exerciseIds.length) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'INVALID_EXERCISES',
-            message: 'One or more exercises do not exist'
-          }
+            message: 'One or more exercises do not exist',
+          },
         });
       }
 
@@ -276,17 +276,29 @@ exports.updateWorkout = async (req, res) => {
         reps: ex.reps || 10,
         duration: ex.duration,
         restTime: ex.restTime || 60,
-        order: ex.order || index + 1
+        order: ex.order || index + 1,
       }));
     }
 
     // Update other fields
-    if (name) workout.name = name;
-    if (description) workout.description = description;
-    if (type) workout.type = type;
-    if (fitnessLevel) workout.fitnessLevel = fitnessLevel;
-    if (duration) workout.duration = duration;
-    if (tags) workout.tags = tags;
+    if (name) {
+      workout.name = name;
+    }
+    if (description) {
+      workout.description = description;
+    }
+    if (type) {
+      workout.type = type;
+    }
+    if (fitnessLevel) {
+      workout.fitnessLevel = fitnessLevel;
+    }
+    if (duration) {
+      workout.duration = duration;
+    }
+    if (tags) {
+      workout.tags = tags;
+    }
 
     // Save workout
     await workout.save();
@@ -294,7 +306,7 @@ exports.updateWorkout = async (req, res) => {
     res.json({
       success: true,
       data: workout,
-      message: 'Workout updated successfully'
+      message: 'Workout updated successfully',
     });
   } catch (error) {
     console.error('Error in updateWorkout:', error);
@@ -302,8 +314,8 @@ exports.updateWorkout = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -314,25 +326,28 @@ exports.updateWorkout = async (req, res) => {
 exports.deleteWorkout = async (req, res) => {
   try {
     const workout = await Workout.findById(req.params.id);
-    
+
     if (!workout) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'WORKOUT_NOT_FOUND',
-          message: 'Workout not found'
-        }
+          message: 'Workout not found',
+        },
       });
     }
 
     // Check if user owns the workout or is admin
-    if (workout.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (
+      workout.createdBy.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
       return res.status(403).json({
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to delete this workout'
-        }
+          message: 'Not authorized to delete this workout',
+        },
       });
     }
 
@@ -340,7 +355,7 @@ exports.deleteWorkout = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Workout deleted successfully'
+      message: 'Workout deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteWorkout:', error);
@@ -348,8 +363,8 @@ exports.deleteWorkout = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -366,20 +381,20 @@ exports.rateWorkout = async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_RATING',
-          message: 'Rating must be between 1 and 5'
-        }
+          message: 'Rating must be between 1 and 5',
+        },
       });
     }
 
     const workout = await Workout.findById(req.params.id);
-    
+
     if (!workout) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'WORKOUT_NOT_FOUND',
-          message: 'Workout not found'
-        }
+          message: 'Workout not found',
+        },
       });
     }
 
@@ -399,12 +414,14 @@ exports.rateWorkout = async (req, res) => {
         userId: req.user._id,
         rating,
         review: review || '',
-        date: Date.now()
+        date: Date.now(),
       });
     }
 
     // Recalculate average rating
-    workout.averageRating = workout.ratings.reduce((acc, item) => acc + item.rating, 0) / workout.ratings.length;
+    workout.averageRating =
+      workout.ratings.reduce((acc, item) => acc + item.rating, 0) /
+      workout.ratings.length;
 
     await workout.save();
 
@@ -413,9 +430,9 @@ exports.rateWorkout = async (req, res) => {
       data: {
         rating,
         review,
-        averageRating: workout.averageRating
+        averageRating: workout.averageRating,
       },
-      message: 'Workout rated successfully'
+      message: 'Workout rated successfully',
     });
   } catch (error) {
     console.error('Error in rateWorkout:', error);
@@ -423,8 +440,8 @@ exports.rateWorkout = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -435,30 +452,30 @@ exports.rateWorkout = async (req, res) => {
 exports.getRecommendedWorkouts = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'USER_NOT_FOUND',
-          message: 'User not found'
-        }
+          message: 'User not found',
+        },
       });
     }
 
     // Get workouts based on user's fitness level
     let recommendations = await Workout.find({
       fitnessLevel: user.fitnessLevel,
-      isCustom: false // Only recommend pre-defined workouts
+      isCustom: false, // Only recommend pre-defined workouts
     })
-    .limit(5)
-    .populate('exercises.exerciseId', 'name muscleGroups difficulty')
-    .sort({ averageRating: -1 });
+      .limit(5)
+      .populate('exercises.exerciseId', 'name muscleGroups difficulty')
+      .sort({ averageRating: -1 });
 
     // If not enough recommendations, add some workouts from adjacent fitness levels
     if (recommendations.length < 5) {
       let adjacentLevel;
-      
+
       if (user.fitnessLevel === 'beginner') {
         adjacentLevel = 'intermediate';
       } else if (user.fitnessLevel === 'advanced') {
@@ -471,18 +488,18 @@ exports.getRecommendedWorkouts = async (req, res) => {
       const additionalWorkouts = await Workout.find({
         fitnessLevel: adjacentLevel,
         isCustom: false,
-        _id: { $nin: recommendations.map(r => r._id) }
+        _id: { $nin: recommendations.map(r => r._id) },
       })
-      .limit(5 - recommendations.length)
-      .populate('exercises.exerciseId', 'name muscleGroups difficulty')
-      .sort({ averageRating: -1 });
+        .limit(5 - recommendations.length)
+        .populate('exercises.exerciseId', 'name muscleGroups difficulty')
+        .sort({ averageRating: -1 });
 
       recommendations = [...recommendations, ...additionalWorkouts];
     }
 
     res.json({
       success: true,
-      data: recommendations
+      data: recommendations,
     });
   } catch (error) {
     console.error('Error in getRecommendedWorkouts:', error);
@@ -490,8 +507,8 @@ exports.getRecommendedWorkouts = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };

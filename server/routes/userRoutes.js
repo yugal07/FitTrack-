@@ -1,17 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  getUserProfile, 
-  updateUserProfile, 
+const {
+  getUserProfile,
+  updateUserProfile,
   updateUserPreferences,
-  deleteUserAccount
+  deleteUserAccount,
 } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 
 // All routes are protected
 router.use(protect);
 
-router.route('/')
+router
+  .route('/')
   .get(getUserProfile)
   .put(updateUserProfile)
   .delete(deleteUserAccount);

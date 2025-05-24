@@ -5,13 +5,13 @@ const { Exercise } = require('../models');
 // @access  Private
 exports.getExercises = async (req, res) => {
   try {
-    const { 
-      muscleGroup, 
-      difficulty, 
-      search, 
+    const {
+      muscleGroup,
+      difficulty,
+      search,
       equipment,
-      page = 1, 
-      limit = 20 
+      page = 1,
+      limit = 20,
     } = req.query;
 
     // Build query
@@ -36,7 +36,7 @@ exports.getExercises = async (req, res) => {
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -59,14 +59,14 @@ exports.getExercises = async (req, res) => {
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
-        limit
+        limit,
       };
     }
 
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
-        limit
+        limit,
       };
     }
 
@@ -78,9 +78,9 @@ exports.getExercises = async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
         page: parseInt(page),
-        limit: parseInt(limit)
+        limit: parseInt(limit),
       },
-      data: exercises
+      data: exercises,
     });
   } catch (error) {
     console.error('Error in getExercises:', error);
@@ -88,8 +88,8 @@ exports.getExercises = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -100,20 +100,20 @@ exports.getExercises = async (req, res) => {
 exports.getExercise = async (req, res) => {
   try {
     const exercise = await Exercise.findById(req.params.id);
-    
+
     if (!exercise) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'EXERCISE_NOT_FOUND',
-          message: 'Exercise not found'
-        }
+          message: 'Exercise not found',
+        },
       });
     }
 
     res.json({
       success: true,
-      data: exercise
+      data: exercise,
     });
   } catch (error) {
     console.error('Error in getExercise:', error);
@@ -121,8 +121,8 @@ exports.getExercise = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -132,15 +132,15 @@ exports.getExercise = async (req, res) => {
 // @access  Private/Admin
 exports.createExercise = async (req, res) => {
   try {
-    const { 
-      name, 
-      description, 
-      muscleGroups, 
-      difficulty, 
+    const {
+      name,
+      description,
+      muscleGroups,
+      difficulty,
       instructions,
       videoUrl,
       imageUrl,
-      equipment
+      equipment,
     } = req.body;
 
     // Check if exercise already exists
@@ -151,8 +151,8 @@ exports.createExercise = async (req, res) => {
         success: false,
         error: {
           code: 'EXERCISE_EXISTS',
-          message: 'Exercise with this name already exists'
-        }
+          message: 'Exercise with this name already exists',
+        },
       });
     }
 
@@ -165,13 +165,13 @@ exports.createExercise = async (req, res) => {
       instructions,
       videoUrl,
       imageUrl,
-      equipment
+      equipment,
     });
 
     res.status(201).json({
       success: true,
       data: exercise,
-      message: 'Exercise created successfully'
+      message: 'Exercise created successfully',
     });
   } catch (error) {
     console.error('Error in createExercise:', error);
@@ -179,8 +179,8 @@ exports.createExercise = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -190,53 +190,69 @@ exports.createExercise = async (req, res) => {
 // @access  Private/Admin
 exports.updateExercise = async (req, res) => {
   try {
-    const { 
-      name, 
-      description, 
-      muscleGroups, 
-      difficulty, 
+    const {
+      name,
+      description,
+      muscleGroups,
+      difficulty,
       instructions,
       videoUrl,
       imageUrl,
-      equipment
+      equipment,
     } = req.body;
 
-    let exercise = await Exercise.findById(req.params.id);
-    
+    const exercise = await Exercise.findById(req.params.id);
+
     if (!exercise) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'EXERCISE_NOT_FOUND',
-          message: 'Exercise not found'
-        }
+          message: 'Exercise not found',
+        },
       });
     }
 
     // Check if updating to an existing name
     if (name && name !== exercise.name) {
       const existingExercise = await Exercise.findOne({ name });
-      
+
       if (existingExercise) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'EXERCISE_EXISTS',
-            message: 'Exercise with this name already exists'
-          }
+            message: 'Exercise with this name already exists',
+          },
         });
       }
     }
 
     // Update fields
-    if (name) exercise.name = name;
-    if (description) exercise.description = description;
-    if (muscleGroups) exercise.muscleGroups = muscleGroups;
-    if (difficulty) exercise.difficulty = difficulty;
-    if (instructions) exercise.instructions = instructions;
-    if (videoUrl !== undefined) exercise.videoUrl = videoUrl;
-    if (imageUrl !== undefined) exercise.imageUrl = imageUrl;
-    if (equipment) exercise.equipment = equipment;
+    if (name) {
+      exercise.name = name;
+    }
+    if (description) {
+      exercise.description = description;
+    }
+    if (muscleGroups) {
+      exercise.muscleGroups = muscleGroups;
+    }
+    if (difficulty) {
+      exercise.difficulty = difficulty;
+    }
+    if (instructions) {
+      exercise.instructions = instructions;
+    }
+    if (videoUrl !== undefined) {
+      exercise.videoUrl = videoUrl;
+    }
+    if (imageUrl !== undefined) {
+      exercise.imageUrl = imageUrl;
+    }
+    if (equipment) {
+      exercise.equipment = equipment;
+    }
 
     // Save exercise
     await exercise.save();
@@ -244,7 +260,7 @@ exports.updateExercise = async (req, res) => {
     res.json({
       success: true,
       data: exercise,
-      message: 'Exercise updated successfully'
+      message: 'Exercise updated successfully',
     });
   } catch (error) {
     console.error('Error in updateExercise:', error);
@@ -252,8 +268,8 @@ exports.updateExercise = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -264,14 +280,14 @@ exports.updateExercise = async (req, res) => {
 exports.deleteExercise = async (req, res) => {
   try {
     const exercise = await Exercise.findById(req.params.id);
-    
+
     if (!exercise) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'EXERCISE_NOT_FOUND',
-          message: 'Exercise not found'
-        }
+          message: 'Exercise not found',
+        },
       });
     }
 
@@ -279,7 +295,7 @@ exports.deleteExercise = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Exercise deleted successfully'
+      message: 'Exercise deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteExercise:', error);
@@ -287,8 +303,8 @@ exports.deleteExercise = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -305,20 +321,20 @@ exports.rateExercise = async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_RATING',
-          message: 'Rating must be between 1 and 5'
-        }
+          message: 'Rating must be between 1 and 5',
+        },
       });
     }
 
     const exercise = await Exercise.findById(req.params.id);
-    
+
     if (!exercise) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'EXERCISE_NOT_FOUND',
-          message: 'Exercise not found'
-        }
+          message: 'Exercise not found',
+        },
       });
     }
 
@@ -338,12 +354,14 @@ exports.rateExercise = async (req, res) => {
         userId: req.user._id,
         rating,
         review: review || '',
-        date: Date.now()
+        date: Date.now(),
       });
     }
 
     // Recalculate average rating
-    exercise.averageRating = exercise.ratings.reduce((acc, item) => acc + item.rating, 0) / exercise.ratings.length;
+    exercise.averageRating =
+      exercise.ratings.reduce((acc, item) => acc + item.rating, 0) /
+      exercise.ratings.length;
 
     await exercise.save();
 
@@ -352,9 +370,9 @@ exports.rateExercise = async (req, res) => {
       data: {
         rating,
         review,
-        averageRating: exercise.averageRating
+        averageRating: exercise.averageRating,
       },
-      message: 'Exercise rated successfully'
+      message: 'Exercise rated successfully',
     });
   } catch (error) {
     console.error('Error in rateExercise:', error);
@@ -362,8 +380,8 @@ exports.rateExercise = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -374,24 +392,25 @@ exports.rateExercise = async (req, res) => {
 exports.getExercisesByMuscleGroup = async (req, res) => {
   try {
     const muscleGroup = req.params.group;
-    
+
     if (!muscleGroup) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'INVALID_REQUEST',
-          message: 'Muscle group is required'
-        }
+          message: 'Muscle group is required',
+        },
       });
     }
 
-    const exercises = await Exercise.find({ muscleGroups: muscleGroup })
-      .sort({ name: 1 });
+    const exercises = await Exercise.find({ muscleGroups: muscleGroup }).sort({
+      name: 1,
+    });
 
     res.json({
       success: true,
       count: exercises.length,
-      data: exercises
+      data: exercises,
     });
   } catch (error) {
     console.error('Error in getExercisesByMuscleGroup:', error);
@@ -399,8 +418,8 @@ exports.getExercisesByMuscleGroup = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };

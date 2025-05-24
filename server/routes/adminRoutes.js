@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { 
+const {
   getAdminStats,
   getUsers,
   getUserById,
@@ -9,7 +9,7 @@ const {
   getAnalytics,
   sendAnnouncement,
   getNotifications,
-  getSystemOverview
+  getSystemOverview,
 } = require('../controllers/adminController');
 const { protect, admin } = require('../middleware/authMiddleware');
 
@@ -20,15 +20,11 @@ router.use(protect, admin);
 router.get('/stats', getAdminStats);
 
 // User management
-router.route('/users')
-  .get(getUsers);
+router.route('/users').get(getUsers);
 
-router.route('/users/:id')
-  .get(getUserById)
-  .put(updateUser)
-  .delete(deleteUser);
+router.route('/users/:id').get(getUserById).put(updateUser).delete(deleteUser);
 
-router.get('/overview' , getSystemOverview);
+router.get('/overview', getSystemOverview);
 
 // Analytics
 router.get('/analytics', getAnalytics);

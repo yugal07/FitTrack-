@@ -3,99 +3,102 @@ const mongoose = require('mongoose');
 const measurementSchema = new mongoose.Schema({
   date: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   weight: {
-    type: Number
+    type: Number,
   },
   height: {
-    type: Number
+    type: Number,
   },
   bodyFat: {
-    type: Number
+    type: Number,
   },
   chest: {
-    type: Number
+    type: Number,
   },
   waist: {
-    type: Number
+    type: Number,
   },
   hips: {
-    type: Number
+    type: Number,
   },
   arms: {
-    type: Number
+    type: Number,
   },
   thighs: {
-    type: Number
+    type: Number,
   },
   notes: {
-    type: String
-  }
+    type: String,
+  },
 });
 
 const goalSchema = new mongoose.Schema({
   type: {
     type: String,
     required: [true, 'Goal type is required'],
-    enum: ['weight', 'strength', 'endurance', 'habit', 'nutrition', 'custom']
+    enum: ['weight', 'strength', 'endurance', 'habit', 'nutrition', 'custom'],
   },
   targetValue: {
-    type: Number
+    type: Number,
   },
   currentValue: {
-    type: Number
+    type: Number,
   },
   unit: {
-    type: String
+    type: String,
   },
   startDate: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   targetDate: {
     type: Date,
-    required: [true, 'Target date is required']
+    required: [true, 'Target date is required'],
   },
   status: {
     type: String,
     enum: ['active', 'completed', 'abandoned'],
-    default: 'active'
-  }
+    default: 'active',
+  },
 });
 
 const progressPhotoSchema = new mongoose.Schema({
   date: {
     type: Date,
-    default: Date.now
+    default: Date.now,
   },
   photoUrl: {
     type: String,
-    required: [true, 'Photo URL is required']
+    required: [true, 'Photo URL is required'],
   },
   category: {
     type: String,
     enum: ['front', 'side', 'back', 'custom'],
-    default: 'front'
+    default: 'front',
   },
   notes: {
-    type: String
-  }
+    type: String,
+  },
 });
 
-const profileSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    unique: true
+const profileSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      unique: true,
+    },
+    goals: [goalSchema],
+    measurements: [measurementSchema],
+    progressPhotos: [progressPhotoSchema],
   },
-  goals: [goalSchema],
-  measurements: [measurementSchema],
-  progressPhotos: [progressPhotoSchema]
-}, {
-  timestamps: true
-});
+  {
+    timestamps: true,
+  }
+);
 
 const Profile = mongoose.model('Profile', profileSchema);
 

@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { 
+const {
   getWorkouts,
   getWorkout,
   createWorkout,
   updateWorkout,
   deleteWorkout,
   rateWorkout,
-  getRecommendedWorkouts
+  getRecommendedWorkouts,
 } = require('../controllers/workoutController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -18,17 +18,11 @@ router.use(protect);
 router.get('/recommended', getRecommendedWorkouts);
 
 // Standard CRUD routes
-router.route('/')
-  .get(getWorkouts)
-  .post(createWorkout);
+router.route('/').get(getWorkouts).post(createWorkout);
 
-router.route('/:id')
-  .get(getWorkout)
-  .put(updateWorkout)
-  .delete(deleteWorkout);
+router.route('/:id').get(getWorkout).put(updateWorkout).delete(deleteWorkout);
 
 // Rating route
 router.post('/:id/ratings', rateWorkout);
 
 module.exports = router;
-

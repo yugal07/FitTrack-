@@ -7,16 +7,16 @@ import WorkoutHistory from './WorkoutHistory';
 
 const Progress = () => {
   const [activeTab, setActiveTab] = useState('trends');
-  
+
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-        <h1 className="px-6 py-4 text-2xl font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
+    <div className='space-y-6'>
+      <div className='bg-white dark:bg-gray-800 shadow rounded-lg'>
+        <h1 className='px-6 py-4 text-2xl font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700'>
           Progress Tracking
         </h1>
-        
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex -mb-px">
+
+        <div className='border-b border-gray-200 dark:border-gray-700'>
+          <nav className='flex -mb-px'>
             <button
               onClick={() => setActiveTab('trends')}
               className={`px-6 py-3 font-medium text-sm border-b-2 ${
@@ -60,8 +60,8 @@ const Progress = () => {
           </nav>
         </div>
       </div>
-      
-      <div className="pb-6">
+
+      <div className='pb-6'>
         {activeTab === 'trends' && <MeasurementTrends />}
         {activeTab === 'photos' && <PhotoComparison />}
         {activeTab === 'workouts' && <WorkoutHistory />}
