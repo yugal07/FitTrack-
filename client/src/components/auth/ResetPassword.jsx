@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useToast } from '../../contexts/ToastContext';
 import ThemeToggle from '../ui/ThemeToggle';
 import api from '../../utils/api';
 
@@ -16,6 +17,7 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
+  const toast = useToast();
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get('token');
 
@@ -47,7 +49,6 @@ const ResetPassword = () => {
       }
 
       try {
-        // This endpoint would need to be implemented on the backend
         const response = await api.post('/api/auth/verify-reset-token', {
           token,
         });
@@ -55,7 +56,9 @@ const ResetPassword = () => {
         setTokenChecked(true);
         setTokenValidating(false);
       } catch (err) {
-        setError('Invalid or expired reset token');
+        setError(
+          err.response?.data?.error?.message || 'Invalid or expired reset token'
+        );
         setTokenChecked(true);
         setTokenValidating(false);
       }
@@ -69,22 +72,23 @@ const ResetPassword = () => {
       setLoading(true);
       setError('');
 
-      // This endpoint would need to be implemented on the backend
       await api.post('/api/auth/reset-password', {
         token,
         newPassword: data.password,
       });
 
       setSuccess(true);
+      toast.success('Password reset successfully!');
 
       // Redirect to login after 3 seconds
       setTimeout(() => {
         navigate('/login');
       }, 3000);
     } catch (err) {
-      setError(
-        err.response?.data?.error?.message || 'Failed to reset password'
-      );
+      const errorMessage =
+        err.response?.data?.error?.message || 'Failed to reset password';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -135,13 +139,21 @@ const ResetPassword = () => {
             <div className='mt-3 text-sm text-gray-700 dark:text-gray-300'>
               <p>{error || 'Invalid or expired reset token'}</p>
             </div>
-            <div className='mt-6'>
+            <div className='mt-6 space-y-3'>
               <Link
                 to='/forgot-password'
                 className='inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900'
               >
                 Request a new reset link
               </Link>
+              <div className='text-sm'>
+                <Link
+                  to='/login'
+                  className='font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300'
+                >
+                  Back to login
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -228,6 +240,11 @@ const ResetPassword = () => {
                   value: 8,
                   message: 'Password must be at least 8 characters long',
                 },
+                pattern: {
+                  value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]/,
+                  message:
+                    'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+                },
               })}
             />
             {errors.password && (
@@ -236,7 +253,8 @@ const ResetPassword = () => {
               </p>
             )}
             <p className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
-              Password must be at least 8 characters long
+              Password must be at least 8 characters long and contain uppercase,
+              lowercase, and numbers
             </p>
           </div>
 
