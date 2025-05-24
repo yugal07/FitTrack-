@@ -27,7 +27,16 @@ const getScheduledWorkouts = asyncHandler(async (req, res) => {
 
   const scheduledWorkouts = await ScheduledWorkout.find(query)
     .sort({ scheduledFor: sortOrder })
-    .populate('workoutId', 'name type duration fitnessLevel')
+    .populate({
+      path: 'workoutId',
+      select: 'name type duration fitnessLevel description exercises',
+      populate: {
+        path: 'exercises.exerciseId',
+        model: 'Exercise',
+        select: 'name category muscleGroups instructions description'
+      }
+    })
+    .populate('workoutSessionId', 'date duration rating')
     .limit(limit ? parseInt(limit) : undefined);
 
   res.status(200).json({
@@ -42,8 +51,16 @@ const getScheduledWorkouts = asyncHandler(async (req, res) => {
 // @access  Private
 const getScheduledWorkout = asyncHandler(async (req, res) => {
   const scheduledWorkout = await ScheduledWorkout.findById(req.params.id)
-    .populate('workoutId')
-    .populate('workoutSessionId');
+    .populate({
+      path: 'workoutId',
+      select: 'name type description fitnessLevel duration exercises',
+      populate: {
+        path: 'exercises.exerciseId',
+        model: 'Exercise',
+        select: 'name category muscleGroups instructions description'
+      }
+    })
+    .populate('workoutSessionId', 'date duration rating difficulty notes');
 
   if (!scheduledWorkout) {
     res.status(404);
@@ -75,20 +92,39 @@ const createScheduledWorkout = asyncHandler(async (req, res) => {
     throw new Error('Workout not found');
   }
 
+  // Validate scheduled time is in the future
+  const scheduledDate = new Date(scheduledFor);
+  if (scheduledDate <= new Date()) {
+    res.status(400);
+    throw new Error('Scheduled time must be in the future');
+  }
+
   // Create the scheduled workout
   const scheduledWorkout = await ScheduledWorkout.create({
     user: req.user.id,
     workoutId,
     name: workout.name,
-    scheduledFor,
+    scheduledFor: scheduledDate,
     duration: workout.duration,
     notes,
     isCompleted: false,
   });
 
+  // Populate and return
+  const populatedScheduledWorkout = await ScheduledWorkout.findById(scheduledWorkout._id)
+    .populate({
+      path: 'workoutId',
+      select: 'name type description fitnessLevel duration',
+      populate: {
+        path: 'exercises.exerciseId',
+        model: 'Exercise',
+        select: 'name category'
+      }
+    });
+
   res.status(201).json({
     success: true,
-    data: scheduledWorkout,
+    data: populatedScheduledWorkout,
   });
 });
 
@@ -120,12 +156,29 @@ const updateScheduledWorkout = asyncHandler(async (req, res) => {
     req.body.duration = workout.duration;
   }
 
+  // Validate scheduled time is in the future (if updating and not completed)
+  if (req.body.scheduledFor && !req.body.isCompleted) {
+    const newScheduledDate = new Date(req.body.scheduledFor);
+    if (newScheduledDate <= new Date()) {
+      res.status(400);
+      throw new Error('Scheduled time must be in the future');
+    }
+  }
+
   // Update the workout
   scheduledWorkout = await ScheduledWorkout.findByIdAndUpdate(
     req.params.id,
     req.body,
     { new: true, runValidators: true }
-  );
+  ).populate({
+    path: 'workoutId',
+    select: 'name type description fitnessLevel duration',
+    populate: {
+      path: 'exercises.exerciseId',
+      model: 'Exercise',
+      select: 'name category muscleGroups'
+    }
+  }).populate('workoutSessionId', 'date duration rating');
 
   res.status(200).json({
     success: true,
@@ -188,13 +241,41 @@ const completeScheduledWorkout = asyncHandler(async (req, res) => {
     {
       isCompleted: true,
       workoutSessionId,
+      completedAt: new Date(),
     },
     { new: true, runValidators: true }
-  );
+  ).populate({
+    path: 'workoutId',
+    select: 'name type description fitnessLevel duration'
+  }).populate('workoutSessionId', 'date duration rating');
 
   res.status(200).json({
     success: true,
     data: scheduledWorkout,
+  });
+});
+
+// @desc    Get upcoming scheduled workouts (for dashboard)
+// @route   GET /api/scheduled-workouts/upcoming
+// @access  Private
+const getUpcomingWorkouts = asyncHandler(async (req, res) => {
+  const { limit = 5 } = req.query;
+
+  const upcomingWorkouts = await ScheduledWorkout.find({
+    user: req.user.id,
+    isCompleted: false,
+    scheduledFor: { $gte: new Date() }
+  })
+    .populate({
+      path: 'workoutId',
+      select: 'name type duration'
+    })
+    .sort({ scheduledFor: 1 })
+    .limit(parseInt(limit));
+
+  res.status(200).json({
+    success: true,
+    data: upcomingWorkouts,
   });
 });
 
@@ -205,4 +286,5 @@ module.exports = {
   updateScheduledWorkout,
   deleteScheduledWorkout,
   completeScheduledWorkout,
+  getUpcomingWorkouts,
 };
