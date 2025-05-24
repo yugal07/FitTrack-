@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import adminService from '../../../services/adminService';
+import ConfirmModal from '../../ui/ConfirmModal';
+import { useToast } from '../../../contexts/ToastContext';
 
 const UserDetail = () => {
   const { id } = useParams();
@@ -17,7 +19,15 @@ const UserDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState(false);
+
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    loading: false,
+  });
+
+  // Toast hook
+  const { success: showSuccess, error: showError } = useToast();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -59,24 +69,21 @@ const UserDetail = () => {
     try {
       setSaving(true);
       setError(null);
-      setSuccess(false);
 
       await adminService.updateUser(id, formData);
-      setSuccess(true);
+
+      // Show success toast
+      showSuccess('User information updated successfully');
 
       // Update local user data
       setUser(prev => ({
         ...prev,
         ...formData,
       }));
-
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setSuccess(false);
-      }, 3000);
     } catch (err) {
       console.error('Failed to update user:', err);
-      setError(
+      // Show error toast instead of setting local error state
+      showError(
         err.error?.message || 'Failed to update user. Please try again.'
       );
     } finally {
@@ -84,27 +91,37 @@ const UserDetail = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this user? This action cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const handleDeleteClick = () => {
+    setDeleteConfirm({
+      isOpen: true,
+      loading: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
 
     try {
-      setLoading(true);
       await adminService.deleteUser(id);
+
+      // Show success toast
+      showSuccess('User deleted successfully');
 
       // Redirect to user list after successful deletion
       navigate('/admin/users');
     } catch (err) {
       console.error('Failed to delete user:', err);
-      setError(
+      // Show error toast instead of setting local error state
+      showError(
         err.error?.message || 'Failed to delete user. Please try again.'
       );
-      setLoading(false);
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleteConfirm.loading) {
+      setDeleteConfirm({ isOpen: false, loading: false });
     }
   };
 
@@ -187,18 +204,6 @@ const UserDetail = () => {
 
         {/* Edit User Form */}
         <div className='px-4 py-5 sm:p-6'>
-          {success && (
-            <div className='mb-6 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 p-4 rounded-md text-green-700 dark:text-green-300'>
-              <p>User information updated successfully.</p>
-            </div>
-          )}
-
-          {error && (
-            <div className='mb-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-4 rounded-md text-red-700 dark:text-red-300'>
-              <p>{error}</p>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit}>
             <div className='grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6'>
               <div className='sm:col-span-3'>
@@ -305,7 +310,7 @@ const UserDetail = () => {
             <div className='mt-6 flex justify-end space-x-3'>
               <button
                 type='button'
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 className='inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800'
               >
                 Delete User
@@ -374,6 +379,19 @@ const UserDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title='Delete User Account'
+        message={`Are you sure you want to delete ${user?.firstName} ${user?.lastName}'s account? This action cannot be undone and will permanently remove all user data, workout history, progress tracking, and personal information from the system.`}
+        confirmText='Delete Account'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </div>
   );
 };
