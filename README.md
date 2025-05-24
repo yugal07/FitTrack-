@@ -45,12 +45,21 @@
 - **Goal Milestones**: Celebrations when fitness goals are achieved
 - **System Announcements**: Important updates and tips from administrators
 
+### 🔐 Authentication & Security
+
+- **Secure Registration**: Multi-step user registration with email verification
+- **JWT Authentication**: Token-based authentication with refresh tokens
+- **Password Reset**: Secure password reset via email with time-limited tokens
+- **Email Notifications**: Professional HTML email templates for password reset and confirmations
+- **Account Security**: Password strength validation and secure password hashing
+
 ### 👤 User Management
 
 - **Profile Customization**: Personalized user profiles with preferences
 - **Dark/Light Mode**: Theme switching for optimal user experience
 - **Measurement Units**: Support for both metric and imperial units
 - **Privacy Controls**: Granular notification and privacy settings
+- **Password Management**: Change password functionality with current password verification
 
 ### 🛡️ Admin Dashboard
 
@@ -66,9 +75,11 @@
 - **React 19.1.0**: Modern UI library with hooks and context
 - **Tailwind CSS**: Utility-first CSS framework for responsive design
 - **React Router**: Client-side routing and navigation
+- **React Hook Form**: Performant forms with easy validation
 - **Chart.js**: Interactive data visualization
 - **Axios**: HTTP client for API requests
 - **Vite**: Fast build tool and development server
+- **Lucide React**: Modern icon library
 
 ### Backend
 
@@ -78,8 +89,10 @@
 - **Mongoose**: MongoDB object modeling for Node.js
 - **JWT**: JSON Web Tokens for secure authentication
 - **bcrypt**: Password hashing and security
+- **Nodemailer**: Email sending for password reset functionality
 - **Multer**: File upload handling
 - **node-cron**: Scheduled task automation
+- **crypto**: Secure token generation for password reset
 
 ### DevOps & Tools
 
@@ -123,6 +136,7 @@ fittrack/
 │   └── documentation/           # API and technical documentation
 │
 ├── docker-compose.yml           # Docker container orchestration
+├── .env.example                 # Environment variables template
 └── README.md                    # Project documentation
 ```
 
@@ -134,6 +148,7 @@ fittrack/
 - **npm** or **yarn**
 - **MongoDB** (local installation or MongoDB Atlas)
 - **Git**
+- **Gmail Account** (for email functionality, optional for development)
 
 ### 🔧 Development Setup
 
@@ -160,17 +175,46 @@ fittrack/
 
 4. **Environment Configuration**
 
-   Create a `.env` file in the server directory:
-
-   ```env
-   PORT=8001
-   MONGODB_URI=mongodb://localhost:27017/fittrack
-   JWT_SECRET=your_super_secure_jwt_secret_key_here
-   REFRESH_TOKEN_SECRET=your_refresh_token_secret_key_here
-   NODE_ENV=development
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
    ```
 
-5. **Database Seeding** (Optional)
+   Edit the `.env` file with your configuration:
+
+   ```env
+   # Server Configuration
+   PORT=8001
+   NODE_ENV=development
+
+   # Database
+   MONGODB_URI=mongodb://localhost:27017/fittrack
+
+   # JWT Secrets (Generate secure random strings for production)
+   JWT_SECRET=your_super_secure_jwt_secret_key_here
+   REFRESH_TOKEN_SECRET=your_refresh_token_secret_key_here
+
+   # Email Configuration (Optional for development)
+   EMAIL_SERVICE=gmail
+   EMAIL_FROM=your-email@gmail.com
+   EMAIL_PASSWORD=your-gmail-app-password
+   FROM_NAME=FitTrack Pro
+
+   # Client URL for password reset links
+   CLIENT_URL=http://localhost:5173
+   ```
+
+5. **Email Setup (Optional)**
+
+   For password reset functionality with real emails:
+
+   - Enable 2-Factor Authentication on your Gmail account
+   - Generate an App Password in Google Account settings
+   - Use the App Password (not your regular password) in `EMAIL_PASSWORD`
+
+   For development without real emails, the system will use Ethereal Email for testing.
+
+6. **Database Seeding** (Optional)
 
    ```bash
    # Seed database with sample data
@@ -180,7 +224,7 @@ fittrack/
    npm run seed:destroy
    ```
 
-6. **Start Backend Server**
+7. **Start Backend Server**
 
    ```bash
    # Development mode with auto-reload
@@ -190,14 +234,14 @@ fittrack/
    npm start
    ```
 
-7. **Frontend Setup**
+8. **Frontend Setup**
 
    ```bash
    cd ../client
    npm install
    ```
 
-8. **Frontend Environment Configuration**
+9. **Frontend Environment Configuration**
 
    Create a `.env` file in the client directory:
 
@@ -205,13 +249,13 @@ fittrack/
    VITE_API_URL=http://localhost:8001/api
    ```
 
-9. **Start Frontend Development Server**
+10. **Start Frontend Development Server**
 
-   ```bash
-   npm run dev
-   ```
+    ```bash
+    npm run dev
+    ```
 
-10. **Access the Application**
+11. **Access the Application**
     - Frontend: http://localhost:5173
     - Backend API: http://localhost:8001/api
 
@@ -254,6 +298,10 @@ After seeding the database, you can use these credentials:
 - `POST /api/auth/login` - User login
 - `POST /api/auth/refresh-token` - Token refresh
 - `GET /api/auth/me` - Get current user
+- `PUT /api/auth/password` - Change password (authenticated users)
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/verify-reset-token` - Verify reset token
+- `POST /api/auth/reset-password` - Reset password with token
 
 ### Core Features
 
@@ -272,6 +320,32 @@ After seeding the database, you can use these credentials:
 
 For detailed API documentation, see the [API Documentation](server/documentation/Routes/Routes.md).
 
+## 🔧 Key Features Implemented
+
+### Password Reset Flow
+
+1. **Request Reset**: User enters email on forgot password page
+2. **Email Sent**: System sends professional HTML email with reset link
+3. **Token Verification**: Frontend verifies token before showing reset form
+4. **Password Reset**: User sets new password with validation
+5. **Confirmation**: Confirmation email sent after successful reset
+
+### Email System
+
+- **Professional Templates**: Beautiful HTML email templates
+- **Development Testing**: Ethereal Email for development testing
+- **Production Ready**: Gmail SMTP for production use
+- **Security**: Time-limited tokens (10 minutes expiry)
+- **Error Handling**: Graceful fallbacks and detailed logging
+
+### Authentication Security
+
+- **Password Hashing**: bcrypt with salt rounds
+- **JWT Tokens**: Access and refresh token system
+- **Token Validation**: Comprehensive token verification
+- **Password Strength**: Client and server-side validation
+- **Secure Reset**: Cryptographically secure reset tokens
+
 ## 🧪 Testing
 
 ```bash
@@ -288,6 +362,13 @@ npm run lint
 
 # Format code
 npm run format
+
+# Test password reset flow
+# 1. Register a new user
+# 2. Use forgot password feature
+# 3. Check email (or console logs for Ethereal)
+# 4. Complete password reset
+# 5. Login with new password
 ```
 
 ## 🚀 Deployment
@@ -319,7 +400,20 @@ NODE_ENV=production
 MONGODB_URI=your_production_mongodb_uri
 JWT_SECRET=your_production_jwt_secret
 REFRESH_TOKEN_SECRET=your_production_refresh_secret
+EMAIL_SERVICE=sendgrid
+SENDGRID_USERNAME=apikey
+SENDGRID_PASSWORD=your_sendgrid_api_key
+CLIENT_URL=https://your-production-domain.com
 ```
+
+### Email Service for Production
+
+For production, consider using:
+
+- **SendGrid**: Reliable email delivery service
+- **AWS SES**: Amazon's email service
+- **Mailgun**: Developer-friendly email API
+- **Postmark**: Transactional email service
 
 ## 🤝 Contributing
 
@@ -348,6 +442,7 @@ We welcome contributions! Please follow these steps:
 - Update documentation for API changes
 - Use meaningful commit messages
 - Ensure all tests pass before submitting
+- Test email functionality with both Ethereal and real email services
 
 ## 🙏 Acknowledgments
 
@@ -356,6 +451,8 @@ We welcome contributions! Please follow these steps:
 - [MongoDB](https://www.mongodb.com/) - Database
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 - [Chart.js](https://www.chartjs.org/) - Data visualization
+- [Nodemailer](https://nodemailer.com/) - Email sending
+- [React Hook Form](https://react-hook-form.com/) - Form handling
 
 ## 📞 Support
 
@@ -367,6 +464,9 @@ If you encounter any issues or have questions:
 
 ## 🔮 Roadmap
 
+- [x] Password reset functionality with email
+- [x] Professional email templates
+- [x] Multi-step user registration
 - [ ] Mobile application (React Native)
 - [ ] Social features and community
 - [ ] Integration with fitness wearables
@@ -374,9 +474,11 @@ If you encounter any issues or have questions:
 - [ ] Meal planning and recipe suggestions
 - [ ] Workout video integration
 - [ ] Multi-language support
+- [ ] Two-factor authentication
+- [ ] Social login (Google, Facebook)
 
 ---
 
 **Built with ❤️ by the FitTrack Team**
 
-_Start your fitness journey today with FitTrack - where every workout counts!_
+_Start your fitness journey today with FitTrack - where every workout counts and every goal is achievable!_
