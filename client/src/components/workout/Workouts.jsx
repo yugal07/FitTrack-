@@ -1,20 +1,37 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../../contexts/ToastContext';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import WorkoutList from './WorkoutList';
 import AvailableWorkouts from './AvailableWorkout';
 import WorkoutForm from './WorkoutForm';
+import WorkoutLogger from './WorkoutLogger';
 
 const Workouts = () => {
   const [activeTab, setActiveTab] = useState('history');
   const [showWorkoutForm, setShowWorkoutForm] = useState(false);
+  const [showWorkoutLogger, setShowWorkoutLogger] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState(null);
 
   // Get toast functions and navigate
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if we should start a workout immediately (from scheduled workout)
+  useEffect(() => {
+    if (location.state?.startWorkout) {
+      setShowWorkoutForm(true);
+      setEditingWorkout(null);
+      // Clear the state to prevent re-triggering
+      navigate(location.pathname, { replace: true });
+    } else if (location.state?.openLogger) {
+      setShowWorkoutLogger(true);
+      // Clear the state to prevent re-triggering
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   const handleStartWorkout = () => {
     setShowWorkoutForm(true);
@@ -25,13 +42,14 @@ const Workouts = () => {
     navigate('/scheduled-workouts/new');
   };
 
-  const handleEditWorkout = workout => {
+  const handleEditWorkout = (workout) => {
     setEditingWorkout(workout);
     setShowWorkoutForm(true);
   };
 
   const handleWorkoutSubmit = () => {
     setShowWorkoutForm(false);
+    setShowWorkoutLogger(false);
     setEditingWorkout(null);
 
     // Show success message
@@ -47,6 +65,7 @@ const Workouts = () => {
 
   const handleCancelWorkout = () => {
     setShowWorkoutForm(false);
+    setShowWorkoutLogger(false);
     setEditingWorkout(null);
   };
 
@@ -55,81 +74,86 @@ const Workouts = () => {
   };
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* Header */}
-      <div className='bg-white dark:bg-gray-800 shadow rounded-lg p-6'>
-        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between'>
-          <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
+      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Workouts
           </h1>
-          <div className='mt-4 sm:mt-0 space-x-2'>
-            <Button
-              variant='secondary'
+          <div className="mt-4 sm:mt-0 space-x-2">
+            <Button 
+              variant="secondary" 
               onClick={handleViewSchedule}
-              disabled={showWorkoutForm}
+              disabled={showWorkoutForm || showWorkoutLogger}
             >
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                className='h-5 w-5 mr-2'
-                viewBox='0 0 20 20'
-                fill='currentColor'
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5 mr-2" 
+                viewBox="0 0 20 20" 
+                fill="currentColor"
               >
-                <path
-                  fillRule='evenodd'
-                  d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z'
-                  clipRule='evenodd'
+                <path 
+                  fillRule="evenodd" 
+                  d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" 
+                  clipRule="evenodd" 
                 />
               </svg>
               View Schedule
             </Button>
-            <Button
-              variant='secondary'
+            <Button 
+              variant="secondary" 
               onClick={handleScheduleWorkout}
-              disabled={showWorkoutForm}
+              disabled={showWorkoutForm || showWorkoutLogger}
             >
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                className='h-5 w-5 mr-2'
-                viewBox='0 0 20 20'
-                fill='currentColor'
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5 mr-2" 
+                viewBox="0 0 20 20" 
+                fill="currentColor"
               >
-                <path
-                  fillRule='evenodd'
-                  d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z'
-                  clipRule='evenodd'
+                <path 
+                  fillRule="evenodd" 
+                  d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" 
+                  clipRule="evenodd" 
                 />
               </svg>
               Schedule Workout
             </Button>
-            <Button
-              variant='primary'
+            <Button 
+              variant="primary" 
               onClick={handleStartWorkout}
-              disabled={showWorkoutForm}
+              disabled={showWorkoutForm || showWorkoutLogger}
             >
               <svg
-                xmlns='http://www.w3.org/2000/svg'
-                className='h-5 w-5 mr-2'
-                viewBox='0 0 20 20'
-                fill='currentColor'
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 mr-2"
+                viewBox="0 0 20 20"
+                fill="currentColor"
               >
                 <path
-                  fillRule='evenodd'
-                  d='M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z'
-                  clipRule='evenodd'
+                  fillRule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clipRule="evenodd"
                 />
               </svg>
               Log Workout
             </Button>
           </div>
         </div>
-        <p className='mt-1 text-gray-500 dark:text-gray-400'>
+        <p className="mt-1 text-gray-500 dark:text-gray-400">
           Track, schedule, and manage your workout activities
         </p>
       </div>
 
-      {/* Workout Form */}
-      {showWorkoutForm ? (
-        <Card title={editingWorkout ? 'Edit Workout' : 'Log New Workout'}>
+      {/* Workout Form or Logger */}
+      {showWorkoutLogger ? (
+        <WorkoutLogger 
+          onComplete={handleWorkoutSubmit}
+          onCancel={handleCancelWorkout}
+        />
+      ) : showWorkoutForm ? (
+        <Card title={editingWorkout ? 'Edit Workout' : (location.state?.scheduledWorkoutId ? 'Complete Scheduled Workout' : 'Log New Workout')}>
           <WorkoutForm
             workout={editingWorkout}
             onSubmit={handleWorkoutSubmit}
@@ -139,9 +163,9 @@ const Workouts = () => {
       ) : (
         <>
           {/* Tabs */}
-          <div className='bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden'>
-            <div className='border-b border-gray-200 dark:border-gray-700'>
-              <nav className='flex -mb-px'>
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+            <div className="border-b border-gray-200 dark:border-gray-700">
+              <nav className="flex -mb-px">
                 <button
                   onClick={() => setActiveTab('history')}
                   className={`px-6 py-3 font-medium text-sm border-b-2 ${
@@ -167,7 +191,7 @@ const Workouts = () => {
           </div>
 
           {/* Tab content */}
-          <div className='bg-white dark:bg-gray-800 shadow rounded-lg p-6'>
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
             {activeTab === 'history' ? (
               <WorkoutList onEditWorkout={handleEditWorkout} />
             ) : (

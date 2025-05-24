@@ -12,7 +12,6 @@ const morgan = require('morgan');
 const {
   startNotificationSchedulers,
 } = require('./services/notificationScheduler');
-const scheduledWorkoutRoutes = require('./routes/scheduledWorkoutRoutes');
 
 dotenv.config();
 
@@ -28,6 +27,7 @@ app.use(morgan('dev'));
 // Static files folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Import routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const profileRoutes = require('./routes/profileRoutes');
@@ -35,26 +35,22 @@ const goalRoutes = require('./routes/goalRoutes');
 const exerciseRoutes = require('./routes/exerciseRoutes');
 const workoutRoutes = require('./routes/workoutRoutes');
 const workoutSessionRoutes = require('./routes/workoutSessionRoutes');
+const scheduledWorkoutRoutes = require('./routes/scheduledWorkoutRoutes');
 const nutritionRoutes = require('./routes/nutritionRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const adminNutritionRoutes = require('./routes/adminNutritionRoutes');
 
-// mounting routes
+// Mount routes (removed duplicates)
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/workouts', workoutRoutes);
-app.use('/api/workout-sessions', workoutSessionRoutes);
+app.use('/api/workout-sessions', workoutSessionRoutes); // Single registration
 app.use('/api/scheduled-workouts', scheduledWorkoutRoutes);
-app.use('/api/nutrition', nutritionRoutes);
-app.use('/api/uploads', uploadRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/admin/nutrition', adminNutritionRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -62,7 +58,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin/nutrition', adminNutritionRoutes);
 
 app.get('/', (req, res) => {
-  res.json({ message: 'hahaha' });
+  res.json({ message: 'FitTrack API is running!' });
 });
 
 app.use(validationErrorHandler);
@@ -72,7 +68,7 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 8001;
 
 app.listen(PORT, () => {
-  console.log('got your server running B');
+  console.log(`Server running on port ${PORT}`);
 });
 
 startNotificationSchedulers();

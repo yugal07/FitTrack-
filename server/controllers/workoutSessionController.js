@@ -130,45 +130,94 @@ exports.logWorkoutSession = async (req, res) => {
   try {
     const {
       workoutId,
+      name,
+      type,
       date,
       duration,
       completedExercises,
       caloriesBurned,
       rating,
       difficulty,
+      feeling,
       notes,
       mood,
     } = req.body;
 
-    // Validate workoutId
-    const workout = await Workout.findById(workoutId);
-    if (!workout) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'WORKOUT_NOT_FOUND',
-          message: 'Workout not found',
-        },
-      });
+    console.log('Received workout session data:', req.body); // Debug log
+
+    let finalWorkoutId = workoutId;
+
+    // Handle case where no workoutId is provided (custom workout from WorkoutLogger)
+    if (!workoutId && name) {
+      try {
+        // Create a temporary workout entry for the session
+        const tempWorkout = await Workout.create({
+          name: name || 'Custom Workout',
+          type: type || 'custom',
+          description: 'Auto-generated from workout session',
+          fitnessLevel: 'intermediate',
+          duration: duration || 60,
+          isCustom: true,
+          userId: req.user._id,
+          exercises: completedExercises?.map((ex, index) => ({
+            exerciseId: ex.exerciseId,
+            sets: 1,
+            reps: 0,
+            order: index + 1
+          })) || []
+        });
+        finalWorkoutId = tempWorkout._id;
+      } catch (workoutError) {
+        console.error('Error creating temporary workout:', workoutError);
+        // Continue without workoutId if creation fails
+      }
+    } else if (workoutId) {
+      // Validate existing workoutId
+      const workout = await Workout.findById(workoutId);
+      if (!workout) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'WORKOUT_NOT_FOUND',
+            message: 'Workout not found',
+          },
+        });
+      }
     }
 
     // Create workout session
-    const workoutSession = await WorkoutSession.create({
+    const workoutSessionData = {
       userId: req.user._id,
-      workoutId,
       date: date || new Date(),
-      duration,
-      completedExercises,
-      caloriesBurned,
-      rating,
-      difficulty,
-      notes,
-      mood,
-    });
+      duration: parseInt(duration),
+      completedExercises: completedExercises || [],
+      caloriesBurned: caloriesBurned || 0,
+      rating: rating ? parseInt(rating) : undefined,
+      difficulty: difficulty || feeling ? parseInt(difficulty || feeling) : undefined,
+      notes: notes || '',
+      mood: mood || undefined,
+      name: name || '',
+      type: type || 'custom',
+      source: 'logger'
+    };
+
+    // Only add workoutId if we have one
+    if (finalWorkoutId) {
+      workoutSessionData.workoutId = finalWorkoutId;
+    }
+
+    console.log('Creating workout session with data:', workoutSessionData); // Debug log
+
+    const workoutSession = await WorkoutSession.create(workoutSessionData);
+
+    // Populate and return the created session
+    const populatedSession = await WorkoutSession.findById(workoutSession._id)
+      .populate('workoutId', 'name type fitnessLevel')
+      .populate('completedExercises.exerciseId', 'name muscleGroups');
 
     res.status(201).json({
       success: true,
-      data: workoutSession,
+      data: populatedSession,
       message: 'Workout session logged successfully',
     });
   } catch (error) {
@@ -178,6 +227,7 @@ exports.logWorkoutSession = async (req, res) => {
       error: {
         code: 'SERVER_ERROR',
         message: 'Server error',
+        details: error.message
       },
     });
   }
