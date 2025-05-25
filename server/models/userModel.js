@@ -112,6 +112,7 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   try {
     return await bcrypt.compare(enteredPassword, this.password);
   } catch (error) {
+    console.error(error);
     throw new Error('Password comparison failed');
   }
 };

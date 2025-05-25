@@ -7,7 +7,7 @@ const {
   deleteNotification,
   updateNotificationPreferences,
 } = require('../controllers/notificationController');
-const { protect, admin } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 // All routes are protected
 router.use(protect);

@@ -8,7 +8,7 @@ exports.notFound = (req, res, next) => {
 };
 
 // Custom error handler
-exports.errorHandler = (err, req, res, next) => {
+exports.errorHandler = (err, req, res) => {
   // If status code is 200, set it to 500 (server error)
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
 

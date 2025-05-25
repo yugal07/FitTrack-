@@ -1,5 +1,4 @@
 const cron = require('node-cron');
-const mongoose = require('mongoose');
 const {
   User,
   Workout,
@@ -11,7 +10,6 @@ const {
   createWorkoutReminder,
   createNutritionReminder,
   createGoalAchievement,
-  createSystemNotification,
 } = require('../controllers/notificationController');
 
 /**
