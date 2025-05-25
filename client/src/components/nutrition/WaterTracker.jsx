@@ -305,16 +305,17 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
   const handleUpdateWater = async change => {
     setIsUpdating(true);
     const newAmount = Math.max(0, waterIntake + change);
+
+    // Play sound when adding water (not when removing)
+    if (change > 0) {
+      playWaterSound();
+    }
+
     try {
       await onUpdate(newAmount);
     } catch (error) {
       console.error('Failed to update water intake:', error);
     } finally {
-    // Play sound when adding water (not when removing)
-    if (change > 0) {
-      playWaterSound();
-    }
-    onUpdate(newAmount).finally(() => {
       setIsUpdating(false);
     }
   };
@@ -323,13 +324,14 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
   const addPresetAmount = async amount => {
     setIsUpdating(true);
     const newAmount = waterIntake + amount;
+
+    playWaterSound();
+
     try {
       await onUpdate(newAmount);
     } catch (error) {
       console.error('Failed to update water intake:', error);
     } finally {
-    playWaterSound();
-    onUpdate(newAmount).finally(() => {
       setIsUpdating(false);
     }
   };
@@ -341,12 +343,11 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
     setIsUpdating(true);
     const amount = parseInt(customAmount);
     const newAmount = waterIntake + amount;
-    try {
-      await onUpdate(newAmount);
+
     playWaterSound();
 
-    onUpdate(newAmount).finally(() => {
-      setIsUpdating(false);
+    try {
+      await onUpdate(newAmount);
       setCustomAmount('');
     } catch (error) {
       console.error('Failed to update water intake:', error);
