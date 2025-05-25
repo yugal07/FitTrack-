@@ -42,6 +42,7 @@ const Nutrition = () => {
     try {
       // Format date as YYYY-MM-DD
       const formattedDate = format(date, 'yyyy-MM-dd');
+      console.log('Fetching nutrition log for date:', formattedDate);
 
       const response = await api.get('api/nutrition/logs', {
         params: {
@@ -51,13 +52,17 @@ const Nutrition = () => {
         },
       });
 
+      console.log('Nutrition log response:', response.data);
+
       if (response.data.count > 0) {
-        setNutritionLog(response.data.data[0]);
+        const log = response.data.data[0];
+        console.log('Setting nutrition log:', log);
+        setNutritionLog(log);
       } else {
+        console.log('No nutrition log found for date:', formattedDate);
         setNutritionLog(null);
       }
     } catch (err) {
-      // Error is handled by the API interceptor
       console.error('Error fetching nutrition log:', err);
     } finally {
       setLoading(false);
@@ -101,23 +106,42 @@ const Nutrition = () => {
 
   // Handle water intake update
   const handleWaterUpdate = async amount => {
-    if (!nutritionLog) return;
-
     try {
-      await api.patch('api/nutrition/water', {
-        date: format(date, 'yyyy-MM-dd'),
+      const formattedDate = format(date, 'yyyy-MM-dd');
+
+      // Call API to update water intake
+      const response = await api.patch('api/nutrition/water', {
+        date: formattedDate,
         amount,
       });
 
-      setNutritionLog({
-        ...nutritionLog,
-        waterIntake: amount,
-      });
+      // Update local state with the response data
+      if (nutritionLog) {
+        setNutritionLog({
+          ...nutritionLog,
+          waterIntake: amount,
+        });
+      } else {
+        // If no nutrition log exists, create one with the water intake
+        const newLogResponse = await api.post('api/nutrition/logs', {
+          date: formattedDate,
+          meals: [],
+          waterIntake: amount,
+        });
+        setNutritionLog(newLogResponse.data.data);
+      }
 
       toast.success('Water intake updated');
     } catch (err) {
-      // Error is handled by the API interceptor
       console.error('Error updating water intake:', err);
+      // Revert optimistic update on error
+      if (nutritionLog) {
+        setNutritionLog(prev => ({
+          ...prev,
+          waterIntake: prev.waterIntake, // Keep previous value
+        }));
+      }
+      toast.error('Failed to update water intake');
     }
   };
 

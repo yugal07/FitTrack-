@@ -302,54 +302,70 @@ const WaterTracker = ({ waterIntake = 0, onUpdate, expanded = false }) => {
   };
 
   // Update water intake
-  const handleUpdateWater = change => {
+  const handleUpdateWater = async change => {
     setIsUpdating(true);
     const newAmount = Math.max(0, waterIntake + change);
-
+    try {
+      await onUpdate(newAmount);
+    } catch (error) {
+      console.error('Failed to update water intake:', error);
+    } finally {
     // Play sound when adding water (not when removing)
     if (change > 0) {
       playWaterSound();
     }
-
     onUpdate(newAmount).finally(() => {
       setIsUpdating(false);
-    });
+    }
   };
 
   // Add preset amounts
-  const addPresetAmount = amount => {
+  const addPresetAmount = async amount => {
     setIsUpdating(true);
     const newAmount = waterIntake + amount;
-
+    try {
+      await onUpdate(newAmount);
+    } catch (error) {
+      console.error('Failed to update water intake:', error);
+    } finally {
     playWaterSound();
-
     onUpdate(newAmount).finally(() => {
       setIsUpdating(false);
-    });
+    }
   };
 
   // Add custom amount
-  const handleAddCustomAmount = () => {
+  const handleAddCustomAmount = async () => {
     if (!customAmount || isNaN(parseInt(customAmount))) return;
 
     setIsUpdating(true);
     const amount = parseInt(customAmount);
     const newAmount = waterIntake + amount;
-
+    try {
+      await onUpdate(newAmount);
     playWaterSound();
 
     onUpdate(newAmount).finally(() => {
       setIsUpdating(false);
       setCustomAmount('');
-    });
+    } catch (error) {
+      console.error('Failed to update water intake:', error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // Reset water intake
-  const resetWater = () => {
+  const resetWater = async () => {
     setIsUpdating(true);
-    onUpdate(0).finally(() => {
+
+    try {
+      await onUpdate(0);
+    } catch (error) {
+      console.error('Failed to reset water intake:', error);
+    } finally {
       setIsUpdating(false);
-    });
+    }
   };
 
   // Get motivation message based on percentage

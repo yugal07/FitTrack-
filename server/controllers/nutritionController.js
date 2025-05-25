@@ -514,20 +514,24 @@ exports.updateWaterIntake = async (req, res) => {
       });
     }
 
-    // Find or create log for today
-    const today = date ? new Date(date) : new Date();
-    today.setHours(0, 0, 0, 0);
+    // Parse the date properly
+    const targetDate = date ? new Date(date) : new Date();
+    // Set to start of day to ensure consistent matching
+    targetDate.setHours(0, 0, 0, 0);
 
     let nutritionLog = await NutritionLog.findOne({
       userId: req.user._id,
-      date: today,
+      date: {
+        $gte: targetDate,
+        $lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000),
+      },
     });
 
     if (!nutritionLog) {
-      // Create new log for today
+      // Create new log for the day
       nutritionLog = await NutritionLog.create({
         userId: req.user._id,
-        date: today,
+        date: targetDate,
         waterIntake: amount,
         meals: [],
       });
@@ -539,10 +543,7 @@ exports.updateWaterIntake = async (req, res) => {
 
     res.json({
       success: true,
-      data: {
-        date: nutritionLog.date,
-        waterIntake: nutritionLog.waterIntake,
-      },
+      data: nutritionLog,
       message: 'Water intake updated successfully',
     });
   } catch (error) {
