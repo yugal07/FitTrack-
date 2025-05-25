@@ -150,7 +150,7 @@ const NutritionStats = () => {
       }));
   };
 
-  // Custom label for the pie chart
+  // Custom label for the pie chart - fixed positioning
   const renderCustomizedLabel = ({
     cx,
     cy,
@@ -158,11 +158,13 @@ const NutritionStats = () => {
     innerRadius,
     outerRadius,
     percent,
-    index,
-    name,
   }) => {
+    // Only show label if percentage is significant enough (>5%)
+    if (percent < 0.05) return null;
+
     const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    // Position label closer to the center to keep it within bounds
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -171,8 +173,10 @@ const NutritionStats = () => {
         x={x}
         y={y}
         fill='white'
-        textAnchor={x > cx ? 'start' : 'end'}
+        textAnchor='middle'
         dominantBaseline='central'
+        fontSize={12}
+        fontWeight='bold'
       >
         {`${(percent * 100).toFixed(0)}%`}
       </text>
