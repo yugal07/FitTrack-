@@ -5,7 +5,7 @@
  * @param {Object} options - Additional options
  * @returns {Object} Pagination data and query modifiers
  */
-exports.getPagination = (req, query = {}, options = {}) => {
+export function getPagination(req, options = {}) {
   // Get pagination parameters from request query
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || options.defaultLimit || 10;
@@ -45,7 +45,7 @@ exports.getPagination = (req, query = {}, options = {}) => {
   }
 
   return pagination;
-};
+}
 
 /**
  * Apply pagination to a Mongoose query
@@ -53,9 +53,9 @@ exports.getPagination = (req, query = {}, options = {}) => {
  * @param {Object} pagination - Pagination data from getPagination
  * @returns {Object} Modified query with pagination
  */
-exports.applyPagination = (query, pagination) => {
+export function applyPagination(query, pagination) {
   return query.skip(pagination.startIndex).limit(pagination.limit);
-};
+}
 
 /**
  * Complete pagination handler - combining count, pagination and query in one function
@@ -65,13 +65,13 @@ exports.applyPagination = (query, pagination) => {
  * @param {Object} options - Additional options
  * @returns {Promise<Object>} Full pagination result
  */
-exports.paginateResults = async (req, Model, query = {}, options = {}) => {
+export async function paginateResults(req, Model, query = {}, options = {}) {
   try {
     // Count total documents
     const totalDocs = await Model.countDocuments(query);
 
     // Calculate pagination
-    const pagination = exports.getPagination(req, query, {
+    const pagination = getPagination(req, {
       ...options,
       totalDocs,
     });
@@ -96,7 +96,7 @@ exports.paginateResults = async (req, Model, query = {}, options = {}) => {
     }
 
     // Apply pagination
-    resultQuery = exports.applyPagination(resultQuery, pagination);
+    resultQuery = applyPagination(resultQuery, pagination);
 
     // Execute query
     const results = await resultQuery;
@@ -115,4 +115,4 @@ exports.paginateResults = async (req, Model, query = {}, options = {}) => {
     console.error('Pagination error:', error);
     throw error;
   }
-};
+}
