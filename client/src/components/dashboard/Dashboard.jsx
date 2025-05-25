@@ -20,7 +20,8 @@ const Dashboard = () => {
   });
   const [recentWorkouts, setRecentWorkouts] = useState([]);
   const [upcomingWorkouts, setUpcomingWorkouts] = useState([]);
-  const [scheduledWorkoutsLoading, setScheduledWorkoutsLoading] = useState(true);
+  const [scheduledWorkoutsLoading, setScheduledWorkoutsLoading] =
+    useState(true);
   const [goals, setGoals] = useState([]);
   const [nutritionData, setNutritionData] = useState(null);
   const [measurements, setMeasurements] = useState([]);
@@ -38,32 +39,36 @@ const Dashboard = () => {
           goalsRes,
           nutritionRes,
           measurementsRes,
-          scheduledWorkoutsRes
+          scheduledWorkoutsRes,
         ] = await Promise.all([
           // Fetch workout stats
           api.get('/api/workout-sessions/stats'),
-          
+
           // Fetch recent workouts
           api.get('/api/workout-sessions?limit=5'),
-          
+
           // Fetch goals
           api.get('/api/goals'),
-          
+
           // Fetch nutrition data for today
-          api.get(`/api/nutrition/logs?startDate=${new Date().toISOString().split('T')[0]}&endDate=${new Date().toISOString().split('T')[0]}`),
-          
+          api.get(
+            `/api/nutrition/logs?startDate=${new Date().toISOString().split('T')[0]}&endDate=${new Date().toISOString().split('T')[0]}`
+          ),
+
           // Fetch recent measurements
           api.get('/api/profiles/measurements'),
-          
+
           // Fetch upcoming scheduled workouts
-          api.get('/api/scheduled-workouts?limit=3&completed=false')
+          api.get('/api/scheduled-workouts?limit=3&completed=false'),
         ]);
 
         // Set workout stats
         setStats({
           totalWorkouts: workoutStatsRes.data.data.totalWorkouts || 0,
           totalCaloriesBurned: workoutStatsRes.data.data.totalCalories || 0,
-          completedGoals: goalsRes.data.data.filter(goal => goal.status === 'completed').length || 0,
+          completedGoals:
+            goalsRes.data.data.filter(goal => goal.status === 'completed')
+              .length || 0,
           averageWorkoutDuration: workoutStatsRes.data.data.avgDuration || 0,
         });
 
@@ -73,7 +78,6 @@ const Dashboard = () => {
         setNutritionData(nutritionRes.data.data[0] || null);
         setMeasurements(measurementsRes.data.data.slice(-3) || []);
         setUpcomingWorkouts(scheduledWorkoutsRes.data.data || []);
-
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data');
@@ -88,10 +92,10 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto'></div>
+          <p className='mt-3 text-sm text-gray-600 dark:text-gray-400'>
             Loading dashboard...
           </p>
         </div>
@@ -101,12 +105,12 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <p className="text-red-600 dark:text-red-400">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-3 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900'>
+        <div className='text-center'>
+          <p className='text-red-600 dark:text-red-400'>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className='mt-3 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700'
           >
             Retry
           </button>
@@ -116,49 +120,49 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Welcome message */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className='bg-white dark:bg-gray-800 shadow rounded-lg p-6'>
+        <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
           Welcome back, {currentUser?.firstName}!
         </h1>
-        <p className="mt-1 text-gray-500 dark:text-gray-400">
+        <p className='mt-1 text-gray-500 dark:text-gray-400'>
           Here's an overview of your fitness journey.
         </p>
       </div>
 
       {/* Stats section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
         <StatCard
-          title="Total Workouts"
+          title='Total Workouts'
           value={stats.totalWorkouts}
-          icon="Dumbbell"
+          icon='Dumbbell'
           trend={stats.totalWorkouts > 10 ? 'up' : null}
         />
         <StatCard
-          title="Calories Burned"
+          title='Calories Burned'
           value={`${stats.totalCaloriesBurned.toLocaleString()} kcal`}
-          icon="Flame"
-          trend="up"
+          icon='Flame'
+          trend='up'
         />
         <StatCard
-          title="Completed Goals"
+          title='Completed Goals'
           value={stats.completedGoals}
-          icon="Target"
+          icon='Target'
           trend={stats.completedGoals > 0 ? 'up' : null}
         />
         <StatCard
-          title="Avg Workout Time"
+          title='Avg Workout Time'
           value={`${Math.round(stats.averageWorkoutDuration)} min`}
-          icon="Clock"
+          icon='Clock'
           trend={stats.averageWorkoutDuration > 30 ? 'up' : null}
         />
       </div>
 
       {/* Main dashboard content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
         {/* Left column */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className='lg:col-span-2 space-y-6'>
           {/* Activity timeline */}
           <ActivityTimeline recentWorkouts={recentWorkouts} />
 
@@ -170,7 +174,7 @@ const Dashboard = () => {
         </div>
 
         {/* Right column */}
-        <div className="space-y-6">
+        <div className='space-y-6'>
           {/* Upcoming workouts - single instance with real data */}
           <UpcomingWorkouts
             workouts={upcomingWorkouts}

@@ -32,7 +32,7 @@ const Workouts = () => {
     } else if (location.state?.openLogger) {
       const loggerData = {
         workoutId: location.state.workoutId,
-        scheduledWorkoutId: location.state.scheduledWorkoutId
+        scheduledWorkoutId: location.state.scheduledWorkoutId,
       };
       setWorkoutLoggerData(loggerData);
       setShowWorkoutLogger(true);
@@ -55,7 +55,7 @@ const Workouts = () => {
     navigate('/scheduled-workouts/new');
   };
 
-  const handleEditWorkout = (workout) => {
+  const handleEditWorkout = workout => {
     setEditingWorkout(workout);
     setShowWorkoutForm(true);
     setShowWorkoutLogger(false);
@@ -80,9 +80,9 @@ const Workouts = () => {
     setActiveTab('history');
   };
 
-  const handleWorkoutComplete = (workoutData) => {
+  const handleWorkoutComplete = workoutData => {
     console.log('Workout completed:', workoutData);
-    
+
     // Reset all states immediately
     setShowWorkoutLogger(false);
     setShowWorkoutForm(false);
@@ -120,73 +120,113 @@ const Workouts = () => {
       showWorkoutLogger,
       editingWorkout: !!editingWorkout,
       activeTab,
-      workoutLoggerData
+      workoutLoggerData,
     });
-  }, [showWorkoutForm, showWorkoutLogger, editingWorkout, activeTab, workoutLoggerData]);
+  }, [
+    showWorkoutForm,
+    showWorkoutLogger,
+    editingWorkout,
+    activeTab,
+    workoutLoggerData,
+  ]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <div className='min-h-screen bg-gray-50 dark:bg-gray-900'>
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6'>
         {/* Mobile-First Header */}
-        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6">
-          <div className="p-4 sm:p-6">
+        <div className='bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6'>
+          <div className='p-4 sm:p-6'>
             {/* Header Content */}
-            <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+            <div className='flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between'>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white'>
                   Workouts
                 </h1>
-                <p className="mt-1 text-sm sm:text-base text-gray-500 dark:text-gray-400">
+                <p className='mt-1 text-sm sm:text-base text-gray-500 dark:text-gray-400'>
                   Track, schedule, and manage your activities
                 </p>
               </div>
-              
+
               {/* Mobile Action Menu Toggle */}
-              <div className="sm:hidden">
+              <div className='sm:hidden'>
                 <Button
-                  variant="primary"
+                  variant='primary'
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="w-full justify-center"
+                  className='w-full justify-center'
                   disabled={showWorkoutForm || showWorkoutLogger}
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  <svg
+                    className='w-5 h-5 mr-2'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M12 6v6m0 0v6m0-6h6m-6 0H6'
+                    />
                   </svg>
                   Quick Actions
                 </Button>
               </div>
 
               {/* Desktop Actions */}
-              <div className="hidden sm:flex sm:space-x-3">
-                <Button 
-                  variant="secondary" 
+              <div className='hidden sm:flex sm:space-x-3'>
+                <Button
+                  variant='secondary'
                   onClick={handleViewSchedule}
                   disabled={showWorkoutForm || showWorkoutLogger}
-                  size="sm"
+                  size='sm'
                 >
-                  <svg className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  <svg
+                    className='h-4 w-4 mr-2'
+                    viewBox='0 0 20 20'
+                    fill='currentColor'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z'
+                      clipRule='evenodd'
+                    />
                   </svg>
                   View Schedule
                 </Button>
-                <Button 
-                  variant="secondary" 
+                <Button
+                  variant='secondary'
                   onClick={handleScheduleWorkout}
                   disabled={showWorkoutForm || showWorkoutLogger}
-                  size="sm"
+                  size='sm'
                 >
-                  <svg className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  <svg
+                    className='h-4 w-4 mr-2'
+                    viewBox='0 0 20 20'
+                    fill='currentColor'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z'
+                      clipRule='evenodd'
+                    />
                   </svg>
                   Schedule
                 </Button>
-                <Button 
-                  variant="primary" 
+                <Button
+                  variant='primary'
                   onClick={handleStartWorkout}
                   disabled={showWorkoutForm || showWorkoutLogger}
                 >
-                  <svg className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                  <svg
+                    className='h-4 w-4 mr-2'
+                    viewBox='0 0 20 20'
+                    fill='currentColor'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z'
+                      clipRule='evenodd'
+                    />
                   </svg>
                   Log Workout
                 </Button>
@@ -195,38 +235,62 @@ const Workouts = () => {
 
             {/* Mobile Action Menu */}
             {mobileMenuOpen && (
-              <div className="mt-4 sm:hidden border-t border-gray-200 dark:border-gray-700 pt-4">
-                <div className="grid grid-cols-1 gap-3">
-                  <Button 
-                    variant="secondary" 
+              <div className='mt-4 sm:hidden border-t border-gray-200 dark:border-gray-700 pt-4'>
+                <div className='grid grid-cols-1 gap-3'>
+                  <Button
+                    variant='secondary'
                     onClick={handleViewSchedule}
                     disabled={showWorkoutForm || showWorkoutLogger}
-                    className="w-full justify-start"
+                    className='w-full justify-start'
                   >
-                    <svg className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    <svg
+                      className='h-5 w-5 mr-3'
+                      viewBox='0 0 20 20'
+                      fill='currentColor'
+                    >
+                      <path
+                        fillRule='evenodd'
+                        d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z'
+                        clipRule='evenodd'
+                      />
                     </svg>
                     View Schedule
                   </Button>
-                  <Button 
-                    variant="secondary" 
+                  <Button
+                    variant='secondary'
                     onClick={handleScheduleWorkout}
                     disabled={showWorkoutForm || showWorkoutLogger}
-                    className="w-full justify-start"
+                    className='w-full justify-start'
                   >
-                    <svg className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    <svg
+                      className='h-5 w-5 mr-3'
+                      viewBox='0 0 20 20'
+                      fill='currentColor'
+                    >
+                      <path
+                        fillRule='evenodd'
+                        d='M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z'
+                        clipRule='evenodd'
+                      />
                     </svg>
                     Schedule Workout
                   </Button>
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant='primary'
                     onClick={handleStartWorkout}
                     disabled={showWorkoutForm || showWorkoutLogger}
-                    className="w-full justify-start"
+                    className='w-full justify-start'
                   >
-                    <svg className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                    <svg
+                      className='h-5 w-5 mr-3'
+                      viewBox='0 0 20 20'
+                      fill='currentColor'
+                    >
+                      <path
+                        fillRule='evenodd'
+                        d='M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z'
+                        clipRule='evenodd'
+                      />
                     </svg>
                     Log Workout
                   </Button>
@@ -239,7 +303,7 @@ const Workouts = () => {
         {/* Conditional rendering with explicit checks */}
         {showWorkoutLogger ? (
           <div>
-            <WorkoutLogger 
+            <WorkoutLogger
               workoutId={workoutLoggerData?.workoutId}
               scheduledWorkoutId={workoutLoggerData?.scheduledWorkoutId}
               onComplete={handleWorkoutComplete}
@@ -247,10 +311,14 @@ const Workouts = () => {
             />
           </div>
         ) : showWorkoutForm ? (
-          <div className="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700">
-            <div className="p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">
-                {editingWorkout ? 'Edit Workout' : (workoutLoggerData?.scheduledWorkoutId ? 'Complete Scheduled Workout' : 'Log New Workout')}
+          <div className='bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700'>
+            <div className='p-4 sm:p-6'>
+              <h2 className='text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6'>
+                {editingWorkout
+                  ? 'Edit Workout'
+                  : workoutLoggerData?.scheduledWorkoutId
+                    ? 'Complete Scheduled Workout'
+                    : 'Log New Workout'}
               </h2>
               <WorkoutForm
                 workout={editingWorkout}
@@ -263,22 +331,22 @@ const Workouts = () => {
         ) : (
           <>
             {/* Mobile-Responsive Tabs */}
-            <div className="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6 overflow-hidden">
+            <div className='bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 mb-4 sm:mb-6 overflow-hidden'>
               {/* Mobile Tab Selector */}
-              <div className="sm:hidden">
+              <div className='sm:hidden'>
                 <select
                   value={activeTab}
-                  onChange={(e) => setActiveTab(e.target.value)}
-                  className="block w-full px-4 py-3 text-base border-0 bg-transparent focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:text-white dark:bg-gray-800"
+                  onChange={e => setActiveTab(e.target.value)}
+                  className='block w-full px-4 py-3 text-base border-0 bg-transparent focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:text-white dark:bg-gray-800'
                 >
-                  <option value="history">Workout History</option>
-                  <option value="templates">Workout Templates</option>
+                  <option value='history'>Workout History</option>
+                  <option value='templates'>Workout Templates</option>
                 </select>
               </div>
 
               {/* Desktop Tabs */}
-              <div className="hidden sm:block border-b border-gray-200 dark:border-gray-700">
-                <nav className="flex -mb-px">
+              <div className='hidden sm:block border-b border-gray-200 dark:border-gray-700'>
+                <nav className='flex -mb-px'>
                   <button
                     onClick={() => setActiveTab('history')}
                     className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
@@ -304,8 +372,8 @@ const Workouts = () => {
             </div>
 
             {/* Tab Content with Mobile-Responsive Container */}
-            <div className="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700">
-              <div className="p-4 sm:p-6">
+            <div className='bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700'>
+              <div className='p-4 sm:p-6'>
                 {activeTab === 'history' ? (
                   <WorkoutList onEditWorkout={handleEditWorkout} />
                 ) : (
