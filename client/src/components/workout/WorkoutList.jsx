@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
 import Button from '../ui/Button';
+import ConfirmModal from '../ui/ConfirmModal';
 import WorkoutDetail from './WorkoutDetail';
 
 const WorkoutList = ({ onEditWorkout }) => {
@@ -15,6 +16,14 @@ const WorkoutList = ({ onEditWorkout }) => {
     endDate: '',
     type: '',
     search: '',
+  });
+
+  // State for delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    workoutId: null,
+    workoutName: '',
+    loading: false,
   });
 
   // Get toast functions
@@ -83,31 +92,55 @@ const WorkoutList = ({ onEditWorkout }) => {
     }
   };
 
-  const handleDeleteWorkout = async workoutId => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this workout? This action cannot be undone.'
-      )
-    ) {
-      return;
-    }
+  const handleDeleteClick = workout => {
+    setDeleteConfirm({
+      isOpen: true,
+      workoutId: workout._id,
+      workoutName: workout.workoutId?.name || 'Custom Workout',
+      loading: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
 
     try {
-      await api.delete(`/api/workout-sessions/${workoutId}`);
+      await api.delete(`/api/workout-sessions/${deleteConfirm.workoutId}`);
 
       // Remove from state
-      setWorkouts(prev => prev.filter(workout => workout._id !== workoutId));
+      setWorkouts(prev =>
+        prev.filter(workout => workout._id !== deleteConfirm.workoutId)
+      );
 
       // Close detail view if open
-      if (selectedWorkout && selectedWorkout._id === workoutId) {
+      if (selectedWorkout && selectedWorkout._id === deleteConfirm.workoutId) {
         setShowDetail(false);
         setSelectedWorkout(null);
       }
 
       toast.success('Workout deleted successfully');
+
+      setDeleteConfirm({
+        isOpen: false,
+        workoutId: null,
+        workoutName: '',
+        loading: false,
+      });
     } catch (err) {
       // Error is handled by the API interceptor
       console.error('Error deleting workout:', err);
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleteConfirm.loading) {
+      setDeleteConfirm({
+        isOpen: false,
+        workoutId: null,
+        workoutName: '',
+        loading: false,
+      });
     }
   };
 
@@ -231,7 +264,7 @@ const WorkoutList = ({ onEditWorkout }) => {
           workout={selectedWorkout}
           onClose={handleCloseDetail}
           onEdit={handleEditSelected}
-          onDelete={() => handleDeleteWorkout(selectedWorkout._id)}
+          onDelete={() => handleDeleteClick(selectedWorkout)}
         />
       ) : (
         <>
@@ -430,6 +463,19 @@ const WorkoutList = ({ onEditWorkout }) => {
           )}
         </>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title='Delete Workout'
+        message={`Are you sure you want to delete "${deleteConfirm.workoutName}"? This action cannot be undone and will permanently remove this workout from your history.`}
+        confirmText='Delete Workout'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </div>
   );
 };

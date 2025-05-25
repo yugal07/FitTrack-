@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import api from '../../utils/api';
 import Card from '../ui/Card';
+import ConfirmModal from '../ui/ConfirmModal';
 import MeasurementForm from './MeasurementForm';
 import MeasurementChart from './MeasurementChart';
 
@@ -13,6 +14,14 @@ const MeasurementsTracker = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingMeasurement, setEditingMeasurement] = useState(null);
   const [metricToDisplay, setMetricToDisplay] = useState('weight');
+
+  // State for delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    measurementId: null,
+    measurementDate: '',
+    loading: false,
+  });
 
   useEffect(() => {
     fetchMeasurements();
@@ -77,17 +86,32 @@ const MeasurementsTracker = () => {
     setShowForm(true);
   };
 
-  const handleDeleteMeasurement = async id => {
-    if (!window.confirm('Are you sure you want to delete this measurement?')) {
-      return;
-    }
+  const handleDeleteClick = measurement => {
+    setDeleteConfirm({
+      isOpen: true,
+      measurementId: measurement._id,
+      measurementDate: format(new Date(measurement.date), 'MMM d, yyyy'),
+      loading: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
 
     try {
-      setLoading(true);
-      await api.delete(`/api/profiles/measurements/${id}`);
+      await api.delete(
+        `/api/profiles/measurements/${deleteConfirm.measurementId}`
+      );
 
       setSuccess('Measurement deleted successfully');
       fetchMeasurements();
+
+      setDeleteConfirm({
+        isOpen: false,
+        measurementId: null,
+        measurementDate: '',
+        loading: false,
+      });
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
@@ -96,8 +120,18 @@ const MeasurementsTracker = () => {
         err.response?.data?.error?.message || 'Failed to delete measurement'
       );
       console.error('Error deleting measurement:', err);
-    } finally {
-      setLoading(false);
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleteConfirm.loading) {
+      setDeleteConfirm({
+        isOpen: false,
+        measurementId: null,
+        measurementDate: '',
+        loading: false,
+      });
     }
   };
 
@@ -290,7 +324,7 @@ const MeasurementsTracker = () => {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteMeasurement(measurement._id)}
+                        onClick={() => handleDeleteClick(measurement)}
                         className='text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300'
                       >
                         Delete
@@ -303,6 +337,19 @@ const MeasurementsTracker = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title='Delete Measurement'
+        message={`Are you sure you want to delete the measurement from ${deleteConfirm.measurementDate}? This action cannot be undone and will permanently remove this measurement from your tracking history.`}
+        confirmText='Delete Measurement'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </Card>
   );
 };

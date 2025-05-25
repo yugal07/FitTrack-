@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import api from '../../utils/api';
 import Card from '../ui/Card';
+import ConfirmModal from '../ui/ConfirmModal';
 import PhotoForm from './PhotoForm';
 
 const ProgressPhotos = () => {
@@ -14,6 +15,14 @@ const ProgressPhotos = () => {
   const [compareMode, setCompareMode] = useState(false);
   const [beforePhoto, setBeforePhoto] = useState(null);
   const [afterPhoto, setAfterPhoto] = useState(null);
+
+  // State for delete confirmation
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    photoId: null,
+    photoDate: '',
+    loading: false,
+  });
 
   useEffect(() => {
     fetchPhotos();
@@ -69,25 +78,48 @@ const ProgressPhotos = () => {
     }
   };
 
-  const handleDeletePhoto = async id => {
-    if (!window.confirm('Are you sure you want to delete this photo?')) {
-      return;
-    }
+  const handleDeleteClick = photo => {
+    setDeleteConfirm({
+      isOpen: true,
+      photoId: photo._id,
+      photoDate: format(new Date(photo.date), 'MMM d, yyyy'),
+      loading: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
 
     try {
-      setLoading(true);
-      await api.delete(`/api/uploads/progress-photo/${id}`);
+      await api.delete(`/api/uploads/progress-photo/${deleteConfirm.photoId}`);
 
       setSuccess('Photo deleted successfully');
       fetchPhotos();
+
+      setDeleteConfirm({
+        isOpen: false,
+        photoId: null,
+        photoDate: '',
+        loading: false,
+      });
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Failed to delete photo');
       console.error('Error deleting photo:', err);
-    } finally {
-      setLoading(false);
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleteConfirm.loading) {
+      setDeleteConfirm({
+        isOpen: false,
+        photoId: null,
+        photoDate: '',
+        loading: false,
+      });
     }
   };
 
@@ -489,7 +521,7 @@ const ProgressPhotos = () => {
                     />
                     <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center opacity-0 group-hover:opacity-100'>
                       <button
-                        onClick={() => handleDeletePhoto(photo._id)}
+                        onClick={() => handleDeleteClick(photo)}
                         className='bg-red-600 text-white p-2 rounded-full hover:bg-red-700'
                       >
                         <svg
@@ -530,6 +562,19 @@ const ProgressPhotos = () => {
           ))}
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title='Delete Progress Photo'
+        message={`Are you sure you want to delete the progress photo from ${deleteConfirm.photoDate}? This action cannot be undone and will permanently remove this photo from your progress tracking.`}
+        confirmText='Delete Photo'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </Card>
   );
 };
