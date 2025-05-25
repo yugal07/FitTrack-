@@ -514,7 +514,14 @@ exports.sendAnnouncement = async (req, res) => {
 // @access  Private/Admin
 exports.getNotifications = async (req, res) => {
   try {
-    const { page = 1, limit = 20, type, startDate, endDate } = req.query;
+    const {
+      page = 1,
+      limit = 20,
+      type,
+      startDate,
+      endDate,
+      groupDuplicates = 'true',
+    } = req.query;
 
     // Build query
     const query = {};
@@ -535,21 +542,85 @@ exports.getNotifications = async (req, res) => {
       }
     }
 
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
+    let notifications;
+    let total;
 
-    // Count total documents
-    const total = await Notification.countDocuments(query);
+    if (groupDuplicates === 'true') {
+      // Group similar notifications and count recipients
+      const pipeline = [
+        { $match: query },
+        {
+          $group: {
+            _id: {
+              type: '$type',
+              title: '$title',
+              message: '$message',
+              // Group by day to handle notifications sent on the same day
+              date: {
+                $dateToString: {
+                  format: '%Y-%m-%d',
+                  date: '$createdAt',
+                },
+              },
+            },
+            count: { $sum: 1 },
+            createdAt: { $first: '$createdAt' },
+            sampleId: { $first: '$_id' },
+          },
+        },
+        { $sort: { createdAt: -1 } },
+        { $skip: (page - 1) * limit },
+        { $limit: parseInt(limit) },
+      ];
 
-    // Get notifications
-    const notifications = await Notification.find(query)
-      .skip(startIndex)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+      const result = await Notification.aggregate(pipeline);
+
+      // Transform the grouped results back to notification-like objects
+      notifications = result.map(group => ({
+        _id: group.sampleId,
+        type: group._id.type,
+        title: group._id.title,
+        message: group._id.message,
+        createdAt: group.createdAt,
+        recipientCount: group.count,
+      }));
+
+      // Get total count of unique notifications
+      const totalPipeline = [
+        { $match: query },
+        {
+          $group: {
+            _id: {
+              type: '$type',
+              title: '$title',
+              message: '$message',
+              date: {
+                $dateToString: {
+                  format: '%Y-%m-%d',
+                  date: '$createdAt',
+                },
+              },
+            },
+          },
+        },
+        { $count: 'total' },
+      ];
+
+      const totalResult = await Notification.aggregate(totalPipeline);
+      total = totalResult.length > 0 ? totalResult[0].total : 0;
+    } else {
+      // Original behavior - show all notifications
+      const startIndex = (page - 1) * limit;
+      total = await Notification.countDocuments(query);
+      notifications = await Notification.find(query)
+        .skip(startIndex)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+    }
 
     // Pagination result
     const pagination = {};
+    const endIndex = page * limit;
 
     if (endIndex < total) {
       pagination.next = {
@@ -558,7 +629,7 @@ exports.getNotifications = async (req, res) => {
       };
     }
 
-    if (startIndex > 0) {
+    if ((page - 1) * limit > 0) {
       pagination.prev = {
         page: page - 1,
         limit,
