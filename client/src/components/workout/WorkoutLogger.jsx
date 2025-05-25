@@ -7,7 +7,12 @@ import { useToast } from '../../contexts/ToastContext';
 import Button from '../ui/Button';
 import { startScheduledWorkout, completeScheduledWorkout } from '../../services/scheduledWorkoutService';
 
-const WorkoutLogger = () => {
+const WorkoutLogger = ({ 
+  workoutId: propWorkoutId,
+  scheduledWorkoutId: propScheduledWorkoutId,
+  onComplete,
+  onCancel
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
@@ -16,13 +21,14 @@ const WorkoutLogger = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [availableExercises, setAvailableExercises] = useState([]);
-  const [scheduledWorkoutId, setScheduledWorkoutId] = useState(null);
+  const [scheduledWorkoutId, setScheduledWorkoutId] = useState(propScheduledWorkoutId || location.state?.scheduledWorkoutId || null);
   const [selectedExercises, setSelectedExercises] = useState([]);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [workoutStarted, setWorkoutStarted] = useState(false);
   const [workoutCompleted, setWorkoutCompleted] = useState(false);
   const [workoutTimer, setWorkoutTimer] = useState(0);
   const [timerInterval, setTimerInterval] = useState(null);
+  const [showCompletionScreen, setShowCompletionScreen] = useState(false);
 
   // React Hook Form setup
   const {
@@ -49,8 +55,9 @@ const WorkoutLogger = () => {
         setAvailableExercises(response.data.data || []);
 
         // Check if we're starting from a scheduled workout
-        if (location.state?.scheduledWorkoutId) {
-          await loadScheduledWorkout(location.state.scheduledWorkoutId);
+        const targetScheduledWorkoutId = scheduledWorkoutId || location.state?.scheduledWorkoutId;
+        if (targetScheduledWorkoutId) {
+          await loadScheduledWorkout(targetScheduledWorkoutId);
         }
       } catch (err) {
         console.error('Error fetching exercises:', err);
@@ -68,7 +75,41 @@ const WorkoutLogger = () => {
         clearInterval(timerInterval);
       }
     };
-  }, [location.state]);
+  }, []);
+
+  // Handle completion screen auto-redirect
+  useEffect(() => {
+    if (showCompletionScreen) {
+      const timer = setTimeout(() => {
+        handleCompletionRedirect();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showCompletionScreen]);
+
+  const handleCompletionRedirect = () => {
+    if (onComplete) {
+      // If we have an onComplete prop, use it (when used within Workouts component)
+      onComplete();
+    } else {
+      // Fallback to direct navigation (standalone usage)
+      navigate('/workouts');
+    }
+  };
+
+  const handleCancel = () => {
+    // Stop timer if running
+    if (timerInterval) {
+      clearInterval(timerInterval);
+    }
+
+    if (onCancel) {
+      onCancel();
+    } else {
+      navigate('/workouts');
+    }
+  };
 
   const loadScheduledWorkout = async (scheduledWorkoutId) => {
     try {
@@ -154,7 +195,7 @@ const WorkoutLogger = () => {
     setSelectedExercises(prev => {
       const updated = [...prev];
       updated[exerciseIndex].completedSets.push({
-        reps: parseInt(setData.reps),
+        reps: parseInt(setData.reps) || 0,
         weight: parseFloat(setData.weight) || 0,
         duration: parseInt(setData.duration) || 0,
         restTime: parseInt(setData.restTime) || 0,
@@ -192,8 +233,8 @@ const WorkoutLogger = () => {
       }
 
       // Create custom workout if needed
-      let workoutId = null;
-      if (!scheduledWorkoutId) {
+      let workoutId = propWorkoutId;
+      if (!workoutId && !scheduledWorkoutId) {
         try {
           const customWorkout = {
             name: formData.workoutName,
@@ -242,7 +283,7 @@ const WorkoutLogger = () => {
       }
 
       // Save workout session - try different endpoint paths
-      console.log('Sending workout session data:', workoutSessionData); // Debug log
+      console.log('Sending workout session data:', workoutSessionData);
       let sessionResponse;
       
       try {
@@ -266,7 +307,7 @@ const WorkoutLogger = () => {
         }
       }
       
-      console.log('Session response:', sessionResponse); // Debug log
+      console.log('Session response:', sessionResponse);
       const workoutSessionId = sessionResponse.data.data._id;
 
       // Mark scheduled workout as completed if applicable
@@ -277,17 +318,13 @@ const WorkoutLogger = () => {
         toast.success('Workout logged successfully! 💪');
       }
 
+      // Set completion states
       setWorkoutCompleted(true);
-      
-      // Redirect after a brief delay
-      setTimeout(() => {
-        navigate('/workouts');
-      }, 2000);
+      setShowCompletionScreen(true);
 
     } catch (err) {
       console.error('Error saving workout:', err);
       toast.error('Failed to save workout');
-    } finally {
       setSubmitting(false);
     }
   };
@@ -303,20 +340,30 @@ const WorkoutLogger = () => {
     );
   }
 
-  if (workoutCompleted) {
+  if (showCompletionScreen) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
         <div className="text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <div className="text-6xl mb-4 animate-bounce">🎉</div>
+          <h1 className="text-3xl font-bold text-white mb-2">
             Workout Completed!
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-indigo-200 mb-4 text-lg">
             Total time: {formatTime(workoutTimer)}
           </p>
-          <p className="text-gray-500 dark:text-gray-500">
-            Redirecting to workouts...
-          </p>
+          <div className="flex items-center justify-center space-x-2 text-indigo-300">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-300"></div>
+            <p>Redirecting to workouts...</p>
+          </div>
+          <div className="mt-4">
+            <Button
+              variant="secondary"
+              onClick={handleCompletionRedirect}
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+            >
+              Continue
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -350,7 +397,7 @@ const WorkoutLogger = () => {
               )}
               <Button
                 variant="secondary"
-                onClick={() => navigate('/workouts')}
+                onClick={handleCancel}
                 className="ml-4"
               >
                 Cancel
@@ -507,7 +554,7 @@ const WorkoutLogger = () => {
               <div className="flex space-x-2 overflow-x-auto">
                 {selectedExercises.map((exercise, index) => (
                   <button
-                    key={`nav-${exercise.exerciseId}-${index}`} // Fixed key
+                    key={`nav-${exercise.exerciseId}-${index}`}
                     onClick={() => setCurrentExerciseIndex(index)}
                     className={`flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       index === currentExerciseIndex
