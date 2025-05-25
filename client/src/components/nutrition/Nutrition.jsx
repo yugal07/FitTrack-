@@ -9,6 +9,7 @@ import Button from '../ui/Button';
 import DailyIntakeForm from './DailyIntakeForm';
 import MealsList from './MealsList';
 import WaterTracker from './WaterTracker';
+import WaterChart from './WaterChart'; // Simple water chart component
 import NutritionSummary from './NutritionSummary';
 import NutritionStats from './NutritionStats';
 import MealPlanner from './MealPlanner';
@@ -172,13 +173,10 @@ const Nutrition = () => {
         }
         return (
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-            {/* Left Column - Nutrition Summary */}
+            {/* Left Column - Nutrition Summary + Water Pie Chart */}
             <div className='space-y-6'>
               <NutritionSummary nutritionLog={nutritionLog} />
-              <WaterTracker
-                waterIntake={nutritionLog.waterIntake}
-                onUpdate={handleWaterUpdate}
-              />
+              <WaterChart waterIntake={nutritionLog.waterIntake} goal={2000} />
             </div>
 
             {/* Right Column - Meals */}
