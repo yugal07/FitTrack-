@@ -130,45 +130,94 @@ exports.logWorkoutSession = async (req, res) => {
   try {
     const {
       workoutId,
+      name,
+      type,
       date,
       duration,
       completedExercises,
       caloriesBurned,
       rating,
       difficulty,
+      feeling,
       notes,
       mood,
     } = req.body;
 
-    // Validate workoutId
-    const workout = await Workout.findById(workoutId);
-    if (!workout) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'WORKOUT_NOT_FOUND',
-          message: 'Workout not found',
-        },
-      });
+    console.log('Received workout session data:', req.body); // Debug log
+
+    let finalWorkoutId = workoutId;
+
+    // Handle case where no workoutId is provided (custom workout from WorkoutLogger)
+    if (!workoutId && name) {
+      try {
+        // Create a temporary workout entry for the session
+        const tempWorkout = await Workout.create({
+          name: name || 'Custom Workout',
+          type: type || 'custom',
+          description: 'Auto-generated from workout session',
+          fitnessLevel: 'intermediate',
+          duration: duration || 60,
+          isCustom: true,
+          userId: req.user._id,
+          exercises: completedExercises?.map((ex, index) => ({
+            exerciseId: ex.exerciseId,
+            sets: 1,
+            reps: 0,
+            order: index + 1
+          })) || []
+        });
+        finalWorkoutId = tempWorkout._id;
+      } catch (workoutError) {
+        console.error('Error creating temporary workout:', workoutError);
+        // Continue without workoutId if creation fails
+      }
+    } else if (workoutId) {
+      // Validate existing workoutId
+      const workout = await Workout.findById(workoutId);
+      if (!workout) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'WORKOUT_NOT_FOUND',
+            message: 'Workout not found',
+          },
+        });
+      }
     }
 
     // Create workout session
-    const workoutSession = await WorkoutSession.create({
+    const workoutSessionData = {
       userId: req.user._id,
-      workoutId,
       date: date || new Date(),
-      duration,
-      completedExercises,
-      caloriesBurned,
-      rating,
-      difficulty,
-      notes,
-      mood,
-    });
+      duration: parseInt(duration),
+      completedExercises: completedExercises || [],
+      caloriesBurned: caloriesBurned || 0,
+      rating: rating ? parseInt(rating) : undefined,
+      difficulty: difficulty || feeling ? parseInt(difficulty || feeling) : undefined,
+      notes: notes || '',
+      mood: mood || undefined,
+      name: name || '',
+      type: type || 'custom',
+      source: 'logger'
+    };
+
+    // Only add workoutId if we have one
+    if (finalWorkoutId) {
+      workoutSessionData.workoutId = finalWorkoutId;
+    }
+
+    console.log('Creating workout session with data:', workoutSessionData); // Debug log
+
+    const workoutSession = await WorkoutSession.create(workoutSessionData);
+
+    // Populate and return the created session
+    const populatedSession = await WorkoutSession.findById(workoutSession._id)
+      .populate('workoutId', 'name type fitnessLevel')
+      .populate('completedExercises.exerciseId', 'name muscleGroups');
 
     res.status(201).json({
       success: true,
-      data: workoutSession,
+      data: populatedSession,
       message: 'Workout session logged successfully',
     });
   } catch (error) {
@@ -178,6 +227,7 @@ exports.logWorkoutSession = async (req, res) => {
       error: {
         code: 'SERVER_ERROR',
         message: 'Server error',
+        details: error.message
       },
     });
   }
@@ -197,6 +247,8 @@ exports.updateWorkoutSession = async (req, res) => {
       difficulty,
       notes,
       mood,
+      name,
+      type
     } = req.body;
 
     const workoutSession = await WorkoutSession.findById(req.params.id);
@@ -247,13 +299,24 @@ exports.updateWorkoutSession = async (req, res) => {
     if (mood) {
       workoutSession.mood = mood;
     }
+    if (name !== undefined) {
+      workoutSession.name = name;
+    }
+    if (type) {
+      workoutSession.type = type;
+    }
 
     // Save changes
     await workoutSession.save();
 
+    // Populate and return updated session
+    const populatedSession = await WorkoutSession.findById(workoutSession._id)
+      .populate('workoutId', 'name type fitnessLevel')
+      .populate('completedExercises.exerciseId', 'name muscleGroups');
+
     res.json({
       success: true,
-      data: workoutSession,
+      data: populatedSession,
       message: 'Workout session updated successfully',
     });
   } catch (error) {
@@ -319,18 +382,20 @@ exports.deleteWorkoutSession = async (req, res) => {
 // @access  Private
 exports.getWorkoutStats = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, period = '30' } = req.query;
 
     // Build date range query
-    const dateQuery = {};
-    if (startDate || endDate) {
-      dateQuery.date = {};
-      if (startDate) {
-        dateQuery.date.$gte = new Date(startDate);
-      }
-      if (endDate) {
-        dateQuery.date.$lte = new Date(endDate);
-      }
+    let dateQuery = {};
+    if (startDate && endDate) {
+      dateQuery.date = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    } else {
+      // Default to last X days
+      const daysAgo = new Date();
+      daysAgo.setDate(daysAgo.getDate() - parseInt(period));
+      dateQuery.date = { $gte: daysAgo };
     }
 
     // Base query - user's sessions
@@ -344,48 +409,49 @@ exports.getWorkoutStats = async (req, res) => {
       { $match: baseQuery },
       { $group: { _id: null, total: { $sum: '$duration' } } },
     ]);
-    const totalDuration =
-      durationResult.length > 0 ? durationResult[0].total : 0;
+    const totalDuration = durationResult.length > 0 ? durationResult[0].total : 0;
 
     // Average workout duration
-    const avgDuration = totalWorkouts > 0 ? totalDuration / totalWorkouts : 0;
+    const avgDuration = totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0;
 
     // Total calories burned
     const caloriesResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
       { $group: { _id: null, total: { $sum: '$caloriesBurned' } } },
     ]);
-    const totalCalories =
-      caloriesResult.length > 0 ? caloriesResult[0].total : 0;
+    const totalCalories = caloriesResult.length > 0 ? caloriesResult[0].total : 0;
 
     // Average difficulty
     const difficultyResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
+      { $match: { difficulty: { $exists: true, $ne: null } } },
       { $group: { _id: null, avg: { $avg: '$difficulty' } } },
     ]);
-    const avgDifficulty =
-      difficultyResult.length > 0 ? difficultyResult[0].avg : 0;
+    const avgDifficulty = difficultyResult.length > 0 ? Math.round(difficultyResult[0].avg * 10) / 10 : 0;
 
     // Average rating
     const ratingResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
+      { $match: { rating: { $exists: true, $ne: null } } },
       { $group: { _id: null, avg: { $avg: '$rating' } } },
     ]);
-    const avgRating = ratingResult.length > 0 ? ratingResult[0].avg : 0;
+    const avgRating = ratingResult.length > 0 ? Math.round(ratingResult[0].avg * 10) / 10 : 0;
 
-    // Workouts by type
+    // Workouts by type (handle both session type and workout type)
     const workoutsByType = await WorkoutSession.aggregate([
       { $match: baseQuery },
       {
-        $lookup: {
-          from: 'workouts',
-          localField: 'workoutId',
-          foreignField: '_id',
-          as: 'workout',
-        },
+        $addFields: {
+          workoutType: {
+            $cond: {
+              if: { $ne: ['$type', null] },
+              then: '$type',
+              else: 'custom'
+            }
+          }
+        }
       },
-      { $unwind: '$workout' },
-      { $group: { _id: '$workout.type', count: { $sum: 1 } } },
+      { $group: { _id: '$workoutType', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
     ]);
 
@@ -416,6 +482,27 @@ exports.getWorkoutStats = async (req, res) => {
       count: item.count,
     }));
 
+    // Weekly trend (last 8 weeks)
+    const weeklyTrend = await WorkoutSession.aggregate([
+      { 
+        $match: { 
+          userId: req.user._id,
+          date: { $gte: new Date(Date.now() - 8 * 7 * 24 * 60 * 60 * 1000) }
+        } 
+      },
+      {
+        $group: {
+          _id: { 
+            week: { $week: '$date' },
+            year: { $year: '$date' }
+          },
+          workouts: { $sum: 1 },
+          duration: { $sum: '$duration' }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.week': 1 } }
+    ]);
+
     res.json({
       success: true,
       data: {
@@ -427,6 +514,8 @@ exports.getWorkoutStats = async (req, res) => {
         avgRating,
         workoutsByType,
         workoutFrequencyByDay,
+        weeklyTrend,
+        period: parseInt(period)
       },
     });
   } catch (error) {
