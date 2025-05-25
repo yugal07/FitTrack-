@@ -20,7 +20,7 @@ const setSchema = new mongoose.Schema({
   timestamp: {
     type: Date,
     default: Date.now, // added for WorkoutLogger
-  }
+  },
 });
 
 const completedExerciseSchema = new mongoose.Schema({
@@ -49,7 +49,7 @@ const completedExerciseSchema = new mongoose.Schema({
   targetWeight: {
     type: Number,
     default: 0,
-  }
+  },
 });
 
 const workoutSessionSchema = new mongoose.Schema(
@@ -63,7 +63,7 @@ const workoutSessionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Workout',
       required: false, // Changed from true to false
-      default: null,   // Added default null
+      default: null, // Added default null
     },
     // Added fields for WorkoutLogger
     name: {
@@ -130,7 +130,7 @@ const workoutSessionSchema = new mongoose.Schema(
       type: String,
       enum: ['manual', 'scheduled', 'logger', 'imported'],
       default: 'manual',
-    }
+    },
   },
   {
     timestamps: true,

@@ -33,8 +33,8 @@ const getScheduledWorkouts = asyncHandler(async (req, res) => {
       populate: {
         path: 'exercises.exerciseId',
         model: 'Exercise',
-        select: 'name category muscleGroups instructions description'
-      }
+        select: 'name category muscleGroups instructions description',
+      },
     })
     .populate('workoutSessionId', 'date duration rating')
     .limit(limit ? parseInt(limit) : undefined);
@@ -57,8 +57,8 @@ const getScheduledWorkout = asyncHandler(async (req, res) => {
       populate: {
         path: 'exercises.exerciseId',
         model: 'Exercise',
-        select: 'name category muscleGroups instructions description'
-      }
+        select: 'name category muscleGroups instructions description',
+      },
     })
     .populate('workoutSessionId', 'date duration rating difficulty notes');
 
@@ -111,16 +111,17 @@ const createScheduledWorkout = asyncHandler(async (req, res) => {
   });
 
   // Populate and return
-  const populatedScheduledWorkout = await ScheduledWorkout.findById(scheduledWorkout._id)
-    .populate({
-      path: 'workoutId',
-      select: 'name type description fitnessLevel duration',
-      populate: {
-        path: 'exercises.exerciseId',
-        model: 'Exercise',
-        select: 'name category'
-      }
-    });
+  const populatedScheduledWorkout = await ScheduledWorkout.findById(
+    scheduledWorkout._id
+  ).populate({
+    path: 'workoutId',
+    select: 'name type description fitnessLevel duration',
+    populate: {
+      path: 'exercises.exerciseId',
+      model: 'Exercise',
+      select: 'name category',
+    },
+  });
 
   res.status(201).json({
     success: true,
@@ -170,15 +171,17 @@ const updateScheduledWorkout = asyncHandler(async (req, res) => {
     req.params.id,
     req.body,
     { new: true, runValidators: true }
-  ).populate({
-    path: 'workoutId',
-    select: 'name type description fitnessLevel duration',
-    populate: {
-      path: 'exercises.exerciseId',
-      model: 'Exercise',
-      select: 'name category muscleGroups'
-    }
-  }).populate('workoutSessionId', 'date duration rating');
+  )
+    .populate({
+      path: 'workoutId',
+      select: 'name type description fitnessLevel duration',
+      populate: {
+        path: 'exercises.exerciseId',
+        model: 'Exercise',
+        select: 'name category muscleGroups',
+      },
+    })
+    .populate('workoutSessionId', 'date duration rating');
 
   res.status(200).json({
     success: true,
@@ -244,10 +247,12 @@ const completeScheduledWorkout = asyncHandler(async (req, res) => {
       completedAt: new Date(),
     },
     { new: true, runValidators: true }
-  ).populate({
-    path: 'workoutId',
-    select: 'name type description fitnessLevel duration'
-  }).populate('workoutSessionId', 'date duration rating');
+  )
+    .populate({
+      path: 'workoutId',
+      select: 'name type description fitnessLevel duration',
+    })
+    .populate('workoutSessionId', 'date duration rating');
 
   res.status(200).json({
     success: true,
@@ -264,11 +269,11 @@ const getUpcomingWorkouts = asyncHandler(async (req, res) => {
   const upcomingWorkouts = await ScheduledWorkout.find({
     user: req.user.id,
     isCompleted: false,
-    scheduledFor: { $gte: new Date() }
+    scheduledFor: { $gte: new Date() },
   })
     .populate({
       path: 'workoutId',
-      select: 'name type duration'
+      select: 'name type duration',
     })
     .sort({ scheduledFor: 1 })
     .limit(parseInt(limit));

@@ -159,12 +159,13 @@ exports.logWorkoutSession = async (req, res) => {
           duration: duration || 60,
           isCustom: true,
           userId: req.user._id,
-          exercises: completedExercises?.map((ex, index) => ({
-            exerciseId: ex.exerciseId,
-            sets: 1,
-            reps: 0,
-            order: index + 1
-          })) || []
+          exercises:
+            completedExercises?.map((ex, index) => ({
+              exerciseId: ex.exerciseId,
+              sets: 1,
+              reps: 0,
+              order: index + 1,
+            })) || [],
         });
         finalWorkoutId = tempWorkout._id;
       } catch (workoutError) {
@@ -193,12 +194,13 @@ exports.logWorkoutSession = async (req, res) => {
       completedExercises: completedExercises || [],
       caloriesBurned: caloriesBurned || 0,
       rating: rating ? parseInt(rating) : undefined,
-      difficulty: difficulty || feeling ? parseInt(difficulty || feeling) : undefined,
+      difficulty:
+        difficulty || feeling ? parseInt(difficulty || feeling) : undefined,
       notes: notes || '',
       mood: mood || undefined,
       name: name || '',
       type: type || 'custom',
-      source: 'logger'
+      source: 'logger',
     };
 
     // Only add workoutId if we have one
@@ -227,7 +229,7 @@ exports.logWorkoutSession = async (req, res) => {
       error: {
         code: 'SERVER_ERROR',
         message: 'Server error',
-        details: error.message
+        details: error.message,
       },
     });
   }
@@ -248,7 +250,7 @@ exports.updateWorkoutSession = async (req, res) => {
       notes,
       mood,
       name,
-      type
+      type,
     } = req.body;
 
     const workoutSession = await WorkoutSession.findById(req.params.id);
@@ -385,11 +387,11 @@ exports.getWorkoutStats = async (req, res) => {
     const { startDate, endDate, period = '30' } = req.query;
 
     // Build date range query
-    let dateQuery = {};
+    const dateQuery = {};
     if (startDate && endDate) {
       dateQuery.date = {
         $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $lte: new Date(endDate),
       };
     } else {
       // Default to last X days
@@ -409,17 +411,20 @@ exports.getWorkoutStats = async (req, res) => {
       { $match: baseQuery },
       { $group: { _id: null, total: { $sum: '$duration' } } },
     ]);
-    const totalDuration = durationResult.length > 0 ? durationResult[0].total : 0;
+    const totalDuration =
+      durationResult.length > 0 ? durationResult[0].total : 0;
 
     // Average workout duration
-    const avgDuration = totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0;
+    const avgDuration =
+      totalWorkouts > 0 ? Math.round(totalDuration / totalWorkouts) : 0;
 
     // Total calories burned
     const caloriesResult = await WorkoutSession.aggregate([
       { $match: baseQuery },
       { $group: { _id: null, total: { $sum: '$caloriesBurned' } } },
     ]);
-    const totalCalories = caloriesResult.length > 0 ? caloriesResult[0].total : 0;
+    const totalCalories =
+      caloriesResult.length > 0 ? caloriesResult[0].total : 0;
 
     // Average difficulty
     const difficultyResult = await WorkoutSession.aggregate([
@@ -427,7 +432,10 @@ exports.getWorkoutStats = async (req, res) => {
       { $match: { difficulty: { $exists: true, $ne: null } } },
       { $group: { _id: null, avg: { $avg: '$difficulty' } } },
     ]);
-    const avgDifficulty = difficultyResult.length > 0 ? Math.round(difficultyResult[0].avg * 10) / 10 : 0;
+    const avgDifficulty =
+      difficultyResult.length > 0
+        ? Math.round(difficultyResult[0].avg * 10) / 10
+        : 0;
 
     // Average rating
     const ratingResult = await WorkoutSession.aggregate([
@@ -435,7 +443,8 @@ exports.getWorkoutStats = async (req, res) => {
       { $match: { rating: { $exists: true, $ne: null } } },
       { $group: { _id: null, avg: { $avg: '$rating' } } },
     ]);
-    const avgRating = ratingResult.length > 0 ? Math.round(ratingResult[0].avg * 10) / 10 : 0;
+    const avgRating =
+      ratingResult.length > 0 ? Math.round(ratingResult[0].avg * 10) / 10 : 0;
 
     // Workouts by type (handle both session type and workout type)
     const workoutsByType = await WorkoutSession.aggregate([
@@ -446,10 +455,10 @@ exports.getWorkoutStats = async (req, res) => {
             $cond: {
               if: { $ne: ['$type', null] },
               then: '$type',
-              else: 'custom'
-            }
-          }
-        }
+              else: 'custom',
+            },
+          },
+        },
       },
       { $group: { _id: '$workoutType', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
@@ -484,23 +493,23 @@ exports.getWorkoutStats = async (req, res) => {
 
     // Weekly trend (last 8 weeks)
     const weeklyTrend = await WorkoutSession.aggregate([
-      { 
-        $match: { 
+      {
+        $match: {
           userId: req.user._id,
-          date: { $gte: new Date(Date.now() - 8 * 7 * 24 * 60 * 60 * 1000) }
-        } 
+          date: { $gte: new Date(Date.now() - 8 * 7 * 24 * 60 * 60 * 1000) },
+        },
       },
       {
         $group: {
-          _id: { 
+          _id: {
             week: { $week: '$date' },
-            year: { $year: '$date' }
+            year: { $year: '$date' },
           },
           workouts: { $sum: 1 },
-          duration: { $sum: '$duration' }
-        }
+          duration: { $sum: '$duration' },
+        },
       },
-      { $sort: { '_id.year': 1, '_id.week': 1 } }
+      { $sort: { '_id.year': 1, '_id.week': 1 } },
     ]);
 
     res.json({
@@ -515,7 +524,7 @@ exports.getWorkoutStats = async (req, res) => {
         workoutsByType,
         workoutFrequencyByDay,
         weeklyTrend,
-        period: parseInt(period)
+        period: parseInt(period),
       },
     });
   } catch (error) {
