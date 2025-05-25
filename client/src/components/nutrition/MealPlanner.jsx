@@ -225,12 +225,20 @@ const MealPlanner = () => {
     return meals[mealType][Math.floor(Math.random() * meals[mealType].length)];
   };
 
+  // Fixed: Add null checks to prevent charAt errors
   const getMealDisplayName = meal => {
+    if (!meal) return '';
     return meal.charAt(0).toUpperCase() + meal.slice(1);
   };
 
   const getDayDisplayName = day => {
-    return format(new Date(day), 'EEEE, MMM d');
+    if (!day) return '';
+    try {
+      return format(new Date(day), 'EEEE, MMM d');
+    } catch (error) {
+      console.error('Invalid date:', day);
+      return '';
+    }
   };
 
   return (
