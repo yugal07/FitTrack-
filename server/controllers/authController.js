@@ -1,7 +1,6 @@
 // Authentication Controllers - Complete with Password Reset
 
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { User, Profile } = require('../models');
 const emailService = require('../services/emailService');

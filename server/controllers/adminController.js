@@ -179,8 +179,7 @@ exports.getUserById = async (req, res) => {
 // @access  Private/Admin
 exports.updateUser = async (req, res) => {
   try {
-    const { firstName, lastName, email, role, fitnessLevel, isActive } =
-      req.body;
+    const { firstName, lastName, email, role, fitnessLevel } = req.body;
 
     const user = await User.findById(req.params.id);
 
