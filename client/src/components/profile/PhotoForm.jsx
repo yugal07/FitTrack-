@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 
 const PhotoForm = ({ onSubmit, onCancel, loading }) => {
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // React Hook Form setup
   const {
@@ -11,28 +12,56 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
     setValue,
     watch,
     formState: { errors },
+    setError,
+    clearErrors,
   } = useForm({
     defaultValues: {
       date: new Date().toISOString().split('T')[0],
       category: 'front',
       notes: '',
-      file: null,
     },
   });
-
-  // Watch file input for preview
-  const watchFile = watch('file');
 
   const handleFileChange = e => {
     const file = e.target.files[0];
 
     if (!file) {
-      setValue('file', null);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setError('file', {
+        type: 'required',
+        message: 'Please select a photo to upload',
+      });
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('file', {
+        type: 'fileType',
+        message: 'Please select an image file (jpg, png, etc.)',
+      });
+      setSelectedFile(null);
       setPreviewUrl(null);
       return;
     }
 
-    // File will be validated by React Hook Form rules
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('file', {
+        type: 'fileSize',
+        message: 'File size must be less than 5MB',
+      });
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
+    // Clear any existing file errors
+    clearErrors('file');
+
+    // Set the selected file
+    setSelectedFile(file);
 
     // Create preview
     const reader = new FileReader();
@@ -40,18 +69,36 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
       setPreviewUrl(reader.result);
     };
     reader.readAsDataURL(file);
-
-    // Set file in form state
-    setValue('file', file);
   };
 
   const removeFile = () => {
-    setValue('file', null);
+    setSelectedFile(null);
     setPreviewUrl(null);
+    // Reset the file input
+    const fileInput = document.getElementById('file-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
   };
 
   const onFormSubmit = data => {
-    onSubmit(data);
+    // Check if file is selected
+    if (!selectedFile) {
+      setError('file', {
+        type: 'required',
+        message: 'Please select a photo to upload',
+      });
+      return;
+    }
+
+    // Pass the actual file object along with form data
+    const formDataWithFile = {
+      ...data,
+      file: selectedFile,
+    };
+
+    console.log('Submitting form with data:', formDataWithFile);
+    onSubmit(formDataWithFile);
   };
 
   return (
@@ -185,19 +232,6 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
                       className='sr-only'
                       accept='image/*'
                       onChange={handleFileChange}
-                      {...register('file', {
-                        required: 'Please select a photo to upload',
-                        validate: {
-                          fileType: file =>
-                            !file ||
-                            file.type.startsWith('image/') ||
-                            'Please select an image file (jpg, png, etc.)',
-                          fileSize: file =>
-                            !file ||
-                            file.size <= 5 * 1024 * 1024 ||
-                            'File size must be less than 5MB',
-                        },
-                      })}
                     />
                   </label>
                   <p className='pl-1'>or drag and drop</p>
@@ -221,13 +255,13 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
           type='button'
           onClick={onCancel}
           disabled={loading}
-          className='bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800'
+          className='bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50'
         >
           Cancel
         </button>
         <button
           type='submit'
-          disabled={loading}
+          disabled={loading || !selectedFile}
           className='inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50'
         >
           {loading ? 'Uploading...' : 'Upload Photo'}
