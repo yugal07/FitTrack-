@@ -32,37 +32,27 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        // Fetch all data in parallel for better performance
-        const [
-          workoutStatsRes,
-          recentWorkoutsRes,
-          goalsRes,
-          nutritionRes,
-          measurementsRes,
-          scheduledWorkoutsRes,
-        ] = await Promise.all([
-          // Fetch workout stats
-          api.get('/api/workout-sessions/stats'),
+        // Fetch workout stats
+        const workoutStatsRes = await api.get('/api/workout-sessions/stats');
 
-          // Fetch recent workouts
-          api.get('/api/workout-sessions?limit=5'),
+        // Fetch recent workouts
+        const recentWorkoutsRes = await api.get(
+          '/api/workout-sessions?limit=5'
+        );
 
-          // Fetch goals
-          api.get('/api/goals'),
+        // Fetch goals
+        const goalsRes = await api.get('/api/goals');
 
-          // Fetch nutrition data for today
-          api.get(
-            `/api/nutrition/logs?startDate=${new Date().toISOString().split('T')[0]}&endDate=${new Date().toISOString().split('T')[0]}`
-          ),
+        // Fetch nutrition data for today
+        const today = new Date().toISOString().split('T')[0];
+        const nutritionRes = await api.get(
+          `/api/nutrition/logs?startDate=${today}&endDate=${today}`
+        );
 
-          // Fetch recent measurements
-          api.get('/api/profiles/measurements'),
+        // Fetch recent measurements
+        const measurementsRes = await api.get('/api/profiles/measurements');
 
-          // Fetch upcoming scheduled workouts
-          api.get('/api/scheduled-workouts?limit=3&completed=false'),
-        ]);
-
-        // Set workout stats
+        // Set the data
         setStats({
           totalWorkouts: workoutStatsRes.data.data.totalWorkouts || 0,
           totalCaloriesBurned: workoutStatsRes.data.data.totalCalories || 0,
@@ -72,23 +62,40 @@ const Dashboard = () => {
           averageWorkoutDuration: workoutStatsRes.data.data.avgDuration || 0,
         });
 
-        // Set other data
         setRecentWorkouts(recentWorkoutsRes.data.data || []);
         setGoals(goalsRes.data.data || []);
         setNutritionData(nutritionRes.data.data[0] || null);
         setMeasurements(measurementsRes.data.data.slice(-3) || []);
-        setUpcomingWorkouts(scheduledWorkoutsRes.data.data || []);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
-        setScheduledWorkoutsLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, []); // Remove any dependencies to prevent infinite loops
+  }, []);
+
+  // Fetch scheduled workouts in a separate useEffect
+  useEffect(() => {
+    const fetchScheduledWorkouts = async () => {
+      try {
+        setScheduledWorkoutsLoading(true);
+        // Fetch upcoming workouts with limit=3 and only those not completed
+        const response = await api.get(
+          '/api/scheduled-workouts?limit=3&completed=false'
+        );
+        setUpcomingWorkouts(response.data.data || []);
+      } catch (err) {
+        console.error('Error fetching scheduled workouts:', err);
+      } finally {
+        setScheduledWorkoutsLoading(false);
+      }
+    };
+
+    fetchScheduledWorkouts();
+  }, []);
 
   if (loading) {
     return (
@@ -98,22 +105,6 @@ const Dashboard = () => {
           <p className='mt-3 text-sm text-gray-600 dark:text-gray-400'>
             Loading dashboard...
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900'>
-        <div className='text-center'>
-          <p className='text-red-600 dark:text-red-400'>{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className='mt-3 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700'
-          >
-            Retry
-          </button>
         </div>
       </div>
     );
@@ -168,14 +159,11 @@ const Dashboard = () => {
 
           {/* Goal progress */}
           <GoalProgress goals={goals} />
-
-          {/* Workout suggestion - moved here for better layout */}
-          <WorkoutSuggestion fitnessLevel={currentUser?.fitnessLevel} />
         </div>
 
         {/* Right column */}
         <div className='space-y-6'>
-          {/* Upcoming workouts - single instance with real data */}
+          {/* Upcoming workouts - Now using real data */}
           <UpcomingWorkouts
             workouts={upcomingWorkouts}
             isLoading={scheduledWorkoutsLoading}
@@ -188,6 +176,9 @@ const Dashboard = () => {
           <RecentMeasurements measurements={measurements} />
         </div>
       </div>
+
+      {/* Workout suggestion */}
+      <WorkoutSuggestion fitnessLevel={currentUser?.fitnessLevel} />
     </div>
   );
 };
