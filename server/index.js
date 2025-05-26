@@ -21,8 +21,8 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: '*',
-    credentials: false,
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
   })
 );
 app.use(express.json());
@@ -103,6 +103,10 @@ if (process.env.NODE_ENV !== 'test') {
     console.error('Error starting notification schedulers:', error);
   }
 }
+
+app.listen(process.env.PORT, () => {
+  console.log('Server is running at PORT 8001');
+});
 
 // Export the Express app for Vercel
 module.exports = app;
