@@ -1,55 +1,11 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const crypto = require('crypto');
 
-// Create upload directories if they don't exist
-const createUploadDirs = () => {
-  const uploadDir = path.join(__dirname, '../uploads');
-  const progressPhotosDir = path.join(uploadDir, 'progress-photos');
-  const profilePicsDir = path.join(uploadDir, 'profile-pics');
+// For Vercel deployment, we'll use memory storage instead of disk storage
+// In production, you should use cloud storage like Cloudinary
 
-  // Create main uploads directory
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-  }
-
-  // Create subdirectories
-  if (!fs.existsSync(progressPhotosDir)) {
-    fs.mkdirSync(progressPhotosDir);
-  }
-
-  if (!fs.existsSync(profilePicsDir)) {
-    fs.mkdirSync(profilePicsDir);
-  }
-};
-
-// Initialize directories
-createUploadDirs();
-
-// Storage configuration
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    // Determine destination based on file type
-    let uploadPath;
-
-    if (req.uploadType === 'profile-pic') {
-      uploadPath = path.join(__dirname, '../uploads/profile-pics');
-    } else if (req.uploadType === 'progress-photo') {
-      uploadPath = path.join(__dirname, '../uploads/progress-photos');
-    } else {
-      uploadPath = path.join(__dirname, '../uploads');
-    }
-
-    cb(null, uploadPath);
-  },
-  filename: function (req, file, cb) {
-    // Generate a unique filename with original extension
-    const randomString = crypto.randomBytes(16).toString('hex');
-    const fileExt = path.extname(file.originalname);
-    cb(null, `${randomString}${fileExt}`);
-  },
-});
+const storage = multer.memoryStorage(); // Use memory storage for Vercel
 
 // File filter - check if file type is allowed
 const fileFilter = (req, file, cb) => {
@@ -69,7 +25,7 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-// Middleware to set upload type
+// Middleware to set upload type (keeping for compatibility)
 exports.setUploadType = type => (req, res, next) => {
   req.uploadType = type;
   next();
@@ -113,14 +69,12 @@ exports.handleUploadError = (err, req, res, next) => {
   next();
 };
 
-// Delete file helper
+// Delete file helper (disabled for Vercel)
 exports.deleteFile = filePath => {
-  const fullPath = path.join(__dirname, '../', filePath);
-
-  if (fs.existsSync(fullPath)) {
-    fs.unlinkSync(fullPath);
-    return true;
-  }
-
-  return false;
+  // In Vercel environment, files are in memory only
+  // This function is kept for compatibility but doesn't do anything
+  console.log(
+    `File deletion requested for: ${filePath} (memory storage - no action needed)`
+  );
+  return true;
 };
