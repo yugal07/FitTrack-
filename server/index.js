@@ -21,7 +21,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: '*',
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true,
   })
 );
@@ -54,18 +54,18 @@ const adminRoutes = require('./routes/adminRoutes');
 const adminNutritionRoutes = require('./routes/adminNutritionRoutes');
 
 // Mount routes
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
-app.use('/profiles', profileRoutes);
-app.use('/goals', goalRoutes);
-app.use('/exercises', exerciseRoutes);
-app.use('/workouts', workoutRoutes);
-app.use('/workout-sessions', workoutSessionRoutes);
-app.use('/nutrition', nutritionRoutes);
-app.use('/uploads', uploadRoutes);
-app.use('/notifications', notificationRoutes);
-app.use('/admin', adminRoutes);
-app.use('/admin/nutrition', adminNutritionRoutes);
+app.use('api/auth', authRoutes);
+app.use('api/users', userRoutes);
+app.use('api/profiles', profileRoutes);
+app.use('api/goals', goalRoutes);
+app.use('api/exercises', exerciseRoutes);
+app.use('api/workouts', workoutRoutes);
+app.use('api/workout-sessions', workoutSessionRoutes);
+app.use('api/nutrition', nutritionRoutes);
+app.use('api/uploads', uploadRoutes);
+app.use('api/notifications', notificationRoutes);
+app.use('api/admin', adminRoutes);
+app.use('api/admin/nutrition', adminNutritionRoutes);
 
 // Health check endpoint
 app.get('/', (req, res) => {
