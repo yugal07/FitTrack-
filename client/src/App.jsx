@@ -1,3 +1,4 @@
+// client/src/App.jsx
 import {
   BrowserRouter as Router,
   Routes,
@@ -52,111 +53,7 @@ function App() {
               <Route path='/forgot-password' element={<ForgotPassword />} />
               <Route path='/reset-password' element={<ResetPassword />} />
 
-              {/* Protected user routes */}
-
-              <Route
-                path='/dashboard'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <Dashboard />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-              <Route
-                path='/workouts'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <Workouts />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-              <Route
-                path='/progress'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <Progress />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-              <Route
-                path='/nutrition'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <Nutrition />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-              <Route
-                path='/goals'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <Goals />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-              <Route
-                path='/profile'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <Profile />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-
-              {/* Scheduled Workout Routes */}
-              <Route
-                path='/scheduled-workouts'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <ScheduledWorkoutList />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-              <Route
-                path='/scheduled-workouts/new'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <ScheduledWorkoutForm />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-              <Route
-                path='/scheduled-workouts/:id'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <ScheduledWorkoutDetail />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-              <Route
-                path='/scheduled-workouts/:id/edit'
-                element={
-                  <AuthGuard>
-                    <Layout>
-                      <ScheduledWorkoutForm />
-                    </Layout>
-                  </AuthGuard>
-                }
-              />
-
+              {/* Protected user routes - All wrapped with AuthGuard */}
               <Route
                 path='/dashboard'
                 element={
@@ -228,6 +125,48 @@ function App() {
                 }
               />
 
+              {/* Scheduled Workout Routes */}
+              <Route
+                path='/scheduled-workouts'
+                element={
+                  <AuthGuard>
+                    <Layout>
+                      <ScheduledWorkoutList />
+                    </Layout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path='/scheduled-workouts/new'
+                element={
+                  <AuthGuard>
+                    <Layout>
+                      <ScheduledWorkoutForm />
+                    </Layout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path='/scheduled-workouts/:id'
+                element={
+                  <AuthGuard>
+                    <Layout>
+                      <ScheduledWorkoutDetail />
+                    </Layout>
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path='/scheduled-workouts/:id/edit'
+                element={
+                  <AuthGuard>
+                    <Layout>
+                      <ScheduledWorkoutForm />
+                    </Layout>
+                  </AuthGuard>
+                }
+              />
+
               {/* Admin routes */}
               <Route
                 path='/admin'
@@ -252,9 +191,23 @@ function App() {
                 <Route path='notifications' element={<NotificationHistory />} />
               </Route>
 
-              {/* Redirects */}
-              <Route path='/' element={<Navigate to='/dashboard' />} />
-              <Route path='*' element={<Navigate to='/dashboard' />} />
+              {/* Root and catch-all redirects with AuthGuard */}
+              <Route
+                path='/'
+                element={
+                  <AuthGuard>
+                    <Navigate to='/dashboard' replace />
+                  </AuthGuard>
+                }
+              />
+              <Route
+                path='*'
+                element={
+                  <AuthGuard>
+                    <Navigate to='/dashboard' replace />
+                  </AuthGuard>
+                }
+              />
             </Routes>
           </AuthProvider>
         </ToastProvider>
