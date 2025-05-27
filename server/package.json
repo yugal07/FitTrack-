@@ -8,6 +8,7 @@
     "dev": "nodemon index.js",
     "seed": "node seeder/index.js",
     "seed:destroy": "node seeder/index.js -d",
+    "seed:help": "node seeder/index.js --help",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{js,json,md}\"",
