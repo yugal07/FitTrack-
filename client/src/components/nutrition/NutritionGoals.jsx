@@ -12,13 +12,14 @@ const NutritionGoals = () => {
   const [activeTab, setActiveTab] = useState('daily');
   const [isEditing, setIsEditing] = useState(false);
   const [showTips, setShowTips] = useState(true);
+  const [progressLoading, setProgressLoading] = useState(false);
 
   // Get toast functions
   const toast = useToast();
   // Get toast-enabled API
   const api = apiWithToast(toast);
 
-  // Default goals - these would come from the API in a real app
+  // Goals state - now fetched from API
   const [goals, setGoals] = useState({
     daily: {
       calories: 2000,
@@ -51,19 +52,19 @@ const NutritionGoals = () => {
   // Form data for editing
   const [formData, setFormData] = useState({ ...goals.daily });
 
-  // Current progress - in a real app, this would be calculated from the day's logged meals
+  // Current progress - now fetched from API
   const [progress, setProgress] = useState({
-    calories: 1450,
-    protein: 95,
-    carbs: 160,
-    fat: 45,
-    fiber: 18,
-    sugar: 35,
-    sodium: 1800,
-    water: 1750,
-    vitaminC: 45,
-    calcium: 650,
-    iron: 10,
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    fiber: 0,
+    sugar: 0,
+    sodium: 0,
+    water: 0,
+    vitaminC: 0,
+    calcium: 0,
+    iron: 0,
   });
 
   // Goal types/plans with descriptions
@@ -104,74 +105,274 @@ const NutritionGoals = () => {
     },
   ];
 
+  // Fetch nutrition goals from API
+  const fetchNutritionGoals = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/nutrition/goals');
+
+      if (response.data && response.data.data) {
+        const fetchedGoals = response.data.data;
+
+        // Set daily goals
+        setGoals({
+          daily: {
+            calories: fetchedGoals.calories || 2000,
+            protein: fetchedGoals.protein || 120,
+            carbs: fetchedGoals.carbs || 250,
+            fat: fetchedGoals.fat || 65,
+            fiber: fetchedGoals.fiber || 30,
+            sugar: fetchedGoals.sugar || 50,
+            sodium: fetchedGoals.sodium || 2300,
+            water: fetchedGoals.water || 2500,
+            vitaminC: fetchedGoals.vitaminC || 75,
+            calcium: fetchedGoals.calcium || 1000,
+            iron: fetchedGoals.iron || 18,
+          },
+          weekly: calculateWeekly({
+            calories: fetchedGoals.calories || 2000,
+            protein: fetchedGoals.protein || 120,
+            carbs: fetchedGoals.carbs || 250,
+            fat: fetchedGoals.fat || 65,
+            fiber: fetchedGoals.fiber || 30,
+            sugar: fetchedGoals.sugar || 50,
+            sodium: fetchedGoals.sodium || 2300,
+            water: fetchedGoals.water || 2500,
+            vitaminC: fetchedGoals.vitaminC || 75,
+            calcium: fetchedGoals.calcium || 1000,
+            iron: fetchedGoals.iron || 18,
+          }),
+        });
+
+        // Update form data with fetched goals
+        setFormData({
+          calories: fetchedGoals.calories || 2000,
+          protein: fetchedGoals.protein || 120,
+          carbs: fetchedGoals.carbs || 250,
+          fat: fetchedGoals.fat || 65,
+          fiber: fetchedGoals.fiber || 30,
+          sugar: fetchedGoals.sugar || 50,
+          sodium: fetchedGoals.sodium || 2300,
+          water: fetchedGoals.water || 2500,
+          vitaminC: fetchedGoals.vitaminC || 75,
+          calcium: fetchedGoals.calcium || 1000,
+          iron: fetchedGoals.iron || 18,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching nutrition goals:', err);
+      // Keep default values if fetch fails
+      toast.error('Failed to load nutrition goals. Using default values.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch current nutrition progress for today
+  const fetchNutritionProgress = async () => {
+    try {
+      setProgressLoading(true);
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
+      const response = await api.get('/api/nutrition/logs', {
+        params: {
+          startDate: today,
+          endDate: today,
+          limit: 1,
+        },
+      });
+
+      if (response.data && response.data.count > 0) {
+        const todayLog = response.data.data[0];
+
+        // Calculate progress from today's nutrition log
+        setProgress({
+          calories: todayLog.totalCalories || 0,
+          protein: todayLog.totalProtein || 0,
+          carbs: todayLog.totalCarbs || 0,
+          fat: todayLog.totalFat || 0,
+          fiber: todayLog.totalFiber || 0,
+          sugar: todayLog.totalSugar || 0,
+          sodium: todayLog.totalSodium || 0,
+          water: todayLog.waterIntake || 0,
+          vitaminC: todayLog.totalVitaminC || 0,
+          calcium: todayLog.totalCalcium || 0,
+          iron: todayLog.totalIron || 0,
+        });
+      } else {
+        // No data for today, reset progress
+        setProgress({
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+          fiber: 0,
+          sugar: 0,
+          sodium: 0,
+          water: 0,
+          vitaminC: 0,
+          calcium: 0,
+          iron: 0,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching nutrition progress:', err);
+      // Keep zero progress if fetch fails
+    } finally {
+      setProgressLoading(false);
+    }
+  };
+
+  // Fetch weekly nutrition progress
+  const fetchWeeklyProgress = async () => {
+    try {
+      setProgressLoading(true);
+      const today = new Date();
+      const weekAgo = new Date(today);
+      weekAgo.setDate(today.getDate() - 6); // Last 7 days including today
+
+      const startDate = weekAgo.toISOString().split('T')[0];
+      const endDate = today.toISOString().split('T')[0];
+
+      const response = await api.get('/api/nutrition/logs', {
+        params: {
+          startDate,
+          endDate,
+          limit: 7,
+        },
+      });
+
+      if (response.data && response.data.count > 0) {
+        // Sum up all the logs for the week
+        const weeklyTotals = response.data.data.reduce(
+          (totals, log) => ({
+            calories: totals.calories + (log.totalCalories || 0),
+            protein: totals.protein + (log.totalProtein || 0),
+            carbs: totals.carbs + (log.totalCarbs || 0),
+            fat: totals.fat + (log.totalFat || 0),
+            fiber: totals.fiber + (log.totalFiber || 0),
+            sugar: totals.sugar + (log.totalSugar || 0),
+            sodium: totals.sodium + (log.totalSodium || 0),
+            water: totals.water + (log.waterIntake || 0),
+            vitaminC: totals.vitaminC + (log.totalVitaminC || 0),
+            calcium: totals.calcium + (log.totalCalcium || 0),
+            iron: totals.iron + (log.totalIron || 0),
+          }),
+          {
+            calories: 0,
+            protein: 0,
+            carbs: 0,
+            fat: 0,
+            fiber: 0,
+            sugar: 0,
+            sodium: 0,
+            water: 0,
+            vitaminC: 0,
+            calcium: 0,
+            iron: 0,
+          }
+        );
+
+        setProgress(weeklyTotals);
+      } else {
+        // No data for this week, reset progress
+        setProgress({
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0,
+          fiber: 0,
+          sugar: 0,
+          sodium: 0,
+          water: 0,
+          vitaminC: 0,
+          calcium: 0,
+          iron: 0,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching weekly nutrition progress:', err);
+      // Keep zero progress if fetch fails
+    } finally {
+      setProgressLoading(false);
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchNutritionGoals();
+  }, []);
+
+  // Fetch progress when tab changes
+  useEffect(() => {
+    if (!loading) {
+      if (activeTab === 'daily') {
+        fetchNutritionProgress();
+      } else if (activeTab === 'weekly') {
+        fetchWeeklyProgress();
+      }
+    }
+  }, [activeTab, loading]);
+
   // Smart tips based on current progress
   const getTips = () => {
     const tips = [];
+    const currentGoals = activeTab === 'daily' ? goals.daily : goals.weekly;
 
     // Calculate percentages for macros
-    const proteinPercent = (progress.protein / goals.daily.protein) * 100;
-    const carbsPercent = (progress.carbs / goals.daily.carbs) * 100;
-    const fatPercent = (progress.fat / goals.daily.fat) * 100;
+    const proteinPercent = (progress.protein / currentGoals.protein) * 100;
+    const carbsPercent = (progress.carbs / currentGoals.carbs) * 100;
+    const fatPercent = (progress.fat / currentGoals.fat) * 100;
+    const caloriePercent = (progress.calories / currentGoals.calories) * 100;
 
-    if (proteinPercent < 50 && progress.calories > goals.daily.calories * 0.5) {
-      tips.push({
-        type: 'warning',
-        title: 'Protein Intake Low',
-        message:
-          "You're below 50% of your protein goal but already consumed more than half your calories. Consider protein-rich foods for your next meal like eggs, chicken, or Greek yogurt.",
-      });
-    }
+    if (activeTab === 'daily') {
+      if (proteinPercent < 50 && caloriePercent > 50) {
+        tips.push({
+          type: 'warning',
+          title: 'Protein Intake Low',
+          message:
+            "You're below 50% of your protein goal but already consumed more than half your calories. Consider protein-rich foods for your next meal like eggs, chicken, or Greek yogurt.",
+        });
+      }
 
-    if (fatPercent > 90 && progress.calories < goals.daily.calories * 0.7) {
-      tips.push({
-        type: 'warning',
-        title: 'Fat Intake High',
-        message:
-          "You've nearly reached your fat goal but have plenty of calories remaining. Consider lower-fat options for your remaining meals today.",
-      });
-    }
+      if (fatPercent > 90 && caloriePercent < 70) {
+        tips.push({
+          type: 'warning',
+          title: 'Fat Intake High',
+          message:
+            "You've nearly reached your fat goal but have plenty of calories remaining. Consider lower-fat options for your remaining meals today.",
+        });
+      }
 
-    if (progress.water < goals.daily.water * 0.4) {
-      tips.push({
-        type: 'info',
-        title: 'Hydration Reminder',
-        message:
-          "You're behind on your water intake goal. Try to drink a glass of water now and set reminders throughout the day.",
-      });
-    }
+      if (progress.water < currentGoals.water * 0.4) {
+        tips.push({
+          type: 'info',
+          title: 'Hydration Reminder',
+          message:
+            "You're behind on your water intake goal. Try to drink a glass of water now and set reminders throughout the day.",
+        });
+      }
 
-    if (
-      progress.fiber < goals.daily.fiber * 0.3 &&
-      progress.calories > goals.daily.calories * 0.5
-    ) {
-      tips.push({
-        type: 'info',
-        title: 'Fiber Intake Low',
-        message:
-          'Consider adding more fiber-rich foods like fruits, vegetables, or whole grains to your remaining meals today.',
-      });
+      if (progress.fiber < currentGoals.fiber * 0.3 && caloriePercent > 50) {
+        tips.push({
+          type: 'info',
+          title: 'Fiber Intake Low',
+          message:
+            'Consider adding more fiber-rich foods like fruits, vegetables, or whole grains to your remaining meals today.',
+        });
+      }
     }
 
     if (tips.length === 0) {
       tips.push({
         type: 'success',
         title: 'Great Progress!',
-        message:
-          "You're on track with your nutrition goals today. Keep up the good work!",
+        message: `You're on track with your nutrition goals ${activeTab === 'daily' ? 'today' : 'this week'}. Keep up the good work!`,
       });
     }
 
     return tips;
   };
-
-  // Simulated API call to fetch user's nutrition goals
-  useEffect(() => {
-    // Simulate API request
-    setTimeout(() => {
-      // In a real app, you'd fetch goals from the server
-      setLoading(false);
-    }, 1000);
-  }, []);
 
   // Handle input change
   const handleInputChange = (field, value) => {
@@ -213,14 +414,11 @@ const NutritionGoals = () => {
         return;
       }
 
+      // Save to API
+      await api.post('/api/nutrition/goals', formData);
+
       // Calculate weekly goals based on daily inputs
       const newWeeklyGoals = calculateWeekly(formData);
-
-      // In a real app, you'd send this to the server
-      // await api.post('api/nutrition/goals', formData);
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
 
       // Update goals
       setGoals({
@@ -264,7 +462,7 @@ const NutritionGoals = () => {
           </div>
           <div className='text-right'>
             <span className='font-medium text-gray-900 dark:text-white'>
-              {current}
+              {Math.round(current)}
               {unit}
             </span>
             <span className='text-gray-500 dark:text-gray-400 ml-1'>
@@ -438,17 +636,21 @@ const NutritionGoals = () => {
   // Render the current goals overview
   const renderGoalsOverview = () => {
     const currentGoals = activeTab === 'daily' ? goals.daily : goals.weekly;
-    const currentProgress =
-      activeTab === 'daily'
-        ? progress
-        : // Scale daily progress to weekly for this demo - in a real app, we would fetch weekly progress
-          Object.keys(progress).reduce((acc, key) => {
-            acc[key] = progress[key] * 5; // Simulate 5 days of progress in the week
-            return acc;
-          }, {});
 
     return (
       <div className='space-y-6'>
+        {/* Progress loading indicator */}
+        {progressLoading && (
+          <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
+            <div className='flex items-center'>
+              <div className='animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500 mr-2'></div>
+              <span className='text-blue-700 dark:text-blue-300 text-sm'>
+                Loading current progress...
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Main macros card */}
         <Card title='Macronutrient Goals' className='relative'>
           <div className='absolute top-4 right-4'>
@@ -473,7 +675,7 @@ const NutritionGoals = () => {
                     </h4>
                     <div className='text-right'>
                       <span className='text-2xl font-bold text-gray-900 dark:text-white'>
-                        {currentProgress.calories}
+                        {Math.round(progress.calories)}
                       </span>
                       <span className='text-gray-500 dark:text-gray-400 ml-1'>
                         / {currentGoals.calories}
@@ -484,7 +686,7 @@ const NutritionGoals = () => {
                     <div
                       className='h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full transition-all duration-300 ease-in-out'
                       style={{
-                        width: `${calculatePercentage(currentProgress.calories, currentGoals.calories)}%`,
+                        width: `${calculatePercentage(progress.calories, currentGoals.calories)}%`,
                       }}
                     ></div>
                   </div>
@@ -496,7 +698,7 @@ const NutritionGoals = () => {
 
                 {/* Protein */}
                 {renderNutrientProgress(
-                  currentProgress.protein,
+                  progress.protein,
                   currentGoals.protein,
                   'Protein',
                   'blue'
@@ -504,7 +706,7 @@ const NutritionGoals = () => {
 
                 {/* Carbs */}
                 {renderNutrientProgress(
-                  currentProgress.carbs,
+                  progress.carbs,
                   currentGoals.carbs,
                   'Carbohydrates',
                   'yellow'
@@ -512,7 +714,7 @@ const NutritionGoals = () => {
 
                 {/* Fat */}
                 {renderNutrientProgress(
-                  currentProgress.fat,
+                  progress.fat,
                   currentGoals.fat,
                   'Fat',
                   'red'
@@ -612,7 +814,7 @@ const NutritionGoals = () => {
 
               {/* Fiber */}
               {renderNutrientProgress(
-                currentProgress.fiber,
+                progress.fiber,
                 currentGoals.fiber,
                 'Fiber',
                 'green'
@@ -620,7 +822,7 @@ const NutritionGoals = () => {
 
               {/* Sugar */}
               {renderNutrientProgress(
-                currentProgress.sugar,
+                progress.sugar,
                 currentGoals.sugar,
                 'Sugar',
                 'pink'
@@ -628,7 +830,7 @@ const NutritionGoals = () => {
 
               {/* Water */}
               {renderNutrientProgress(
-                currentProgress.water,
+                progress.water,
                 currentGoals.water,
                 'Water',
                 'blue',
@@ -643,7 +845,7 @@ const NutritionGoals = () => {
                 <div className='space-y-3'>
                   {/* Vitamin C */}
                   {renderNutrientProgress(
-                    currentProgress.vitaminC,
+                    progress.vitaminC,
                     currentGoals.vitaminC,
                     'Vitamin C',
                     'orange',
@@ -652,7 +854,7 @@ const NutritionGoals = () => {
 
                   {/* Calcium */}
                   {renderNutrientProgress(
-                    currentProgress.calcium,
+                    progress.calcium,
                     currentGoals.calcium,
                     'Calcium',
                     'purple',
@@ -661,7 +863,7 @@ const NutritionGoals = () => {
 
                   {/* Iron */}
                   {renderNutrientProgress(
-                    currentProgress.iron,
+                    progress.iron,
                     currentGoals.iron,
                     'Iron',
                     'gray',

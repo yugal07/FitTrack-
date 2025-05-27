@@ -31,6 +31,31 @@ const foodSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  // Additional nutrients for goals tracking
+  fiber: {
+    type: Number,
+    default: 0,
+  },
+  sugar: {
+    type: Number,
+    default: 0,
+  },
+  sodium: {
+    type: Number,
+    default: 0,
+  },
+  vitaminC: {
+    type: Number,
+    default: 0,
+  },
+  calcium: {
+    type: Number,
+    default: 0,
+  },
+  iron: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const mealSchema = new mongoose.Schema({
@@ -66,6 +91,7 @@ const nutritionLogSchema = new mongoose.Schema(
       type: Number, // in ml
       default: 0,
     },
+    // Main macronutrients totals
     totalCalories: {
       type: Number,
       default: 0,
@@ -79,6 +105,31 @@ const nutritionLogSchema = new mongoose.Schema(
       default: 0,
     },
     totalFat: {
+      type: Number,
+      default: 0,
+    },
+    // Additional nutrients totals
+    totalFiber: {
+      type: Number,
+      default: 0,
+    },
+    totalSugar: {
+      type: Number,
+      default: 0,
+    },
+    totalSodium: {
+      type: Number,
+      default: 0,
+    },
+    totalVitaminC: {
+      type: Number,
+      default: 0,
+    },
+    totalCalcium: {
+      type: Number,
+      default: 0,
+    },
+    totalIron: {
       type: Number,
       default: 0,
     },
@@ -97,23 +148,46 @@ nutritionLogSchema.pre('save', function (next) {
   let protein = 0;
   let carbs = 0;
   let fat = 0;
+  let fiber = 0;
+  let sugar = 0;
+  let sodium = 0;
+  let vitaminC = 0;
+  let calcium = 0;
+  let iron = 0;
 
   this.meals.forEach(meal => {
     meal.foods.forEach(food => {
-      calories += food.calories * food.quantity;
-      protein += food.protein * food.quantity;
-      carbs += food.carbs * food.quantity;
-      fat += food.fat * food.quantity;
+      const quantity = food.quantity || 1;
+      calories += (food.calories || 0) * quantity;
+      protein += (food.protein || 0) * quantity;
+      carbs += (food.carbs || 0) * quantity;
+      fat += (food.fat || 0) * quantity;
+      fiber += (food.fiber || 0) * quantity;
+      sugar += (food.sugar || 0) * quantity;
+      sodium += (food.sodium || 0) * quantity;
+      vitaminC += (food.vitaminC || 0) * quantity;
+      calcium += (food.calcium || 0) * quantity;
+      iron += (food.iron || 0) * quantity;
     });
   });
 
-  this.totalCalories = calories;
-  this.totalProtein = protein;
-  this.totalCarbs = carbs;
-  this.totalFat = fat;
+  // Set calculated totals
+  this.totalCalories = Math.round(calories);
+  this.totalProtein = Math.round(protein * 10) / 10;
+  this.totalCarbs = Math.round(carbs * 10) / 10;
+  this.totalFat = Math.round(fat * 10) / 10;
+  this.totalFiber = Math.round(fiber * 10) / 10;
+  this.totalSugar = Math.round(sugar * 10) / 10;
+  this.totalSodium = Math.round(sodium);
+  this.totalVitaminC = Math.round(vitaminC * 10) / 10;
+  this.totalCalcium = Math.round(calcium);
+  this.totalIron = Math.round(iron * 10) / 10;
 
   next();
 });
+
+// Add index for efficient queries
+nutritionLogSchema.index({ userId: 1, date: 1 });
 
 const NutritionLog = mongoose.model('NutritionLog', nutritionLogSchema);
 
