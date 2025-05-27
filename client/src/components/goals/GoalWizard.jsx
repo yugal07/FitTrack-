@@ -121,15 +121,17 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
 
   // Select goal type component (Step 1)
   const renderTypeSelection = () => (
-    <div className='space-y-4'>
-      <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
-        Select Goal Type
-      </h3>
-      <p className='text-gray-500 dark:text-gray-400'>
-        What type of fitness goal would you like to set?
-      </p>
+    <div className='space-y-6'>
+      <div className='text-center'>
+        <h3 className='text-xl font-semibold text-gray-900 dark:text-white'>
+          Select Goal Type
+        </h3>
+        <p className='mt-2 text-gray-600 dark:text-gray-400'>
+          What type of fitness goal would you like to set?
+        </p>
+      </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mt-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <GoalTypeCard
           type='weight'
           title='Weight Goal'
@@ -186,7 +188,7 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
       </div>
 
       {errors.type && (
-        <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+        <p className='text-center text-sm text-red-600 dark:text-red-400'>
           {errors.type.message}
         </p>
       )}
@@ -201,35 +203,40 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     </div>
   );
 
-  // Goal details component (Step 2)
+  // Goal details component (Step 2) - IMPROVED VERSION
   const renderGoalDetails = () => (
-    <div className='space-y-4'>
-      <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
-        Set Goal Details
-      </h3>
-      <p className='text-gray-500 dark:text-gray-400'>
-        Define your target and current progress
-      </p>
+    <div className='space-y-6'>
+      <div className='text-center'>
+        <h3 className='text-xl font-semibold text-gray-900 dark:text-white'>
+          Set Goal Details
+        </h3>
+        <p className='mt-2 text-gray-600 dark:text-gray-400'>
+          Define your target and current progress
+        </p>
+      </div>
 
-      <div className='space-y-4 mt-4'>
-        <div>
+      <div className='space-y-6'>
+        {/* Target Value Section */}
+        <div className='space-y-3'>
           <label
             htmlFor='targetValue'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
           >
             Target Value*
           </label>
-          <div className='mt-1 flex rounded-md shadow-sm'>
+
+          {/* Target Value and Unit Input - Combined Row */}
+          <div className='flex rounded-lg shadow-sm'>
             <input
               type='number'
               id='targetValue'
               min='0'
               step='0.1'
-              className={`flex-grow focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-none rounded-l-md sm:text-sm ${
+              className={`flex-grow px-3 py-2.5 text-base border-2 border-r-0 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
                 errors.targetValue
-                  ? 'border-red-300 dark:border-red-700'
-                  : 'border-gray-300 dark:border-gray-700'
-              } dark:bg-gray-800 dark:text-white`}
+                  ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+              } dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
               placeholder='Enter target value'
               {...register('targetValue', {
                 required: 'Target value is required',
@@ -243,53 +250,59 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
                 },
               })}
             />
-            <div className='inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-300 sm:text-sm'>
-              <input
-                type='text'
-                id='unit'
-                className={`border-0 bg-transparent p-0 focus:ring-0 ${
-                  errors.unit ? 'text-red-500 dark:text-red-400' : ''
-                }`}
-                placeholder='Unit'
-                {...register('unit', {
-                  required: 'Unit is required',
-                })}
-              />
-            </div>
+            <input
+              type='text'
+              id='unit'
+              className={`w-28 px-3 py-2.5 text-base border-2 rounded-r-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
+                errors.unit
+                  ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+                  : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
+              } dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+              placeholder='Unit'
+              {...register('unit', {
+                required: 'Unit is required',
+              })}
+            />
           </div>
+
+          {/* Error Messages */}
           {errors.targetValue && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='text-sm text-red-600 dark:text-red-400 font-medium'>
               {errors.targetValue.message}
             </p>
           )}
           {errors.unit && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='text-sm text-red-600 dark:text-red-400 font-medium'>
               {errors.unit.message}
             </p>
           )}
-          <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
+
+          {/* Helper Text */}
+          <p className='text-sm text-gray-500 dark:text-gray-400'>
             Example: 150 lbs, 30 minutes, 10 sessions
           </p>
         </div>
 
-        <div>
+        {/* Current Value Section */}
+        <div className='space-y-3'>
           <label
             htmlFor='currentValue'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
           >
-            Current Value
+            Current Value (Optional)
           </label>
+
           <input
             type='number'
             id='currentValue'
             min='0'
             step='0.1'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+            className={`w-full px-3 py-2.5 text-base border-2 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
               errors.currentValue
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
-            placeholder='Enter current value (optional)'
+                ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+                : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+            } dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+            placeholder='Enter your current value (leave blank to start from zero)'
             {...register('currentValue', {
               min: {
                 value: 0,
@@ -310,49 +323,54 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
               },
             })}
           />
+
           {errors.currentValue && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='text-sm text-red-600 dark:text-red-400 font-medium'>
               {errors.currentValue.message}
             </p>
           )}
-          <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
-            Leave blank to start from zero
+
+          <p className='text-sm text-gray-500 dark:text-gray-400'>
+            This helps track your starting point and progress
           </p>
         </div>
       </div>
     </div>
   );
 
-  // Target date component (Step 3)
+  // Target date component (Step 3) - IMPROVED VERSION
   const renderTargetDate = () => {
     // Calculate minimum date (today)
     const today = new Date();
     const minDate = today.toISOString().split('T')[0];
 
     return (
-      <div className='space-y-4'>
-        <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
-          Set Target Date
-        </h3>
-        <p className='text-gray-500 dark:text-gray-400'>
-          When do you want to achieve this goal?
-        </p>
+      <div className='space-y-6'>
+        <div className='text-center'>
+          <h3 className='text-xl font-semibold text-gray-900 dark:text-white'>
+            Set Target Date
+          </h3>
+          <p className='mt-2 text-gray-600 dark:text-gray-400'>
+            When do you want to achieve this goal?
+          </p>
+        </div>
 
-        <div className='mt-4'>
+        <div className='space-y-3'>
           <label
             htmlFor='targetDate'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-semibold text-gray-700 dark:text-gray-300'
           >
             Target Date*
           </label>
+
           <input
             type='date'
             id='targetDate'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
+            className={`w-full px-3 py-2.5 text-base border-2 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors ${
               errors.targetDate
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
+                ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+                : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+            } dark:text-white`}
             min={minDate}
             {...register('targetDate', {
               required: 'Target date is required',
@@ -366,39 +384,40 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
               },
             })}
           />
+
           {errors.targetDate && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='text-sm text-red-600 dark:text-red-400 font-medium'>
               {errors.targetDate.message}
             </p>
           )}
-          <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
+
+          <p className='text-sm text-gray-500 dark:text-gray-400'>
             Select a realistic timeframe for your goal
           </p>
         </div>
 
-        <div className='pt-2'>
-          <div className='bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-700 p-4'>
-            <div className='flex'>
-              <div className='flex-shrink-0'>
-                <svg
-                  className='h-5 w-5 text-blue-400'
-                  xmlns='http://www.w3.org/2000/svg'
-                  viewBox='0 0 20 20'
-                  fill='currentColor'
-                >
-                  <path
-                    fillRule='evenodd'
-                    d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z'
-                    clipRule='evenodd'
-                  />
-                </svg>
-              </div>
-              <div className='ml-3'>
-                <p className='text-sm text-blue-700 dark:text-blue-300'>
-                  Setting a specific deadline increases your chances of
-                  achieving your goal.
-                </p>
-              </div>
+        {/* Info Box */}
+        <div className='bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-400 dark:border-blue-700 p-4 rounded-r-lg'>
+          <div className='flex'>
+            <div className='flex-shrink-0'>
+              <svg
+                className='h-5 w-5 text-blue-400'
+                xmlns='http://www.w3.org/2000/svg'
+                viewBox='0 0 20 20'
+                fill='currentColor'
+              >
+                <path
+                  fillRule='evenodd'
+                  d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z'
+                  clipRule='evenodd'
+                />
+              </svg>
+            </div>
+            <div className='ml-3'>
+              <p className='text-sm text-blue-700 dark:text-blue-300 font-medium'>
+                Setting a specific deadline increases your chances of achieving
+                your goal.
+              </p>
             </div>
           </div>
         </div>
@@ -455,68 +474,65 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
     );
 
     return (
-      <div className='space-y-4'>
-        <h3 className='text-lg font-medium text-gray-900 dark:text-white'>
-          Review Your Goal
-        </h3>
-        <p className='text-gray-500 dark:text-gray-400'>
-          Confirm your goal details before creating
-        </p>
+      <div className='space-y-6'>
+        <div className='text-center'>
+          <h3 className='text-xl font-semibold text-gray-900 dark:text-white'>
+            Review Your Goal
+          </h3>
+          <p className='mt-2 text-gray-600 dark:text-gray-400'>
+            Confirm your goal details before creating
+          </p>
+        </div>
 
-        <div className='mt-4 bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600'>
-          <div className='space-y-3'>
-            <div>
-              <h4 className='text-base font-medium text-gray-700 dark:text-gray-300'>
-                Goal
-              </h4>
-              <p className='text-gray-900 dark:text-white font-medium'>
+        <div className='bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/30 rounded-xl p-6 border border-indigo-200 dark:border-indigo-700'>
+          <div className='space-y-4'>
+            <div className='text-center'>
+              <h4 className='text-lg font-bold text-indigo-800 dark:text-indigo-300'>
                 {getGoalTitle()}
-              </p>
+              </h4>
             </div>
 
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-              <div>
-                <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700'>
+                <h5 className='text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1'>
                   Current Value
-                </h4>
-                <p className='text-gray-900 dark:text-white'>
+                </h5>
+                <p className='text-xl font-bold text-gray-900 dark:text-white'>
                   {currentValueFormatted} {watch('unit')}
                 </p>
               </div>
 
-              <div>
-                <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+              <div className='bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700'>
+                <h5 className='text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1'>
                   Target Date
-                </h4>
-                <p className='text-gray-900 dark:text-white'>
+                </h5>
+                <p className='text-lg font-bold text-gray-900 dark:text-white'>
                   {formatDate(watchTargetDate)}
                 </p>
-                <p className='text-xs text-gray-500 dark:text-gray-400'>
+                <p className='text-sm text-gray-500 dark:text-gray-400'>
                   ({getDaysUntilTarget()} days from now)
                 </p>
               </div>
             </div>
 
             {/* Progress preview */}
-            <div>
-              <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+            <div className='bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700'>
+              <h5 className='text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2'>
                 Starting Progress
-              </h4>
-              <div className='mt-1'>
-                <div className='flex items-center justify-between text-xs'>
-                  <span className='text-gray-600 dark:text-gray-400'>
-                    {currentValueFormatted} / {watchTargetValue} {watch('unit')}
-                  </span>
-                  <span className='font-medium text-indigo-600 dark:text-indigo-400'>
-                    {progressPercentage}%
-                  </span>
-                </div>
-                <div className='mt-1 w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2'>
-                  <div
-                    className='bg-indigo-600 h-2 rounded-full'
-                    style={{ width: `${Math.min(100, progressPercentage)}%` }}
-                  ></div>
-                </div>
+              </h5>
+              <div className='flex items-center justify-between text-sm mb-2'>
+                <span className='text-gray-600 dark:text-gray-400'>
+                  {currentValueFormatted} / {watchTargetValue} {watch('unit')}
+                </span>
+                <span className='font-bold text-indigo-600 dark:text-indigo-400'>
+                  {progressPercentage}%
+                </span>
+              </div>
+              <div className='w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3'>
+                <div
+                  className='bg-gradient-to-r from-indigo-500 to-blue-500 h-3 rounded-full transition-all duration-500'
+                  style={{ width: `${Math.min(100, progressPercentage)}%` }}
+                ></div>
               </div>
             </div>
           </div>
@@ -549,98 +565,102 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
           <div className='absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75'></div>
         </div>
 
-        {/* Modal panel */}
-        <div className='inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full'>
-          <div className='px-4 pt-5 pb-4 sm:p-6 sm:pb-4'>
-            <div className='sm:flex sm:items-start'>
-              <div className='mt-3 text-center sm:mt-0 sm:text-left w-full'>
-                <h2 className='text-xl leading-6 font-medium text-gray-900 dark:text-white'>
+        {/* Modal panel - MADE LARGER */}
+        <div className='inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full'>
+          <div className='px-6 pt-6 pb-4 sm:p-8 sm:pb-4'>
+            <div className='w-full'>
+              <div className='text-center mb-6'>
+                <h2 className='text-2xl font-bold text-gray-900 dark:text-white'>
                   Create New Goal
                 </h2>
+              </div>
 
-                {/* Progress steps */}
-                <div className='mt-4 mb-8'>
-                  <div className='flex items-center justify-between'>
-                    <div className='w-full flex items-center'>
-                      {[1, 2, 3, 4].map(stepNumber => (
-                        <React.Fragment key={stepNumber}>
-                          {/* Step circle */}
+              {/* Progress steps */}
+              <div className='mb-8'>
+                <div className='flex items-center justify-between'>
+                  <div className='w-full flex items-center'>
+                    {[1, 2, 3, 4].map(stepNumber => (
+                      <React.Fragment key={stepNumber}>
+                        {/* Step circle */}
+                        <div
+                          className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-bold ${
+                            step >= stepNumber
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                          }`}
+                        >
+                          {stepNumber}
+                        </div>
+
+                        {/* Connector line (not for last step) */}
+                        {stepNumber < 4 && (
                           <div
-                            className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                              step >= stepNumber
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                            className={`flex-1 h-2 mx-2 rounded ${
+                              step > stepNumber
+                                ? 'bg-indigo-600'
+                                : 'bg-gray-200 dark:bg-gray-700'
                             }`}
-                          >
-                            {stepNumber}
-                          </div>
-
-                          {/* Connector line (not for last step) */}
-                          {stepNumber < 4 && (
-                            <div
-                              className={`flex-1 h-1 ${
-                                step > stepNumber
-                                  ? 'bg-indigo-600'
-                                  : 'bg-gray-200 dark:bg-gray-700'
-                              }`}
-                            ></div>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Step labels */}
-                  <div className='flex justify-between text-xs mt-2'>
-                    <div
-                      className={
-                        step >= 1
-                          ? 'text-indigo-600 dark:text-indigo-400'
-                          : 'text-gray-500 dark:text-gray-400'
-                      }
-                    >
-                      Type
-                    </div>
-                    <div
-                      className={
-                        step >= 2
-                          ? 'text-indigo-600 dark:text-indigo-400'
-                          : 'text-gray-500 dark:text-gray-400'
-                      }
-                    >
-                      Details
-                    </div>
-                    <div
-                      className={
-                        step >= 3
-                          ? 'text-indigo-600 dark:text-indigo-400'
-                          : 'text-gray-500 dark:text-gray-400'
-                      }
-                    >
-                      Date
-                    </div>
-                    <div
-                      className={
-                        step >= 4
-                          ? 'text-indigo-600 dark:text-indigo-400'
-                          : 'text-gray-500 dark:text-gray-400'
-                      }
-                    >
-                      Review
-                    </div>
+                          ></div>
+                        )}
+                      </React.Fragment>
+                    ))}
                   </div>
                 </div>
 
-                {/* Step content */}
-                <div className='mb-6'>{renderStep()}</div>
+                {/* Step labels */}
+                <div className='flex justify-between text-sm mt-3 font-medium'>
+                  <div
+                    className={
+                      step >= 1
+                        ? 'text-indigo-600 dark:text-indigo-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }
+                  >
+                    Type
+                  </div>
+                  <div
+                    className={
+                      step >= 2
+                        ? 'text-indigo-600 dark:text-indigo-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }
+                  >
+                    Details
+                  </div>
+                  <div
+                    className={
+                      step >= 3
+                        ? 'text-indigo-600 dark:text-indigo-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }
+                  >
+                    Date
+                  </div>
+                  <div
+                    className={
+                      step >= 4
+                        ? 'text-indigo-600 dark:text-indigo-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }
+                  >
+                    Review
+                  </div>
+                </div>
               </div>
+
+              {/* Step content */}
+              <div className='min-h-[400px]'>{renderStep()}</div>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className='bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse'>
+          <div className='bg-gray-50 dark:bg-gray-700 px-6 py-4 sm:px-8 sm:flex sm:flex-row-reverse sm:gap-3'>
             {step < 4 ? (
-              <Button variant='primary' onClick={nextStep}>
+              <Button
+                variant='primary'
+                onClick={nextStep}
+                className='w-full sm:w-auto px-6 py-2'
+              >
                 Next
               </Button>
             ) : (
@@ -648,6 +668,7 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
                 variant='primary'
                 onClick={handleSubmit(onFormSubmit)}
                 disabled={loading}
+                className='w-full sm:w-auto px-6 py-2'
               >
                 {loading ? 'Creating...' : 'Create Goal'}
               </Button>
@@ -657,7 +678,7 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
               <Button
                 variant='outline'
                 onClick={prevStep}
-                className='mt-3 sm:mt-0 sm:mr-3'
+                className='w-full sm:w-auto px-6 py-2 mt-3 sm:mt-0'
               >
                 Back
               </Button>
@@ -665,7 +686,7 @@ const GoalWizard = ({ onClose, onGoalCreated }) => {
               <Button
                 variant='outline'
                 onClick={onClose}
-                className='mt-3 sm:mt-0 sm:mr-3'
+                className='w-full sm:w-auto px-6 py-2 mt-3 sm:mt-0'
               >
                 Cancel
               </Button>
@@ -788,16 +809,16 @@ const GoalTypeCard = ({
 
   return (
     <div
-      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+      className={`border-2 rounded-xl p-5 cursor-pointer transition-all duration-200 hover:shadow-lg ${
         selected
-          ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 dark:border-indigo-400'
-          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+          ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 dark:border-indigo-400 shadow-md'
+          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
       }`}
       onClick={onClick}
     >
-      <div className='flex items-center'>
+      <div className='flex items-start space-x-4'>
         <div
-          className={`p-2 rounded-full ${
+          className={`p-3 rounded-lg ${
             selected
               ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-300'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
@@ -805,9 +826,9 @@ const GoalTypeCard = ({
         >
           {icons[icon]}
         </div>
-        <div className='ml-3'>
+        <div className='flex-1 min-w-0'>
           <h3
-            className={`text-sm font-medium ${
+            className={`text-base font-semibold ${
               selected
                 ? 'text-indigo-800 dark:text-indigo-300'
                 : 'text-gray-900 dark:text-white'
@@ -815,10 +836,26 @@ const GoalTypeCard = ({
           >
             {title}
           </h3>
-          <p className='text-xs text-gray-500 dark:text-gray-400'>
+          <p className='text-sm text-gray-500 dark:text-gray-400 mt-1'>
             {description}
           </p>
         </div>
+        {selected && (
+          <div className='flex-shrink-0'>
+            <svg
+              className='h-5 w-5 text-indigo-600 dark:text-indigo-400'
+              xmlns='http://www.w3.org/2000/svg'
+              viewBox='0 0 20 20'
+              fill='currentColor'
+            >
+              <path
+                fillRule='evenodd'
+                d='M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z'
+                clipRule='evenodd'
+              />
+            </svg>
+          </div>
+        )}
       </div>
     </div>
   );
