@@ -12,10 +12,27 @@ const {
   updateWaterIntake,
   getNutritionStats,
 } = require('../controllers/nutritionController');
+const {
+  getNutritionGoals,
+  setNutritionGoals,
+  calculateNutritionGoals,
+  getGoalRecommendations,
+  resetNutritionGoals,
+} = require('../controllers/nutritionGoalsController');
 const { protect } = require('../middleware/authMiddleware');
 
 // All routes are protected
 router.use(protect);
+
+// Nutrition Goals routes
+router
+  .route('/goals')
+  .get(getNutritionGoals)
+  .post(setNutritionGoals)
+  .delete(resetNutritionGoals);
+
+router.post('/goals/calculate', calculateNutritionGoals);
+router.get('/goals/recommendations', getGoalRecommendations);
 
 // Nutrition logs routes
 router.route('/logs').get(getNutritionLogs).post(createNutritionLog);
