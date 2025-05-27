@@ -1,17 +1,15 @@
 const cron = require('node-cron');
-const mongoose = require('mongoose');
 const {
   User,
   Workout,
   WorkoutSession,
   NutritionLog,
-  Profile
+  Profile,
 } = require('../models');
 const {
   createWorkoutReminder,
   createNutritionReminder,
   createGoalAchievement,
-  createSystemNotification
 } = require('../controllers/notificationController');
 
 /**
@@ -25,7 +23,7 @@ const scheduleWorkoutReminders = () => {
 
       // Get users who have enabled workout reminders
       const users = await User.find({
-        'preferences.notifications.workoutReminders': true
+        'preferences.notifications.workoutReminders': true,
       });
 
       // Get today's date (start of day)
@@ -45,7 +43,7 @@ const scheduleWorkoutReminders = () => {
 
         const recentSessions = await WorkoutSession.find({
           userId: user._id,
-          date: { $gte: lastWeek }
+          date: { $gte: lastWeek },
         });
 
         // Find a workout appropriate for the user
@@ -53,9 +51,11 @@ const scheduleWorkoutReminders = () => {
 
         if (recentSessions.length > 0) {
           // Get the most recent workout type they did
-          const recentWorkoutIds = recentSessions.map(session => session.workoutId);
+          const recentWorkoutIds = recentSessions.map(
+            session => session.workoutId
+          );
           const recentWorkouts = await Workout.find({
-            _id: { $in: recentWorkoutIds }
+            _id: { $in: recentWorkoutIds },
           });
 
           // Try to recommend a different workout type
@@ -63,14 +63,14 @@ const scheduleWorkoutReminders = () => {
 
           workoutToRecommend = await Workout.findOne({
             fitnessLevel: user.fitnessLevel,
-            type: { $nin: workoutTypes }
+            type: { $nin: workoutTypes },
           });
         }
 
         // Fallback if no suitable workout found
         if (!workoutToRecommend) {
           workoutToRecommend = await Workout.findOne({
-            fitnessLevel: user.fitnessLevel
+            fitnessLevel: user.fitnessLevel,
           });
         }
 
@@ -97,7 +97,7 @@ const scheduleNutritionReminders = () => {
 
       // Get users who have enabled nutrition reminders
       const users = await User.find({
-        'preferences.notifications.nutritionReminders': true
+        'preferences.notifications.nutritionReminders': true,
       });
 
       // Get today's date (start of day)
@@ -111,8 +111,8 @@ const scheduleNutritionReminders = () => {
           userId: user._id,
           date: {
             $gte: today,
-            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
-          }
+            $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+          },
         });
 
         // Only send reminder if they haven't logged nutrition today
@@ -139,7 +139,7 @@ const scheduleGoalChecks = () => {
 
       // Get users who have enabled goal milestone notifications
       const users = await User.find({
-        'preferences.notifications.goalMilestones': true
+        'preferences.notifications.goalMilestones': true,
       });
 
       // Check goals for each user
@@ -148,8 +148,11 @@ const scheduleGoalChecks = () => {
 
         if (profile && profile.goals.length > 0) {
           // Find active goals that are completed but not marked as such
-          profile.goals.forEach(async (goal) => {
-            if (goal.status === 'active' && goal.currentValue >= goal.targetValue) {
+          profile.goals.forEach(async goal => {
+            if (
+              goal.status === 'active' &&
+              goal.currentValue >= goal.targetValue
+            ) {
               // Update goal status
               goal.status = 'completed';
 
@@ -201,5 +204,5 @@ module.exports = {
   scheduleWorkoutReminders,
   scheduleNutritionReminders,
   scheduleGoalChecks,
-  startNotificationSchedulers
+  startNotificationSchedulers,
 };

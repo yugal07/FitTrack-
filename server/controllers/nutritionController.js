@@ -40,14 +40,14 @@ exports.getNutritionLogs = async (req, res) => {
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
-        limit
+        limit,
       };
     }
 
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
-        limit
+        limit,
       };
     }
 
@@ -59,9 +59,9 @@ exports.getNutritionLogs = async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
         page: parseInt(page),
-        limit: parseInt(limit)
+        limit: parseInt(limit),
       },
-      data: nutritionLogs
+      data: nutritionLogs,
     });
   } catch (error) {
     console.error('Error in getNutritionLogs:', error);
@@ -69,8 +69,8 @@ exports.getNutritionLogs = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -87,8 +87,8 @@ exports.getNutritionLog = async (req, res) => {
         success: false,
         error: {
           code: 'LOG_NOT_FOUND',
-          message: 'Nutrition log not found'
-        }
+          message: 'Nutrition log not found',
+        },
       });
     }
 
@@ -98,14 +98,14 @@ exports.getNutritionLog = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to access this nutrition log'
-        }
+          message: 'Not authorized to access this nutrition log',
+        },
       });
     }
 
     res.json({
       success: true,
-      data: nutritionLog
+      data: nutritionLog,
     });
   } catch (error) {
     console.error('Error in getNutritionLog:', error);
@@ -113,8 +113,8 @@ exports.getNutritionLog = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -129,7 +129,7 @@ exports.createNutritionLog = async (req, res) => {
     // Check if a log already exists for this date
     const existingLog = await NutritionLog.findOne({
       userId: req.user._id,
-      date: new Date(date).setHours(0, 0, 0, 0)
+      date: new Date(date).setHours(0, 0, 0, 0),
     });
 
     if (existingLog) {
@@ -138,8 +138,8 @@ exports.createNutritionLog = async (req, res) => {
         error: {
           code: 'LOG_EXISTS',
           message: 'A nutrition log already exists for this date',
-          existingLogId: existingLog._id
-        }
+          existingLogId: existingLog._id,
+        },
       });
     }
 
@@ -149,13 +149,13 @@ exports.createNutritionLog = async (req, res) => {
       date: date || new Date(),
       meals: meals || [],
       waterIntake: waterIntake || 0,
-      notes: notes || ''
+      notes: notes || '',
     });
 
     res.status(201).json({
       success: true,
       data: nutritionLog,
-      message: 'Nutrition log created successfully'
+      message: 'Nutrition log created successfully',
     });
   } catch (error) {
     console.error('Error in createNutritionLog:', error);
@@ -163,8 +163,8 @@ exports.createNutritionLog = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -183,8 +183,8 @@ exports.updateNutritionLog = async (req, res) => {
         success: false,
         error: {
           code: 'LOG_NOT_FOUND',
-          message: 'Nutrition log not found'
-        }
+          message: 'Nutrition log not found',
+        },
       });
     }
 
@@ -194,16 +194,24 @@ exports.updateNutritionLog = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to update this nutrition log'
-        }
+          message: 'Not authorized to update this nutrition log',
+        },
       });
     }
 
     // Update fields
-    if (date) {nutritionLog.date = date;}
-    if (meals) {nutritionLog.meals = meals;}
-    if (waterIntake !== undefined) {nutritionLog.waterIntake = waterIntake;}
-    if (notes !== undefined) {nutritionLog.notes = notes;}
+    if (date) {
+      nutritionLog.date = date;
+    }
+    if (meals) {
+      nutritionLog.meals = meals;
+    }
+    if (waterIntake !== undefined) {
+      nutritionLog.waterIntake = waterIntake;
+    }
+    if (notes !== undefined) {
+      nutritionLog.notes = notes;
+    }
 
     // Save changes
     await nutritionLog.save();
@@ -211,7 +219,7 @@ exports.updateNutritionLog = async (req, res) => {
     res.json({
       success: true,
       data: nutritionLog,
-      message: 'Nutrition log updated successfully'
+      message: 'Nutrition log updated successfully',
     });
   } catch (error) {
     console.error('Error in updateNutritionLog:', error);
@@ -219,8 +227,8 @@ exports.updateNutritionLog = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -237,8 +245,8 @@ exports.deleteNutritionLog = async (req, res) => {
         success: false,
         error: {
           code: 'LOG_NOT_FOUND',
-          message: 'Nutrition log not found'
-        }
+          message: 'Nutrition log not found',
+        },
       });
     }
 
@@ -248,8 +256,8 @@ exports.deleteNutritionLog = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to delete this nutrition log'
-        }
+          message: 'Not authorized to delete this nutrition log',
+        },
       });
     }
 
@@ -257,7 +265,7 @@ exports.deleteNutritionLog = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Nutrition log deleted successfully'
+      message: 'Nutrition log deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteNutritionLog:', error);
@@ -265,8 +273,8 @@ exports.deleteNutritionLog = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -276,15 +284,15 @@ exports.deleteNutritionLog = async (req, res) => {
 // @access  Private
 exports.addMeal = async (req, res) => {
   try {
-    const { type, time, foods, notes , unit } = req.body;
+    const { type, time, foods, notes } = req.body;
 
     if (!type || !foods || !Array.isArray(foods) || foods.length === 0) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'INVALID_DATA',
-          message: 'Meal type and at least one food item are required'
-        }
+          message: 'Meal type and at least one food item are required',
+        },
       });
     }
 
@@ -295,8 +303,8 @@ exports.addMeal = async (req, res) => {
         success: false,
         error: {
           code: 'LOG_NOT_FOUND',
-          message: 'Nutrition log not found'
-        }
+          message: 'Nutrition log not found',
+        },
       });
     }
 
@@ -306,8 +314,8 @@ exports.addMeal = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to update this nutrition log'
-        }
+          message: 'Not authorized to update this nutrition log',
+        },
       });
     }
 
@@ -316,7 +324,7 @@ exports.addMeal = async (req, res) => {
       type,
       time: time || new Date(),
       foods,
-      notes: notes || ''
+      notes: notes || '',
     };
 
     // Add to meals array
@@ -329,7 +337,7 @@ exports.addMeal = async (req, res) => {
       success: true,
       data: newMeal,
       nutritionLog: nutritionLog,
-      message: 'Meal added successfully'
+      message: 'Meal added successfully',
     });
   } catch (error) {
     console.error('Error in addMeal:', error);
@@ -337,8 +345,8 @@ exports.addMeal = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -357,8 +365,8 @@ exports.updateMeal = async (req, res) => {
         success: false,
         error: {
           code: 'LOG_NOT_FOUND',
-          message: 'Nutrition log not found'
-        }
+          message: 'Nutrition log not found',
+        },
       });
     }
 
@@ -368,8 +376,8 @@ exports.updateMeal = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to update this nutrition log'
-        }
+          message: 'Not authorized to update this nutrition log',
+        },
       });
     }
 
@@ -383,16 +391,24 @@ exports.updateMeal = async (req, res) => {
         success: false,
         error: {
           code: 'MEAL_NOT_FOUND',
-          message: 'Meal not found'
-        }
+          message: 'Meal not found',
+        },
       });
     }
 
     // Update meal fields
-    if (type) {nutritionLog.meals[mealIndex].type = type;}
-    if (time) {nutritionLog.meals[mealIndex].time = time;}
-    if (foods) {nutritionLog.meals[mealIndex].foods = foods;}
-    if (notes !== undefined) {nutritionLog.meals[mealIndex].notes = notes;}
+    if (type) {
+      nutritionLog.meals[mealIndex].type = type;
+    }
+    if (time) {
+      nutritionLog.meals[mealIndex].time = time;
+    }
+    if (foods) {
+      nutritionLog.meals[mealIndex].foods = foods;
+    }
+    if (notes !== undefined) {
+      nutritionLog.meals[mealIndex].notes = notes;
+    }
 
     // Save changes
     await nutritionLog.save();
@@ -401,7 +417,7 @@ exports.updateMeal = async (req, res) => {
       success: true,
       data: nutritionLog.meals[mealIndex],
       nutritionLog: nutritionLog,
-      message: 'Meal updated successfully'
+      message: 'Meal updated successfully',
     });
   } catch (error) {
     console.error('Error in updateMeal:', error);
@@ -409,8 +425,8 @@ exports.updateMeal = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -427,8 +443,8 @@ exports.deleteMeal = async (req, res) => {
         success: false,
         error: {
           code: 'LOG_NOT_FOUND',
-          message: 'Nutrition log not found'
-        }
+          message: 'Nutrition log not found',
+        },
       });
     }
 
@@ -438,8 +454,8 @@ exports.deleteMeal = async (req, res) => {
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Not authorized to update this nutrition log'
-        }
+          message: 'Not authorized to update this nutrition log',
+        },
       });
     }
 
@@ -453,8 +469,8 @@ exports.deleteMeal = async (req, res) => {
         success: false,
         error: {
           code: 'MEAL_NOT_FOUND',
-          message: 'Meal not found'
-        }
+          message: 'Meal not found',
+        },
       });
     }
 
@@ -467,7 +483,7 @@ exports.deleteMeal = async (req, res) => {
     res.json({
       success: true,
       nutritionLog: nutritionLog,
-      message: 'Meal deleted successfully'
+      message: 'Meal deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteMeal:', error);
@@ -475,8 +491,8 @@ exports.deleteMeal = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -493,27 +509,31 @@ exports.updateWaterIntake = async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_DATA',
-          message: 'Water amount is required'
-        }
+          message: 'Water amount is required',
+        },
       });
     }
 
-    // Find or create log for today
-    const today = date ? new Date(date) : new Date();
-    today.setHours(0, 0, 0, 0);
+    // Parse the date properly
+    const targetDate = date ? new Date(date) : new Date();
+    // Set to start of day to ensure consistent matching
+    targetDate.setHours(0, 0, 0, 0);
 
     let nutritionLog = await NutritionLog.findOne({
       userId: req.user._id,
-      date: today
+      date: {
+        $gte: targetDate,
+        $lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000),
+      },
     });
 
     if (!nutritionLog) {
-      // Create new log for today
+      // Create new log for the day
       nutritionLog = await NutritionLog.create({
         userId: req.user._id,
-        date: today,
+        date: targetDate,
         waterIntake: amount,
-        meals: []
+        meals: [],
       });
     } else {
       // Update existing log
@@ -523,11 +543,8 @@ exports.updateWaterIntake = async (req, res) => {
 
     res.json({
       success: true,
-      data: {
-        date: nutritionLog.date,
-        waterIntake: nutritionLog.waterIntake
-      },
-      message: 'Water intake updated successfully'
+      data: nutritionLog,
+      message: 'Water intake updated successfully',
     });
   } catch (error) {
     console.error('Error in updateWaterIntake:', error);
@@ -535,8 +552,8 @@ exports.updateWaterIntake = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -566,58 +583,63 @@ exports.getNutritionStats = async (req, res) => {
     // Aggregate daily averages
     const dailyAverages = await NutritionLog.aggregate([
       { $match: baseQuery },
-      { $group: {
-        _id: null,
-        avgCalories: { $avg: '$totalCalories' },
-        avgProtein: { $avg: '$totalProtein' },
-        avgCarbs: { $avg: '$totalCarbs' },
-        avgFat: { $avg: '$totalFat' },
-        avgWaterIntake: { $avg: '$waterIntake' }
-      }
-      }
+      {
+        $group: {
+          _id: null,
+          avgCalories: { $avg: '$totalCalories' },
+          avgProtein: { $avg: '$totalProtein' },
+          avgCarbs: { $avg: '$totalCarbs' },
+          avgFat: { $avg: '$totalFat' },
+          avgWaterIntake: { $avg: '$waterIntake' },
+        },
+      },
     ]);
 
     // Calorie intake over time
     const caloriesTrend = await NutritionLog.aggregate([
       { $match: baseQuery },
       { $sort: { date: 1 } },
-      { $project: {
-        date: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
-        calories: '$totalCalories'
-      }
-      }
+      {
+        $project: {
+          date: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+          calories: '$totalCalories',
+        },
+      },
     ]);
 
     // Macronutrient distribution
     const macroDistribution = await NutritionLog.aggregate([
       { $match: baseQuery },
-      { $group: {
-        _id: null,
-        totalProtein: { $sum: '$totalProtein' },
-        totalCarbs: { $sum: '$totalCarbs' },
-        totalFat: { $sum: '$totalFat' }
-      }
+      {
+        $group: {
+          _id: null,
+          totalProtein: { $sum: '$totalProtein' },
+          totalCarbs: { $sum: '$totalCarbs' },
+          totalFat: { $sum: '$totalFat' },
+        },
       },
-      { $project: {
-        _id: 0,
-        protein: '$totalProtein',
-        carbs: '$totalCarbs',
-        fat: '$totalFat'
-      }
-      }
+      {
+        $project: {
+          _id: 0,
+          protein: '$totalProtein',
+          carbs: '$totalCarbs',
+          fat: '$totalFat',
+        },
+      },
     ]);
 
     // Meal type distribution
     const mealTypeDistribution = await NutritionLog.aggregate([
       { $match: baseQuery },
       { $unwind: '$meals' },
-      { $group: {
-        _id: '$meals.type',
-        count: { $sum: 1 },
-        avgCalories: { $avg: { $sum: '$meals.foods.calories' } }
-      }
+      {
+        $group: {
+          _id: '$meals.type',
+          count: { $sum: 1 },
+          avgCalories: { $avg: { $sum: '$meals.foods.calories' } },
+        },
       },
-      { $sort: { count: -1 } }
+      { $sort: { count: -1 } },
     ]);
 
     res.json({
@@ -625,9 +647,10 @@ exports.getNutritionStats = async (req, res) => {
       data: {
         dailyAverages: dailyAverages.length > 0 ? dailyAverages[0] : null,
         caloriesTrend,
-        macroDistribution: macroDistribution.length > 0 ? macroDistribution[0] : null,
-        mealTypeDistribution
-      }
+        macroDistribution:
+          macroDistribution.length > 0 ? macroDistribution[0] : null,
+        mealTypeDistribution,
+      },
     });
   } catch (error) {
     console.error('Error in getNutritionStats:', error);
@@ -635,8 +658,8 @@ exports.getNutritionStats = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };

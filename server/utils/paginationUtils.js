@@ -1,4 +1,3 @@
-
 /**
  * Pagination helper for MongoDB queries
  * @param {Object} req - Express request object
@@ -6,7 +5,7 @@
  * @param {Object} options - Additional options
  * @returns {Object} Pagination data and query modifiers
  */
-exports.getPagination = (req, query = {}, options = {}) => {
+export function getPagination(req, options = {}) {
   // Get pagination parameters from request query
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || options.defaultLimit || 10;
@@ -20,14 +19,14 @@ exports.getPagination = (req, query = {}, options = {}) => {
     page,
     limit,
     startIndex,
-    endIndex
+    endIndex,
   };
 
   // Add next page if available
   if (endIndex < options.totalDocs) {
     pagination.next = {
       page: page + 1,
-      limit
+      limit,
     };
   }
 
@@ -35,7 +34,7 @@ exports.getPagination = (req, query = {}, options = {}) => {
   if (startIndex > 0) {
     pagination.prev = {
       page: page - 1,
-      limit
+      limit,
     };
   }
 
@@ -46,35 +45,35 @@ exports.getPagination = (req, query = {}, options = {}) => {
   }
 
   return pagination;
-};
+}
 
 /**
-         * Apply pagination to a Mongoose query
-         * @param {Object} query - Mongoose query
-         * @param {Object} pagination - Pagination data from getPagination
-         * @returns {Object} Modified query with pagination
-         */
-exports.applyPagination = (query, pagination) => {
+ * Apply pagination to a Mongoose query
+ * @param {Object} query - Mongoose query
+ * @param {Object} pagination - Pagination data from getPagination
+ * @returns {Object} Modified query with pagination
+ */
+export function applyPagination(query, pagination) {
   return query.skip(pagination.startIndex).limit(pagination.limit);
-};
+}
 
 /**
-         * Complete pagination handler - combining count, pagination and query in one function
-         * @param {Object} req - Express request
-         * @param {Object} Model - Mongoose model
-         * @param {Object} query - Query conditions
-         * @param {Object} options - Additional options
-         * @returns {Promise<Object>} Full pagination result
-         */
-exports.paginateResults = async (req, Model, query = {}, options = {}) => {
+ * Complete pagination handler - combining count, pagination and query in one function
+ * @param {Object} req - Express request
+ * @param {Object} Model - Mongoose model
+ * @param {Object} query - Query conditions
+ * @param {Object} options - Additional options
+ * @returns {Promise<Object>} Full pagination result
+ */
+export async function paginateResults(req, Model, query = {}, options = {}) {
   try {
     // Count total documents
     const totalDocs = await Model.countDocuments(query);
 
     // Calculate pagination
-    const pagination = exports.getPagination(req, query, {
+    const pagination = getPagination(req, {
       ...options,
-      totalDocs
+      totalDocs,
     });
 
     // Apply basic pagination to query
@@ -97,7 +96,7 @@ exports.paginateResults = async (req, Model, query = {}, options = {}) => {
     }
 
     // Apply pagination
-    resultQuery = exports.applyPagination(resultQuery, pagination);
+    resultQuery = applyPagination(resultQuery, pagination);
 
     // Execute query
     const results = await resultQuery;
@@ -108,12 +107,12 @@ exports.paginateResults = async (req, Model, query = {}, options = {}) => {
       pagination: {
         ...pagination,
         total: totalDocs,
-        pages: Math.ceil(totalDocs / pagination.limit)
+        pages: Math.ceil(totalDocs / pagination.limit),
       },
-      data: results
+      data: results,
     };
   } catch (error) {
     console.error('Pagination error:', error);
     throw error;
   }
-};
+}

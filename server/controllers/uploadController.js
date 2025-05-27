@@ -1,6 +1,4 @@
 const { Profile, User } = require('../models');
-const { deleteFile } = require('../middleware/uploadMiddleware');
-const path = require('path');
 
 // @desc    Upload progress photo
 // @route   POST /api/uploads/progress-photo
@@ -12,8 +10,8 @@ exports.uploadProgressPhoto = async (req, res) => {
         success: false,
         error: {
           code: 'NO_FILE',
-          message: 'No file uploaded'
-        }
+          message: 'No file uploaded',
+        },
       });
     }
 
@@ -23,27 +21,26 @@ exports.uploadProgressPhoto = async (req, res) => {
     const profile = await Profile.findOne({ userId: req.user._id });
 
     if (!profile) {
-      // Delete the uploaded file
-      deleteFile(req.file.path);
-
       return res.status(404).json({
         success: false,
         error: {
           code: 'PROFILE_NOT_FOUND',
-          message: 'Profile not found'
-        }
+          message: 'Profile not found',
+        },
       });
     }
 
-    // Create file path for database (relative path)
-    const filePath = `uploads/progress-photos/${req.file.filename}`;
+    // For now, we'll store base64 representation of the file
+    // In production, you should upload to cloud storage (Cloudinary, AWS S3, etc.)
+    const fileBase64 = req.file.buffer.toString('base64');
+    const dataUri = `data:${req.file.mimetype};base64,${fileBase64}`;
 
     // Create progress photo object
     const progressPhoto = {
       date: new Date(),
-      photoUrl: filePath,
+      photoUrl: dataUri, // Store as data URI for now
       category: category || 'front',
-      notes: notes || ''
+      notes: notes || '',
     };
 
     // Add to progress photos array
@@ -56,24 +53,19 @@ exports.uploadProgressPhoto = async (req, res) => {
       success: true,
       data: {
         ...progressPhoto,
-        url: `${req.protocol}://${req.get('host')}/${filePath}`
+        message:
+          'Photo stored in memory. Implement cloud storage for persistence.',
       },
-      message: 'Progress photo uploaded successfully'
+      message: 'Progress photo uploaded successfully (memory storage)',
     });
   } catch (error) {
     console.error('Error in uploadProgressPhoto:', error);
-
-    // Delete the uploaded file if there was an error
-    if (req.file) {
-      deleteFile(req.file.path);
-    }
-
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -88,8 +80,8 @@ exports.uploadProfilePicture = async (req, res) => {
         success: false,
         error: {
           code: 'NO_FILE',
-          message: 'No file uploaded'
-        }
+          message: 'No file uploaded',
+        },
       });
     }
 
@@ -97,28 +89,21 @@ exports.uploadProfilePicture = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (!user) {
-      // Delete the uploaded file
-      deleteFile(req.file.path);
-
       return res.status(404).json({
         success: false,
         error: {
           code: 'USER_NOT_FOUND',
-          message: 'User not found'
-        }
+          message: 'User not found',
+        },
       });
     }
 
-    // Delete the old profile picture if it exists
-    if (user.profilePicture) {
-      deleteFile(user.profilePicture);
-    }
-
-    // Create file path for database (relative path)
-    const filePath = `uploads/profile-pics/${req.file.filename}`;
+    // Convert file to base64 data URI
+    const fileBase64 = req.file.buffer.toString('base64');
+    const dataUri = `data:${req.file.mimetype};base64,${fileBase64}`;
 
     // Update user's profile picture
-    user.profilePicture = filePath;
+    user.profilePicture = dataUri;
 
     // Save user
     await user.save();
@@ -126,25 +111,20 @@ exports.uploadProfilePicture = async (req, res) => {
     res.json({
       success: true,
       data: {
-        profilePicture: filePath,
-        url: `${req.protocol}://${req.get('host')}/${filePath}`
+        profilePicture: dataUri,
+        message:
+          'Profile picture stored in memory. Implement cloud storage for persistence.',
       },
-      message: 'Profile picture updated successfully'
+      message: 'Profile picture updated successfully (memory storage)',
     });
   } catch (error) {
     console.error('Error in uploadProfilePicture:', error);
-
-    // Delete the uploaded file if there was an error
-    if (req.file) {
-      deleteFile(req.file.path);
-    }
-
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
@@ -161,8 +141,8 @@ exports.deleteProgressPhoto = async (req, res) => {
         success: false,
         error: {
           code: 'PROFILE_NOT_FOUND',
-          message: 'Profile not found'
-        }
+          message: 'Profile not found',
+        },
       });
     }
 
@@ -176,26 +156,20 @@ exports.deleteProgressPhoto = async (req, res) => {
         success: false,
         error: {
           code: 'PHOTO_NOT_FOUND',
-          message: 'Progress photo not found'
-        }
+          message: 'Progress photo not found',
+        },
       });
     }
 
-    // Get file path before removing from array
-    const filePath = profile.progressPhotos[photoIndex].photoUrl;
-
-    // Remove from array
+    // Remove from array (no file deletion needed in memory storage)
     profile.progressPhotos.splice(photoIndex, 1);
 
     // Save profile
     await profile.save();
 
-    // Delete file from server
-    deleteFile(filePath);
-
     res.json({
       success: true,
-      message: 'Progress photo deleted successfully'
+      message: 'Progress photo deleted successfully',
     });
   } catch (error) {
     console.error('Error in deleteProgressPhoto:', error);
@@ -203,45 +177,23 @@ exports.deleteProgressPhoto = async (req, res) => {
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Server error'
-      }
+        message: 'Server error',
+      },
     });
   }
 };
 
-// @desc    Serve uploaded files
+// @desc    Serve uploaded files (disabled for memory storage)
 // @route   GET /api/uploads/:folder/:filename
 // @access  Public
 exports.serveFile = (req, res) => {
-  const { folder, filename } = req.params;
-
-  // Validate folder to prevent directory traversal
-  const allowedFolders = ['progress-photos', 'profile-pics'];
-
-  if (!allowedFolders.includes(folder)) {
-    return res.status(400).json({
-      success: false,
-      error: {
-        code: 'INVALID_FOLDER',
-        message: 'Invalid folder specified'
-      }
-    });
-  }
-
-  // Construct file path
-  const filePath = path.join(__dirname, '../uploads', folder, filename);
-
-  // Send file
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.error('Error serving file:', err);
-      res.status(404).json({
-        success: false,
-        error: {
-          code: 'FILE_NOT_FOUND',
-          message: 'File not found'
-        }
-      });
-    }
+  // In memory storage, files are not served from filesystem
+  res.status(501).json({
+    success: false,
+    error: {
+      code: 'NOT_IMPLEMENTED',
+      message:
+        'File serving not available with memory storage. Files are stored as data URIs.',
+    },
   });
 };

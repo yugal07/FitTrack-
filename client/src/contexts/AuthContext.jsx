@@ -43,14 +43,14 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       const response = await authService.login(email, password);
       setCurrentUser(response.data);
-      
+
       // Redirect based on user role
       if (response.data.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/dashboard');
       }
-      
+
       return response;
     } catch (err) {
       setError(err.error?.message || 'Login failed');
@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Register function (unchanged)
-  const register = async (userData) => {
+  const register = async userData => {
     try {
       setError(null);
       const response = await authService.register(userData);
@@ -85,17 +85,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Update user information
-  const updateUser = (user) => {
+  const updateUser = user => {
     setCurrentUser(user);
   };
 
   // Forgot password function (unchanged)
-  const forgotPassword = async (email) => {
+  const forgotPassword = async email => {
     try {
       setError(null);
       return await authService.forgotPassword(email);
     } catch (err) {
-      setError(err.error?.message || 'Failed to process forgot password request');
+      setError(
+        err.error?.message || 'Failed to process forgot password request'
+      );
       throw err;
     }
   };
@@ -123,7 +125,7 @@ export const AuthProvider = ({ children }) => {
     forgotPassword,
     changePassword,
     isAuthenticated: authService.isAuthenticated,
-    isAdmin
+    isAdmin,
   };
 
   return (

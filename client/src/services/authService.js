@@ -41,7 +41,7 @@ const login = async (email, password) => {
 };
 
 // Register user
-const register = async (userData) => {
+const register = async userData => {
   try {
     const response = await api.post('/api/auth/register', userData);
     const { token, refreshToken } = response.data.data;
@@ -65,9 +65,11 @@ const refreshToken = async () => {
       throw new Error('No refresh token available');
     }
 
-    const response = await api.post('/api/auth/refresh-token', { refreshToken });
+    const response = await api.post('/api/auth/refresh-token', {
+      refreshToken,
+    });
     const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-    
+
     storeTokens(accessToken, newRefreshToken);
     return accessToken;
   } catch (error) {
@@ -77,7 +79,7 @@ const refreshToken = async () => {
 };
 
 // Forgot password
-const forgotPassword = async (email) => {
+const forgotPassword = async email => {
   try {
     const response = await api.post('/api/auth/forgot-password', { email });
     return response.data;
@@ -89,9 +91,9 @@ const forgotPassword = async (email) => {
 // Update password
 const updatePassword = async (currentPassword, newPassword) => {
   try {
-    const response = await api.put('/api/auth/password', { 
-      currentPassword, 
-      newPassword 
+    const response = await api.put('/api/auth/password', {
+      currentPassword,
+      newPassword,
     });
     return response.data;
   } catch (error) {
@@ -118,7 +120,7 @@ const authService = {
   updatePassword,
   getCurrentUser,
   isAuthenticated,
-  getToken
+  getToken,
 };
 
 export default authService;

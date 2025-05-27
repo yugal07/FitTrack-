@@ -5,101 +5,106 @@ const workoutExerciseSchema = new mongoose.Schema({
   exerciseId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Exercise',
-    required: true
+    required: true,
   },
   sets: {
     type: Number,
-    default: 3
+    default: 3,
   },
   reps: {
     type: Number,
-    default: 10
+    default: 10,
   },
   duration: {
-    type: Number // in seconds, for time-based exercises
+    type: Number, // in seconds, for time-based exercises
   },
   restTime: {
     type: Number, // in seconds
-    default: 60
+    default: 60,
   },
   order: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 });
 
 const ratingSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
   },
   rating: {
     type: Number,
     required: true,
     min: 1,
-    max: 5
+    max: 5,
   },
   review: {
-    type: String
+    type: String,
   },
   date: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-const workoutSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Workout name is required'],
-    trim: true
+const workoutSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Workout name is required'],
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: [true, 'Description is required'],
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    type: {
+      type: String,
+      required: true,
+      enum: ['strength', 'cardio', 'flexibility', 'hybrid', 'hiit', 'custom'],
+    },
+    fitnessLevel: {
+      type: String,
+      required: true,
+      enum: ['beginner', 'intermediate', 'advanced'],
+    },
+    isCustom: {
+      type: Boolean,
+      default: false,
+    },
+    duration: {
+      type: Number, // in minutes
+      required: true,
+    },
+    exercises: [workoutExerciseSchema],
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    ratings: [ratingSchema],
+    tags: {
+      type: [String],
+      default: [],
+    },
   },
-  description: {
-    type: String,
-    required: [true, 'Description is required']
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  type: {
-    type: String,
-    required: true,
-    enum: ['strength', 'cardio', 'flexibility', 'hybrid', 'hiit', 'custom']
-  },
-  fitnessLevel: {
-    type: String,
-    required: true,
-    enum: ['beginner', 'intermediate', 'advanced']
-  },
-  isCustom: {
-    type: Boolean,
-    default: false
-  },
-  duration: {
-    type: Number, // in minutes
-    required: true
-  },
-  exercises: [workoutExerciseSchema],
-  averageRating: {
-    type: Number,
-    default: 0
-  },
-  ratings: [ratingSchema],
-  tags: {
-    type: [String],
-    default: []
+  {
+    timestamps: true,
   }
-}, {
-  timestamps: true
-});
+);
 
 // Calculate average rating before saving
-workoutSchema.pre('save', function(next) {
+workoutSchema.pre('save', function (next) {
   if (this.ratings.length > 0) {
-    this.averageRating = this.ratings.reduce((acc, item) => acc + item.rating, 0) / this.ratings.length;
+    this.averageRating =
+      this.ratings.reduce((acc, item) => acc + item.rating, 0) /
+      this.ratings.length;
   }
   next();
 });

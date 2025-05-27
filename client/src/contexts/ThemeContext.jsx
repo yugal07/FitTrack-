@@ -17,59 +17,60 @@ export const ThemeProvider = ({ children }) => {
     if (storedTheme) {
       return storedTheme;
     }
-    
+
     // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    if (
+      window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    ) {
       return 'dark';
     }
-    
+
     // Default to light
     return 'light';
   };
-  
+
   const [theme, setTheme] = useState(getInitialTheme);
-  
+
   // Update the data-theme attribute when theme changes
   useEffect(() => {
     const root = window.document.documentElement;
-    
+
     // Remove old theme class
     root.classList.remove('light', 'dark');
-    
+
     // Add new theme class
     root.classList.add(theme);
-    
+
     // Store preference in local storage
     localStorage.setItem('theme', theme);
   }, [theme]);
-  
+
   // Toggle theme
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
   };
-  
+
   // Set specific theme
-  const setThemeMode = (mode) => {
+  const setThemeMode = mode => {
     if (mode === 'light' || mode === 'dark') {
       setTheme(mode);
     }
   };
-  
+
   // Is dark mode
   const isDark = theme === 'dark';
-  
+
   // Context value
   const value = {
     theme,
     isDark,
     toggleTheme,
-    setTheme: setThemeMode
+    setTheme: setThemeMode,
   };
-  
+
   return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
 };
 

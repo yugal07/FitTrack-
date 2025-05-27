@@ -5,7 +5,11 @@
  * @param {Object} specialFilters - Object mapping field names to special filter functions
  * @returns {Object} MongoDB filter query
  */
-exports.buildFilterQuery = (reqQuery, allowedFilters = [], specialFilters = {}) => {
+exports.buildFilterQuery = (
+  reqQuery,
+  allowedFilters = [],
+  specialFilters = {}
+) => {
   // Create a copy of the request query
   const queryObj = { ...reqQuery };
 
@@ -41,11 +45,11 @@ exports.buildFilterQuery = (reqQuery, allowedFilters = [], specialFilters = {}) 
 };
 
 /**
-         * Build a MongoDB search query from a search term
-         * @param {string} searchTerm - The search term
-         * @param {Array} searchFields - Array of fields to search in
-         * @returns {Object} MongoDB search query ($or clause)
-         */
+ * Build a MongoDB search query from a search term
+ * @param {string} searchTerm - The search term
+ * @param {Array} searchFields - Array of fields to search in
+ * @returns {Object} MongoDB search query ($or clause)
+ */
 exports.buildSearchQuery = (searchTerm, searchFields = []) => {
   if (!searchTerm || !searchFields.length) {
     return {};
@@ -53,17 +57,17 @@ exports.buildSearchQuery = (searchTerm, searchFields = []) => {
 
   return {
     $or: searchFields.map(field => ({
-      [field]: { $regex: searchTerm, $options: 'i' }
-    }))
+      [field]: { $regex: searchTerm, $options: 'i' },
+    })),
   };
 };
 
 /**
-         * Parse sorting parameter and return MongoDB sort object
-         * @param {string} sortString - Comma-separated sort fields (prefix with - for desc)
-         * @param {string} defaultSort - Default sort if none provided
-         * @returns {Object} MongoDB sort object
-         */
+ * Parse sorting parameter and return MongoDB sort object
+ * @param {string} sortString - Comma-separated sort fields (prefix with - for desc)
+ * @param {string} defaultSort - Default sort if none provided
+ * @returns {Object} MongoDB sort object
+ */
 exports.parseSortQuery = (sortString, defaultSort = '-createdAt') => {
   if (!sortString) {
     return defaultSort;
@@ -73,11 +77,11 @@ exports.parseSortQuery = (sortString, defaultSort = '-createdAt') => {
 };
 
 /**
-         * Combine filter and search queries
-         * @param {Object} filterQuery - MongoDB filter query
-         * @param {Object} searchQuery - MongoDB search query
-         * @returns {Object} Combined query
-         */
+ * Combine filter and search queries
+ * @param {Object} filterQuery - MongoDB filter query
+ * @param {Object} searchQuery - MongoDB search query
+ * @returns {Object} Combined query
+ */
 exports.combineQueries = (filterQuery, searchQuery) => {
   if (Object.keys(searchQuery).length === 0) {
     return filterQuery;
@@ -91,21 +95,25 @@ exports.combineQueries = (filterQuery, searchQuery) => {
 };
 
 /**
-         * Process request query and build a complete MongoDB query
-         * @param {Object} req - Express request
-         * @param {Object} options - Query options
-         * @returns {Object} Query processing result
-         */
+ * Process request query and build a complete MongoDB query
+ * @param {Object} req - Express request
+ * @param {Object} options - Query options
+ * @returns {Object} Query processing result
+ */
 exports.processQuery = (req, options = {}) => {
   const {
     allowedFilters = [],
     searchFields = [],
     defaultSort = '-createdAt',
-    specialFilters = {}
+    specialFilters = {},
   } = options;
 
   // Build filter query
-  const filterQuery = exports.buildFilterQuery(req.query, allowedFilters, specialFilters);
+  const filterQuery = exports.buildFilterQuery(
+    req.query,
+    allowedFilters,
+    specialFilters
+  );
 
   // Build search query if search term is provided
   const searchQuery = exports.buildSearchQuery(req.query.search, searchFields);
@@ -120,6 +128,6 @@ exports.processQuery = (req, options = {}) => {
     query,
     sort,
     page: parseInt(req.query.page, 10) || 1,
-    limit: parseInt(req.query.limit, 10) || 10
+    limit: parseInt(req.query.limit, 10) || 10,
   };
 };
