@@ -12,7 +12,7 @@ RUN npm ci
 COPY . ./
 
 # Create production .env file
-RUN echo "VITE_API_URL=/api" > .env
+RUN echo "VITE_API_URL=" > .env
 
 # Build the React application
 RUN npm run build

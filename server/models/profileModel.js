@@ -62,6 +62,9 @@ const goalSchema = new mongoose.Schema({
     enum: ['active', 'completed', 'abandoned'],
     default: 'active',
   },
+  completedAt: {
+    type: Date,
+  },
 });
 
 const progressPhotoSchema = new mongoose.Schema({

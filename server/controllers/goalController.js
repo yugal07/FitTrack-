@@ -204,6 +204,7 @@ exports.updateGoal = async (req, res) => {
       profile.goals[goalIndex].targetValue
     ) {
       profile.goals[goalIndex].status = 'completed';
+      profile.goals[goalIndex].completedAt = new Date();
     }
 
     // Save profile
@@ -330,10 +331,12 @@ exports.updateGoalProgress = async (req, res) => {
     // Auto-update status if goal is met
     if (currentValue >= profile.goals[goalIndex].targetValue) {
       profile.goals[goalIndex].status = 'completed';
+      profile.goals[goalIndex].completedAt = new Date();
     } else {
       // Ensure the status is active if the goal was previously completed
       if (profile.goals[goalIndex].status === 'completed') {
         profile.goals[goalIndex].status = 'active';
+        profile.goals[goalIndex].completedAt = undefined;
       }
     }
 

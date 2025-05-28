@@ -419,8 +419,8 @@ const GoalList = ({ goals, loading, onGoalUpdated }) => {
                   </div>
                   <div className='mt-2 sm:mt-0 text-sm text-gray-500 dark:text-gray-400'>
                     Completed on{' '}
-                    {goal.updatedAt
-                      ? format(new Date(goal.updatedAt), 'MMM d, yyyy')
+                    {goal.completedAt
+                      ? format(new Date(goal.completedAt), 'MMM d, yyyy')
                       : 'unknown date'}
                   </div>
                 </div>
