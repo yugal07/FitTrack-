@@ -89,7 +89,7 @@ const AnnouncementCreator = () => {
                     errors.title
                       ? 'border-red-300 dark:border-red-700'
                       : 'border-gray-300 dark:border-gray-600'
-                  } dark:bg-gray-700 dark:text-white rounded-md`}
+                  } dark:bg-gray-700 dark:text-white rounded-md py-2.5 px-4 border-2`}
                   {...register('title', {
                     required: 'Title is required',
                     validate: value =>
@@ -120,7 +120,7 @@ const AnnouncementCreator = () => {
                     errors.message
                       ? 'border-red-300 dark:border-red-700'
                       : 'border-gray-300 dark:border-gray-600'
-                  } dark:bg-gray-700 dark:text-white rounded-md`}
+                  } dark:bg-gray-700 dark:text-white rounded-md py-2.5 px-4 border-2`}
                   {...register('message', {
                     required: 'Message is required',
                     validate: value =>
@@ -145,7 +145,7 @@ const AnnouncementCreator = () => {
               <div className='mt-1'>
                 <select
                   id='targetUsers'
-                  className='shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md'
+                  className='shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md py-2.5 px-4 border-2'
                   {...register('targetUsers', {
                     required: 'Please select target users',
                   })}

@@ -233,7 +233,7 @@ const NutritionManager = () => {
                 type='text'
                 name='search'
                 id='search'
-                className='block w-full pr-10 sm:text-sm rounded-md dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 focus:ring-red-500 focus:border-red-500'
+                className='block w-full pr-10 sm:text-sm rounded-md dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 focus:ring-red-500 focus:border-red-500 py-2.5 px-4 border-2'
                 placeholder='Search nutrition items'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}

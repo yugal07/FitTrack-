@@ -149,7 +149,7 @@ const AnalyticsDashboard = () => {
                 id='startDate'
                 value={dateRange.startDate}
                 onChange={handleDateChange}
-                className='shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md'
+                className='shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md py-2.5 px-4 border-2'
               />
             </div>
             <div className='w-full sm:w-1/3 mt-4 sm:mt-0'>
@@ -165,7 +165,7 @@ const AnalyticsDashboard = () => {
                 id='endDate'
                 value={dateRange.endDate}
                 onChange={handleDateChange}
-                className='shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md'
+                className='shadow-sm focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md py-2.5 px-4 border-2'
               />
             </div>
             <div className='mt-4 sm:mt-0 sm:flex-shrink-0 sm:ml-auto'>
