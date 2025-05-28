@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { useToast } from '../../contexts/ToastContext';
 import { apiWithToast } from '../../utils/api';
@@ -22,6 +22,9 @@ const Nutrition = () => {
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState('daily');
 
+  // Prevent duplicate log creation in dev/StrictMode
+  const hasAttemptedLogCreation = useRef(false);
+
   // Get toast functions
   const toast = useToast();
   // Get toast-enabled API
@@ -29,16 +32,28 @@ const Nutrition = () => {
 
   // Fetch nutrition log for the selected date
   useEffect(() => {
-    if (
-      activeTab === 'daily' ||
-      activeTab === 'meals' ||
-      activeTab === 'water'
-    ) {
-      fetchNutritionLog();
-    }
+    let isMounted = true;
+
+    const fetchData = async () => {
+      if (
+        activeTab === 'daily' ||
+        activeTab === 'meals' ||
+        activeTab === 'water'
+      ) {
+        await fetchNutritionLog(isMounted);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [date, activeTab]);
 
-  const fetchNutritionLog = async () => {
+  const fetchNutritionLog = async (isMounted = true) => {
+    if (!isMounted) return;
+
     setLoading(true);
     try {
       // Format date as YYYY-MM-DD
@@ -53,12 +68,14 @@ const Nutrition = () => {
         },
       });
 
+      if (!isMounted) return;
       console.log('Nutrition log response:', response.data);
 
       if (response.data.count > 0) {
         const log = response.data.data[0];
         console.log('Setting nutrition log:', log);
         setNutritionLog(log);
+        hasAttemptedLogCreation.current = false; // Reset for future date changes
       } else {
         console.log('No nutrition log found for date:', formattedDate);
         setNutritionLog(null);
@@ -67,8 +84,10 @@ const Nutrition = () => {
         const today = new Date();
         const todayFormatted = format(today, 'yyyy-MM-dd');
 
-        // Compare formatted dates instead of Date objects
+        // Only create a new log if the date is today
         if (formattedDate === todayFormatted) {
+          if (hasAttemptedLogCreation.current) return; // Prevent duplicate creation
+          hasAttemptedLogCreation.current = true;
           console.log('Creating new log for today');
           try {
             const createResponse = await api.post('api/nutrition/logs', {
@@ -76,26 +95,40 @@ const Nutrition = () => {
               meals: [],
               waterIntake: 0,
             });
+            if (!isMounted) return;
             setNutritionLog(createResponse.data.data);
-            toast.success('Nutrition log created successfully');
+            toast.success('Nutrition log created successfully', {
+              key: Date.now(),
+            });
           } catch (createError) {
+            if (!isMounted) return;
             console.error('Error creating nutrition log:', createError);
             const errorMessage =
               createError.response?.data?.error?.message ||
               'Failed to create nutrition log';
-            toast.error(errorMessage);
+            toast.error(errorMessage, { key: Date.now() });
           }
         } else {
+          hasAttemptedLogCreation.current = false; // Reset for future date changes
           console.log('Not creating log - date is not today');
+          // Show appropriate message for future/past dates
+          if (formattedDate > todayFormatted) {
+            toast.info('Cannot create nutrition log for future dates', {
+              key: Date.now(),
+            });
+          }
         }
       }
     } catch (err) {
+      if (!isMounted) return;
       console.error('Error fetching nutrition log:', err);
       const errorMessage =
         err.response?.data?.error?.message || 'Failed to fetch nutrition log';
-      toast.error(errorMessage);
+      toast.error(errorMessage, { key: Date.now() });
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -107,7 +140,9 @@ const Nutrition = () => {
       const todayFormatted = format(today, 'yyyy-MM-dd');
 
       if (formattedDate > todayFormatted) {
-        toast.error('Cannot create nutrition log for future dates');
+        toast.error('Cannot create nutrition log for future dates', {
+          key: Date.now(),
+        });
         return;
       }
 
@@ -118,9 +153,12 @@ const Nutrition = () => {
       });
 
       setNutritionLog(response.data.data);
-      toast.success('Nutrition log created successfully');
+      toast.success('Nutrition log created successfully', { key: Date.now() });
     } catch (err) {
       console.error('Error creating nutrition log:', err);
+      const errorMessage =
+        err.response?.data?.error?.message || 'Failed to create nutrition log';
+      toast.error(errorMessage, { key: Date.now() });
     }
   };
 
