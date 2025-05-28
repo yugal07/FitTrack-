@@ -329,15 +329,25 @@ const ProfileStep = memo(
           htmlFor='dateOfBirth'
           className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
         >
-          Date of birth
+          Date of birth<span className='text-red-500 ml-1'>*</span>
         </label>
         <input
           id='dateOfBirth'
           type='date'
-          className='appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm'
+          className={`appearance-none relative block w-full px-3 py-2 border ${
+            errors.dateOfBirth
+              ? 'border-red-300 dark:border-red-700'
+              : 'border-gray-300 dark:border-gray-700'
+          } placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 focus:z-10 sm:text-sm`}
           value={formData.dateOfBirth}
           onChange={e => updateFormData('dateOfBirth', e.target.value)}
+          max={new Date().toISOString().split('T')[0]}
         />
+        {errors.dateOfBirth && (
+          <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            {errors.dateOfBirth}
+          </p>
+        )}
       </div>
 
       <div>
@@ -672,6 +682,31 @@ const Register = () => {
       } else if (stepNumber === 3) {
         if (!formData.gender)
           newErrors.gender = 'Please select a gender option';
+
+        // Date of birth validation
+        if (!formData.dateOfBirth) {
+          newErrors.dateOfBirth = 'Date of birth is required';
+        } else {
+          const birthDate = new Date(formData.dateOfBirth);
+          const today = new Date();
+          const minAge = 13; // Minimum age requirement
+
+          // Calculate age
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birthDate.getDate())
+          ) {
+            age--;
+          }
+
+          if (birthDate > today) {
+            newErrors.dateOfBirth = 'Date of birth cannot be in the future';
+          } else if (age < minAge) {
+            newErrors.dateOfBirth = `You must be at least ${minAge} years old to register`;
+          }
+        }
       } else if (stepNumber === 4) {
         if (!formData.acceptTerms)
           newErrors.acceptTerms = 'You must accept the terms and conditions';
