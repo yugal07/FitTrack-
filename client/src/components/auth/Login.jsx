@@ -15,7 +15,7 @@ const Login = () => {
   const location = useLocation();
 
   // Get redirect location from state if available
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = '/dashboard';
 
   // React Hook Form setup
   const {
