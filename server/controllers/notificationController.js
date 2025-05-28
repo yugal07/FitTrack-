@@ -1,4 +1,4 @@
-const { Notification, User, Profile, Workout, Goal } = require('../models');
+const { Notification, User, Profile, Workout } = require('../models');
 
 // @desc    Get all notifications for the user
 // @route   GET /api/notifications
@@ -243,7 +243,7 @@ exports.updateNotificationPreferences = async (req, res) => {
 // Utility functions for creating different types of notifications
 
 // Create workout reminder notification
-exports.createWorkoutReminder = async (userId, workoutId, scheduledTime) => {
+exports.createWorkoutReminder = async (userId, workoutId) => {
   try {
     const workout = await Workout.findById(workoutId);
 
