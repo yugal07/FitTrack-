@@ -62,9 +62,38 @@ const Nutrition = () => {
       } else {
         console.log('No nutrition log found for date:', formattedDate);
         setNutritionLog(null);
+
+        // Check if the date is today before creating a new log
+        const today = new Date();
+        const todayFormatted = format(today, 'yyyy-MM-dd');
+
+        // Compare formatted dates instead of Date objects
+        if (formattedDate === todayFormatted) {
+          console.log('Creating new log for today');
+          try {
+            const createResponse = await api.post('api/nutrition/logs', {
+              date: formattedDate,
+              meals: [],
+              waterIntake: 0,
+            });
+            setNutritionLog(createResponse.data.data);
+            toast.success('Nutrition log created successfully');
+          } catch (createError) {
+            console.error('Error creating nutrition log:', createError);
+            const errorMessage =
+              createError.response?.data?.error?.message ||
+              'Failed to create nutrition log';
+            toast.error(errorMessage);
+          }
+        } else {
+          console.log('Not creating log - date is not today');
+        }
       }
     } catch (err) {
       console.error('Error fetching nutrition log:', err);
+      const errorMessage =
+        err.response?.data?.error?.message || 'Failed to fetch nutrition log';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -74,6 +103,14 @@ const Nutrition = () => {
   const handleCreateLog = async () => {
     try {
       const formattedDate = format(date, 'yyyy-MM-dd');
+      const today = new Date();
+      const todayFormatted = format(today, 'yyyy-MM-dd');
+
+      if (formattedDate > todayFormatted) {
+        toast.error('Cannot create nutrition log for future dates');
+        return;
+      }
+
       const response = await api.post('api/nutrition/logs', {
         date: formattedDate,
         meals: [],
@@ -83,7 +120,6 @@ const Nutrition = () => {
       setNutritionLog(response.data.data);
       toast.success('Nutrition log created successfully');
     } catch (err) {
-      // Error is handled by the API interceptor
       console.error('Error creating nutrition log:', err);
     }
   };

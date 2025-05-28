@@ -125,14 +125,50 @@ exports.getNutritionLog = async (req, res) => {
 exports.createNutritionLog = async (req, res) => {
   try {
     const { date, meals, waterIntake, notes } = req.body;
+    console.log('Creating nutrition log with date:', date);
+
+    // Validate date
+    const logDate = new Date(date);
+    const today = new Date();
+
+    // Set both dates to start of day in UTC
+    const logDateUTC = new Date(
+      Date.UTC(
+        logDate.getUTCFullYear(),
+        logDate.getUTCMonth(),
+        logDate.getUTCDate()
+      )
+    );
+    const todayUTC = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+    );
+
+    console.log('Log date (UTC):', logDateUTC);
+    console.log('Today (UTC):', todayUTC);
+
+    // Check if date is in the future
+    if (logDateUTC > todayUTC) {
+      console.log('Date is in the future');
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'FUTURE_DATE',
+          message: 'Cannot create nutrition log for future dates',
+        },
+      });
+    }
 
     // Check if a log already exists for this date
     const existingLog = await NutritionLog.findOne({
       userId: req.user._id,
-      date: new Date(date).setHours(0, 0, 0, 0),
+      date: {
+        $gte: logDateUTC,
+        $lt: new Date(logDateUTC.getTime() + 24 * 60 * 60 * 1000),
+      },
     });
 
     if (existingLog) {
+      console.log('Log already exists for date:', date);
       return res.status(400).json({
         success: false,
         error: {
@@ -146,11 +182,13 @@ exports.createNutritionLog = async (req, res) => {
     // Create nutrition log
     const nutritionLog = await NutritionLog.create({
       userId: req.user._id,
-      date: date || new Date(),
+      date: logDateUTC,
       meals: meals || [],
       waterIntake: waterIntake || 0,
       notes: notes || '',
     });
+
+    console.log('Nutrition log created successfully:', nutritionLog._id);
 
     res.status(201).json({
       success: true,
