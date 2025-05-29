@@ -57,30 +57,44 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
     onSubmit(processedData);
   };
 
+  // Common input classes for better visibility and sizing
+  const inputClasses = hasError =>
+    `
+    mt-1 px-3 py-2 h-10 
+    focus:ring-indigo-500 focus:border-indigo-500 
+    block w-full shadow-sm sm:text-sm 
+    ${
+      hasError
+        ? 'border-red-300 dark:border-red-500 bg-red-50 dark:bg-red-900/20'
+        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700'
+    } 
+    text-gray-900 dark:text-gray-100
+    rounded-md
+    placeholder-gray-400 dark:placeholder-gray-400
+    focus:bg-white dark:focus:bg-gray-700
+    transition-colors duration-200
+  `.trim();
+
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className='space-y-4'>
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+    <form onSubmit={handleSubmit(onFormSubmit)} className='space-y-6'>
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
         <div>
           <label
             htmlFor='date'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
           >
             Date
           </label>
           <input
             type='date'
             id='date'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
-              errors.date
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
+            className={inputClasses(errors.date)}
             {...register('date', {
               required: 'Date is required',
             })}
           />
           {errors.date && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='mt-2 text-sm text-red-600 dark:text-red-400'>
               {errors.date.message}
             </p>
           )}
@@ -89,7 +103,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
         <div>
           <label
             htmlFor='weight'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
           >
             Weight (kg)
           </label>
@@ -97,11 +111,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             type='number'
             step='0.1'
             id='weight'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
-              errors.weight
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
+            className={inputClasses(errors.weight)}
             {...register('weight', {
               min: {
                 value: 0,
@@ -114,7 +124,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             })}
           />
           {errors.weight && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='mt-2 text-sm text-red-600 dark:text-red-400'>
               {errors.weight.message}
             </p>
           )}
@@ -123,7 +133,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
         <div>
           <label
             htmlFor='bodyFat'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
           >
             Body Fat (%)
           </label>
@@ -131,11 +141,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             type='number'
             step='0.1'
             id='bodyFat'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
-              errors.bodyFat
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
+            className={inputClasses(errors.bodyFat)}
             {...register('bodyFat', {
               min: {
                 value: 0,
@@ -152,7 +158,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             })}
           />
           {errors.bodyFat && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='mt-2 text-sm text-red-600 dark:text-red-400'>
               {errors.bodyFat.message}
             </p>
           )}
@@ -161,7 +167,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
         <div>
           <label
             htmlFor='chest'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
           >
             Chest (cm)
           </label>
@@ -169,11 +175,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             type='number'
             step='0.1'
             id='chest'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
-              errors.chest
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
+            className={inputClasses(errors.chest)}
             {...register('chest', {
               min: {
                 value: 0,
@@ -186,7 +188,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             })}
           />
           {errors.chest && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='mt-2 text-sm text-red-600 dark:text-red-400'>
               {errors.chest.message}
             </p>
           )}
@@ -195,7 +197,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
         <div>
           <label
             htmlFor='waist'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
           >
             Waist (cm)
           </label>
@@ -203,11 +205,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             type='number'
             step='0.1'
             id='waist'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
-              errors.waist
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
+            className={inputClasses(errors.waist)}
             {...register('waist', {
               min: {
                 value: 0,
@@ -220,7 +218,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             })}
           />
           {errors.waist && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='mt-2 text-sm text-red-600 dark:text-red-400'>
               {errors.waist.message}
             </p>
           )}
@@ -229,7 +227,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
         <div>
           <label
             htmlFor='hips'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
           >
             Hips (cm)
           </label>
@@ -237,11 +235,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             type='number'
             step='0.1'
             id='hips'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
-              errors.hips
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
+            className={inputClasses(errors.hips)}
             {...register('hips', {
               min: {
                 value: 0,
@@ -254,7 +248,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             })}
           />
           {errors.hips && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='mt-2 text-sm text-red-600 dark:text-red-400'>
               {errors.hips.message}
             </p>
           )}
@@ -263,7 +257,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
         <div>
           <label
             htmlFor='arms'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
           >
             Arms (cm)
           </label>
@@ -271,11 +265,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             type='number'
             step='0.1'
             id='arms'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
-              errors.arms
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
+            className={inputClasses(errors.arms)}
             {...register('arms', {
               min: {
                 value: 0,
@@ -288,7 +278,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             })}
           />
           {errors.arms && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='mt-2 text-sm text-red-600 dark:text-red-400'>
               {errors.arms.message}
             </p>
           )}
@@ -297,7 +287,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
         <div>
           <label
             htmlFor='thighs'
-            className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+            className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
           >
             Thighs (cm)
           </label>
@@ -305,11 +295,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             type='number'
             step='0.1'
             id='thighs'
-            className={`mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm ${
-              errors.thighs
-                ? 'border-red-300 dark:border-red-700'
-                : 'border-gray-300 dark:border-gray-700'
-            } dark:bg-gray-800 dark:text-white rounded-md`}
+            className={inputClasses(errors.thighs)}
             {...register('thighs', {
               min: {
                 value: 0,
@@ -322,7 +308,7 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
             })}
           />
           {errors.thighs && (
-            <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+            <p className='mt-2 text-sm text-red-600 dark:text-red-400'>
               {errors.thighs.message}
             </p>
           )}
@@ -332,31 +318,31 @@ const MeasurementForm = ({ initialData, onSubmit, onCancel, loading }) => {
       <div>
         <label
           htmlFor='notes'
-          className='block text-sm font-medium text-gray-700 dark:text-gray-300'
+          className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
         >
           Notes
         </label>
         <textarea
           id='notes'
-          rows='3'
-          className='mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-md'
+          rows='4'
+          className='mt-1 px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md placeholder-gray-400 dark:placeholder-gray-400 focus:bg-white dark:focus:bg-gray-700 transition-colors duration-200'
           {...register('notes')}
         ></textarea>
       </div>
 
-      <div className='flex justify-end space-x-3'>
+      <div className='flex justify-end space-x-3 pt-4'>
         <button
           type='button'
           onClick={onCancel}
           disabled={loading}
-          className='bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800'
+          className='bg-white dark:bg-gray-700 py-2 px-6 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 transition-colors'
         >
           Cancel
         </button>
         <button
           type='submit'
           disabled={loading}
-          className='inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50'
+          className='inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 transition-colors'
         >
           {loading ? 'Saving...' : 'Save'}
         </button>
