@@ -65,7 +65,7 @@ exports.addMeasurement = async (req, res) => {
 
     // Create new measurement
     const newMeasurement = {
-      date: date || new Date(),
+      date: date ? new Date(date) : new Date(),
       weight,
       height,
       bodyFat,
@@ -315,7 +315,7 @@ exports.uploadProgressPhoto = async (req, res) => {
 
     // Create new progress photo
     const newPhoto = {
-      date: date || new Date(),
+      date: date ? new Date(date) : new Date(),
       photoUrl,
       category: category || 'front',
       notes,

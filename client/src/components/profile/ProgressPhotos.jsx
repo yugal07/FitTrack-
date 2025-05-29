@@ -126,12 +126,12 @@ const ProgressPhotos = () => {
   const handleSelectPhoto = (photo, type) => {
     if (type === 'before') {
       setBeforePhoto(photo);
+      // Auto-select the newest photo if after is not selected
       if (!afterPhoto) {
-        // Auto-select the newest photo if after is not selected
         const newerPhotos = photos.filter(
           p =>
             new Date(p.date) > new Date(photo.date) &&
-            p.category === photo.category
+            (selectedCategory === 'all' || p.category === photo.category)
         );
         if (newerPhotos.length > 0) {
           setAfterPhoto(newerPhotos[0]);
@@ -139,12 +139,12 @@ const ProgressPhotos = () => {
       }
     } else {
       setAfterPhoto(photo);
+      // Auto-select the oldest photo if before is not selected
       if (!beforePhoto) {
-        // Auto-select the oldest photo if before is not selected
         const olderPhotos = photos.filter(
           p =>
             new Date(p.date) < new Date(photo.date) &&
-            p.category === photo.category
+            (selectedCategory === 'all' || p.category === photo.category)
         );
         if (olderPhotos.length > 0) {
           setBeforePhoto(olderPhotos[olderPhotos.length - 1]);
@@ -178,6 +178,18 @@ const ProgressPhotos = () => {
     return groups;
   }, {});
 
+  // Get available photos for comparison selection
+  const getAvailablePhotos = (excludePhoto = null) => {
+    const availablePhotos =
+      selectedCategory === 'all'
+        ? photos
+        : photos.filter(photo => photo.category === selectedCategory);
+
+    return excludePhoto
+      ? availablePhotos.filter(photo => photo._id !== excludePhoto._id)
+      : availablePhotos;
+  };
+
   return (
     <Card
       title='Progress Photos'
@@ -200,10 +212,10 @@ const ProgressPhotos = () => {
           <button
             type='button'
             onClick={() => setSelectedCategory('all')}
-            className={`px-3 py-1 rounded-md text-sm ${
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               selectedCategory === 'all'
                 ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
             }`}
           >
             All
@@ -211,10 +223,10 @@ const ProgressPhotos = () => {
           <button
             type='button'
             onClick={() => setSelectedCategory('front')}
-            className={`px-3 py-1 rounded-md text-sm ${
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               selectedCategory === 'front'
                 ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
             }`}
           >
             Front
@@ -222,10 +234,10 @@ const ProgressPhotos = () => {
           <button
             type='button'
             onClick={() => setSelectedCategory('side')}
-            className={`px-3 py-1 rounded-md text-sm ${
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               selectedCategory === 'side'
                 ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
             }`}
           >
             Side
@@ -233,10 +245,10 @@ const ProgressPhotos = () => {
           <button
             type='button'
             onClick={() => setSelectedCategory('back')}
-            className={`px-3 py-1 rounded-md text-sm ${
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               selectedCategory === 'back'
                 ? 'bg-indigo-600 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
             }`}
           >
             Back
@@ -249,7 +261,7 @@ const ProgressPhotos = () => {
               <button
                 type='button'
                 onClick={() => setShowForm(true)}
-                className='inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800'
+                className='inline-flex items-center px-4 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors'
               >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
@@ -270,9 +282,13 @@ const ProgressPhotos = () => {
 
               <button
                 type='button'
-                onClick={() => setCompareMode(true)}
-                disabled={photos.length < 2}
-                className='inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50'
+                onClick={() => {
+                  setCompareMode(true);
+                  setBeforePhoto(null);
+                  setAfterPhoto(null);
+                }}
+                disabled={filteredPhotos.length < 2}
+                className='inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
               >
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
@@ -295,8 +311,22 @@ const ProgressPhotos = () => {
             <button
               type='button'
               onClick={exitCompareMode}
-              className='inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800'
+              className='inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors'
             >
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                className='h-4 w-4 mr-2'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M6 18L18 6M6 6l12 12'
+                />
+              </svg>
               Exit Compare Mode
             </button>
           )}
@@ -304,7 +334,7 @@ const ProgressPhotos = () => {
       </div>
 
       {showForm && (
-        <div className='mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800'>
+        <div className='mb-6 p-6 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800'>
           <h3 className='text-lg font-medium text-gray-900 dark:text-white mb-4'>
             Upload Progress Photo
           </h3>
@@ -317,53 +347,103 @@ const ProgressPhotos = () => {
       )}
 
       {compareMode ? (
-        <div className='my-4'>
-          <h3 className='text-lg font-medium text-gray-900 dark:text-white mb-4'>
+        <div className='my-6'>
+          <h3 className='text-lg font-medium text-gray-900 dark:text-white mb-6'>
             Before & After Comparison
           </h3>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
             <div className='border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
-              <div className='bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700'>
+              <div className='bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700'>
                 <h4 className='font-medium text-gray-700 dark:text-gray-300'>
                   Before
                 </h4>
               </div>
 
-              {beforePhoto ? (
-                <div className='relative'>
-                  <img
-                    src={beforePhoto.photoUrl}
-                    alt='Before'
-                    className='w-full h-auto'
-                  />
-                  <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-2 text-sm'>
-                    {format(new Date(beforePhoto.date), 'MMM d, yyyy')}
+              <div className='h-96 flex flex-col'>
+                {beforePhoto ? (
+                  <div className='relative h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700'>
+                    <img
+                      src={beforePhoto.photoUrl}
+                      alt='Before'
+                      className='max-h-full max-w-full object-contain'
+                    />
+                    <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-3'>
+                      <div className='flex justify-between items-center'>
+                        <span className='text-sm font-medium'>
+                          {format(new Date(beforePhoto.date), 'MMM d, yyyy')}
+                        </span>
+                        <span className='text-xs px-2 py-1 bg-gray-800 rounded-full capitalize'>
+                          {beforePhoto.category}
+                        </span>
+                      </div>
+                      {beforePhoto.notes && (
+                        <p className='text-xs mt-1 opacity-90 truncate'>
+                          {beforePhoto.notes}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setBeforePhoto(null)}
+                      className='absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700 transition-colors'
+                    >
+                      <svg
+                        className='h-4 w-4'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M6 18L18 6M6 6l12 12'
+                        />
+                      </svg>
+                    </button>
                   </div>
-                </div>
-              ) : (
-                <div className='h-64 flex items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700'>
-                  Select a "Before" photo
-                </div>
-              )}
+                ) : (
+                  <div className='h-full flex items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700'>
+                    <div className='text-center'>
+                      <svg
+                        className='mx-auto h-12 w-12 text-gray-400 mb-3'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-4-2v6m-6-6v6'
+                        />
+                      </svg>
+                      <p className='text-sm'>Select a "Before" photo</p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              {!beforePhoto && photos.length > 0 && (
-                <div className='p-4'>
-                  <div className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+              {!beforePhoto && getAvailablePhotos(afterPhoto).length > 0 && (
+                <div className='p-4 border-t border-gray-200 dark:border-gray-700'>
+                  <div className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
                     Select a before photo:
                   </div>
-                  <div className='grid grid-cols-3 gap-2'>
-                    {photos.slice(0, 6).map(photo => (
+                  <div className='grid grid-cols-3 gap-2 max-h-32 overflow-y-auto'>
+                    {getAvailablePhotos(afterPhoto).map(photo => (
                       <div
                         key={photo._id}
                         onClick={() => handleSelectPhoto(photo, 'before')}
-                        className='cursor-pointer rounded-md overflow-hidden border-2 border-transparent hover:border-indigo-500'
+                        className='cursor-pointer rounded-md overflow-hidden border-2 border-transparent hover:border-indigo-500 transition-all transform hover:scale-105'
                       >
                         <img
                           src={photo.photoUrl}
                           alt={format(new Date(photo.date), 'MMM d, yyyy')}
-                          className='w-full h-auto'
+                          className='w-full h-14 object-cover'
                         />
+                        <div className='text-xs text-center py-1 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400'>
+                          {format(new Date(photo.date), 'MMM d')}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -372,46 +452,96 @@ const ProgressPhotos = () => {
             </div>
 
             <div className='border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden'>
-              <div className='bg-gray-50 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700'>
+              <div className='bg-gray-50 dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700'>
                 <h4 className='font-medium text-gray-700 dark:text-gray-300'>
                   After
                 </h4>
               </div>
 
-              {afterPhoto ? (
-                <div className='relative'>
-                  <img
-                    src={afterPhoto.photoUrl}
-                    alt='After'
-                    className='w-full h-auto'
-                  />
-                  <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-2 text-sm'>
-                    {format(new Date(afterPhoto.date), 'MMM d, yyyy')}
+              <div className='h-96 flex flex-col'>
+                {afterPhoto ? (
+                  <div className='relative h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700'>
+                    <img
+                      src={afterPhoto.photoUrl}
+                      alt='After'
+                      className='max-h-full max-w-full object-contain'
+                    />
+                    <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-3'>
+                      <div className='flex justify-between items-center'>
+                        <span className='text-sm font-medium'>
+                          {format(new Date(afterPhoto.date), 'MMM d, yyyy')}
+                        </span>
+                        <span className='text-xs px-2 py-1 bg-gray-800 rounded-full capitalize'>
+                          {afterPhoto.category}
+                        </span>
+                      </div>
+                      {afterPhoto.notes && (
+                        <p className='text-xs mt-1 opacity-90 truncate'>
+                          {afterPhoto.notes}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setAfterPhoto(null)}
+                      className='absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700 transition-colors'
+                    >
+                      <svg
+                        className='h-4 w-4'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M6 18L18 6M6 6l12 12'
+                        />
+                      </svg>
+                    </button>
                   </div>
-                </div>
-              ) : (
-                <div className='h-64 flex items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700'>
-                  Select an "After" photo
-                </div>
-              )}
+                ) : (
+                  <div className='h-full flex items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700'>
+                    <div className='text-center'>
+                      <svg
+                        className='mx-auto h-12 w-12 text-gray-400 mb-3'
+                        fill='none'
+                        viewBox='0 0 24 24'
+                        stroke='currentColor'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-4-2v6m-6-6v6'
+                        />
+                      </svg>
+                      <p className='text-sm'>Select an "After" photo</p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              {!afterPhoto && photos.length > 0 && (
-                <div className='p-4'>
-                  <div className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+              {!afterPhoto && getAvailablePhotos(beforePhoto).length > 0 && (
+                <div className='p-4 border-t border-gray-200 dark:border-gray-700'>
+                  <div className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
                     Select an after photo:
                   </div>
-                  <div className='grid grid-cols-3 gap-2'>
-                    {photos.slice(0, 6).map(photo => (
+                  <div className='grid grid-cols-3 gap-2 max-h-32 overflow-y-auto'>
+                    {getAvailablePhotos(beforePhoto).map(photo => (
                       <div
                         key={photo._id}
                         onClick={() => handleSelectPhoto(photo, 'after')}
-                        className='cursor-pointer rounded-md overflow-hidden border-2 border-transparent hover:border-indigo-500'
+                        className='cursor-pointer rounded-md overflow-hidden border-2 border-transparent hover:border-indigo-500 transition-all transform hover:scale-105'
                       >
                         <img
                           src={photo.photoUrl}
                           alt={format(new Date(photo.date), 'MMM d, yyyy')}
-                          className='w-full h-auto'
+                          className='w-full h-14 object-cover'
                         />
+                        <div className='text-xs text-center py-1 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400'>
+                          {format(new Date(photo.date), 'MMM d')}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -421,36 +551,44 @@ const ProgressPhotos = () => {
           </div>
 
           {beforePhoto && afterPhoto && (
-            <div className='mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700'>
-              <h4 className='font-medium text-gray-900 dark:text-white mb-2'>
+            <div className='mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700'>
+              <h4 className='font-medium text-gray-900 dark:text-white mb-3'>
                 Comparison Details
               </h4>
-              <p className='text-sm text-gray-600 dark:text-gray-300'>
-                <span className='font-medium'>Time difference:</span>{' '}
-                {formatTimeDifference(
-                  new Date(beforePhoto.date),
-                  new Date(afterPhoto.date)
-                )}
-              </p>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300'>
+                <div>
+                  <span className='font-medium'>Time difference:</span>{' '}
+                  {formatTimeDifference(
+                    new Date(beforePhoto.date),
+                    new Date(afterPhoto.date)
+                  )}
+                </div>
+                <div>
+                  <span className='font-medium'>Categories:</span>{' '}
+                  {beforePhoto.category} → {afterPhoto.category}
+                </div>
+              </div>
               {(beforePhoto.notes || afterPhoto.notes) && (
-                <div className='mt-2'>
-                  <p className='text-sm text-gray-600 dark:text-gray-300'>
-                    <span className='font-medium'>Before notes:</span>{' '}
-                    {beforePhoto.notes || 'None'}
-                  </p>
-                  <p className='text-sm text-gray-600 dark:text-gray-300'>
-                    <span className='font-medium'>After notes:</span>{' '}
-                    {afterPhoto.notes || 'None'}
-                  </p>
+                <div className='mt-3 pt-3 border-t border-gray-200 dark:border-gray-700'>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-300'>
+                    <div>
+                      <span className='font-medium'>Before notes:</span>{' '}
+                      {beforePhoto.notes || 'None'}
+                    </div>
+                    <div>
+                      <span className='font-medium'>After notes:</span>{' '}
+                      {afterPhoto.notes || 'None'}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           )}
         </div>
       ) : loading && photos.length === 0 ? (
-        <div className='text-center py-8'>
+        <div className='text-center py-12'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto'></div>
-          <p className='mt-3 text-sm text-gray-600 dark:text-gray-400'>
+          <p className='mt-4 text-sm text-gray-600 dark:text-gray-400'>
             Loading photos...
           </p>
         </div>
@@ -482,7 +620,7 @@ const ProgressPhotos = () => {
           <button
             type='button'
             onClick={() => setShowForm(true)}
-            className='mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800'
+            className='mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors'
           >
             <svg
               xmlns='http://www.w3.org/2000/svg'
@@ -522,7 +660,7 @@ const ProgressPhotos = () => {
                     <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity flex items-center justify-center opacity-0 group-hover:opacity-100'>
                       <button
                         onClick={() => handleDeleteClick(photo)}
-                        className='bg-red-600 text-white p-2 rounded-full hover:bg-red-700'
+                        className='bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors'
                       >
                         <svg
                           xmlns='http://www.w3.org/2000/svg'
@@ -563,7 +701,6 @@ const ProgressPhotos = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={deleteConfirm.isOpen}
         onClose={handleDeleteCancel}
@@ -585,7 +722,7 @@ const formatTimeDifference = (date1, date2) => {
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays < 7) {
-    return `${diffDays} days`;
+    return `${diffDays} ${diffDays === 1 ? 'day' : 'days'}`;
   } else if (diffDays < 30) {
     const weeks = Math.floor(diffDays / 7);
     return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
