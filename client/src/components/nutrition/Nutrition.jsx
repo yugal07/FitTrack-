@@ -272,6 +272,7 @@ const Nutrition = () => {
                   <DailyIntakeForm
                     nutritionLogId={nutritionLog._id}
                     onMealAdded={handleMealAdded}
+                    onCancel={() => setShowForm(false)}
                   />
                 ) : (
                   <MealsList
@@ -307,6 +308,7 @@ const Nutrition = () => {
               <DailyIntakeForm
                 nutritionLogId={nutritionLog._id}
                 onMealAdded={handleMealAdded}
+                onCancel={() => setShowForm(false)}
               />
             ) : (
               <>
