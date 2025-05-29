@@ -89,16 +89,13 @@ const PhotoForm = ({ onSubmit, onCancel, loading }) => {
       return;
     }
 
-    // Ensure date is properly formatted without timezone conversion
-    // The date input gives us YYYY-MM-DD format, keep it as-is
+    // Pass the actual file object along with form data
     const formDataWithFile = {
       ...data,
-      date: data.date, // Keep the original date string
       file: selectedFile,
     };
 
     console.log('Submitting form with data:', formDataWithFile);
-    console.log('Date being sent:', data.date);
     onSubmit(formDataWithFile);
   };
 
