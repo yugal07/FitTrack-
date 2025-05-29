@@ -15,7 +15,7 @@ const getCurrentLocalDateTimeString = () => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
-const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
+const DailyIntakeForm = ({ nutritionLogId, onMealAdded, onCancel }) => {
   const initialFormState = {
     type: 'breakfast',
     time: getCurrentLocalDateTimeString(),
@@ -826,11 +826,21 @@ const DailyIntakeForm = ({ nutritionLogId, onMealAdded }) => {
         />
       </div>
 
-      {/* Submit Button */}
-      <div className='flex justify-end'>
+      {/* Submit and Cancel Buttons */}
+      <div className='flex justify-end gap-2'>
         <Button type='submit' variant='primary' disabled={loading}>
           {loading ? 'Adding...' : 'Add Meal'}
         </Button>
+        {onCancel && (
+          <Button
+            type='button'
+            variant='secondary'
+            onClick={onCancel}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+        )}
       </div>
     </form>
   );

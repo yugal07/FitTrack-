@@ -259,19 +259,22 @@ const Nutrition = () => {
                 title="Today's Meals"
                 className='mb-6'
                 footer={
-                  <Button
-                    onClick={() => setShowForm(!showForm)}
-                    variant='primary'
-                    fullWidth
-                  >
-                    {showForm ? 'Cancel' : 'Add Meal'}
-                  </Button>
+                  !showForm && (
+                    <Button
+                      onClick={() => setShowForm(true)}
+                      variant='primary'
+                      fullWidth
+                    >
+                      Add Meal
+                    </Button>
+                  )
                 }
               >
                 {showForm ? (
                   <DailyIntakeForm
                     nutritionLogId={nutritionLog._id}
                     onMealAdded={handleMealAdded}
+                    onCancel={() => setShowForm(false)}
                   />
                 ) : (
                   <MealsList
@@ -307,6 +310,7 @@ const Nutrition = () => {
               <DailyIntakeForm
                 nutritionLogId={nutritionLog._id}
                 onMealAdded={handleMealAdded}
+                onCancel={() => setShowForm(false)}
               />
             ) : (
               <>
