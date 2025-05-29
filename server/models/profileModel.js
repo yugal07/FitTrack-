@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const measurementSchema = new mongoose.Schema({
   date: {
     type: Date,
-    default: Date.now,
+    required: true,
   },
   weight: {
     type: Number,
@@ -70,7 +70,7 @@ const goalSchema = new mongoose.Schema({
 const progressPhotoSchema = new mongoose.Schema({
   date: {
     type: Date,
-    default: Date.now,
+    required: true,
   },
   photoUrl: {
     type: String,

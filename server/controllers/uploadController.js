@@ -15,7 +15,11 @@ exports.uploadProgressPhoto = async (req, res) => {
       });
     }
 
-    const { category, notes } = req.body;
+    const { category, notes, date } = req.body; // Add date here
+
+    // Debug logging
+    console.log('Received date from frontend:', date);
+    console.log('Date type:', typeof date);
 
     // Get user profile
     const profile = await Profile.findOne({ userId: req.user._id });
@@ -31,23 +35,26 @@ exports.uploadProgressPhoto = async (req, res) => {
     }
 
     // For now, we'll store base64 representation of the file
-    // In production, you should upload to cloud storage (Cloudinary, AWS S3, etc.)
     const fileBase64 = req.file.buffer.toString('base64');
     const dataUri = `data:${req.file.mimetype};base64,${fileBase64}`;
 
     // Create progress photo object
     const progressPhoto = {
-      date: new Date(),
-      photoUrl: dataUri, // Store as data URI for now
+      date: date ? new Date(date) : new Date(), // Use submitted date or fallback
+      photoUrl: dataUri,
       category: category || 'front',
       notes: notes || '',
     };
+
+    console.log('Progress photo before save:', progressPhoto);
 
     // Add to progress photos array
     profile.progressPhotos.push(progressPhoto);
 
     // Save profile
     await profile.save();
+
+    console.log('Progress photo after save:', progressPhoto);
 
     res.status(201).json({
       success: true,
