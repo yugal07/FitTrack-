@@ -12,6 +12,7 @@ const morgan = require('morgan');
 const {
   startNotificationSchedulers,
 } = require('./services/notificationScheduler');
+const helmet = require('helmet');
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
+app.use(helmet());
 
 // Static files folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

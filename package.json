@@ -25,6 +25,7 @@
     "prettier": "^3.5.3"
   },
   "dependencies": {
+    "helmet": "^8.1.0",
     "lint": "^0.8.19",
     "staged": "^0.0.0"
   }
