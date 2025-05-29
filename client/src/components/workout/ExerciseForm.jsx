@@ -7,7 +7,6 @@ import Button from '../ui/Button';
 const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
   const [availableExercises, setAvailableExercises] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isCustomExercise, setIsCustomExercise] = useState(false);
 
   // Get toast functions
   const toast = useToast();
@@ -38,7 +37,6 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
 
   // Watch values for validation
   const watchExerciseId = watch('exerciseId');
-  const watchExerciseName = watch('exerciseName');
   const watchSets = watch('sets');
 
   // Load exercises from API
@@ -63,7 +61,14 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
   useEffect(() => {
     if (exercise) {
       setValue('exerciseId', exercise.exerciseId);
-      setValue('exerciseName', exercise.exerciseName);
+
+      // Set exercise name from the available exercises
+      const selectedExercise = availableExercises.find(
+        ex => ex._id === exercise.exerciseId
+      );
+      if (selectedExercise) {
+        setValue('exerciseName', selectedExercise.name);
+      }
 
       if (exercise.sets && exercise.sets.length > 0) {
         // Remove default set and add all exercise sets
@@ -77,28 +82,15 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
           });
         });
       }
-
-      // Check if this is a custom exercise
-      setIsCustomExercise(
-        !availableExercises.some(ex => ex._id === exercise.exerciseId)
-      );
     }
   }, [exercise, availableExercises, setValue, append, remove]);
 
-  const handleExerciseTypeChange = e => {
+  const handleExerciseChange = e => {
     const value = e.target.value;
-
-    if (value === 'custom') {
-      setIsCustomExercise(true);
-      setValue('exerciseId', '');
-      setValue('exerciseName', '');
-    } else {
-      setIsCustomExercise(false);
-      const selectedExercise = availableExercises.find(ex => ex._id === value);
-      if (selectedExercise) {
-        setValue('exerciseId', value);
-        setValue('exerciseName', selectedExercise.name);
-      }
+    const selectedExercise = availableExercises.find(ex => ex._id === value);
+    if (selectedExercise) {
+      setValue('exerciseId', value);
+      setValue('exerciseName', selectedExercise.name);
     }
   };
 
@@ -156,71 +148,32 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
           >
             Exercise*
           </label>
-          {isCustomExercise ? (
-            <div className='mt-1'>
-              <input
-                type='text'
-                id='exerciseName'
-                className={`block w-full rounded-md ${
-                  errors.exerciseName
-                    ? 'border-red-300 dark:border-red-700'
-                    : 'border-gray-300 dark:border-gray-700'
-                } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-                placeholder='Enter custom exercise name'
-                {...register('exerciseName', {
-                  required: 'Custom exercise name is required',
-                })}
-              />
-              {errors.exerciseName && (
-                <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
-                  {errors.exerciseName.message}
-                </p>
-              )}
-              <div className='mt-2 flex items-center text-sm'>
-                <button
-                  type='button'
-                  onClick={() => setIsCustomExercise(false)}
-                  className='text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300'
-                >
-                  Select from existing exercises
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className='mt-1'>
-              <select
-                id='exerciseId'
-                className={`block w-full rounded-md ${
-                  errors.exerciseId
-                    ? 'border-red-300 dark:border-red-700'
-                    : 'border-gray-300 dark:border-gray-700'
-                } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-                {...register('exerciseId', {
-                  required: isCustomExercise
-                    ? false
-                    : 'Please select an exercise',
-                })}
-                onChange={e => {
-                  handleExerciseTypeChange(e);
-                  // Also update the register value
-                  register('exerciseId').onChange(e);
-                }}
-              >
-                <option value=''>Select an exercise</option>
-                {availableExercises.map(exercise => (
-                  <option key={exercise._id} value={exercise._id}>
-                    {exercise.name} ({exercise.muscleGroups.join(', ')})
-                  </option>
-                ))}
-                <option value='custom'>Add a custom exercise</option>
-              </select>
-              {errors.exerciseId && (
-                <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
-                  {errors.exerciseId.message}
-                </p>
-              )}
-            </div>
-          )}
+          <div className='mt-1'>
+            <select
+              id='exerciseId'
+              className={`block w-full rounded-md ${
+                errors.exerciseId
+                  ? 'border-red-300 dark:border-red-700'
+                  : 'border-gray-300 dark:border-gray-700'
+              } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
+              {...register('exerciseId', {
+                required: 'Please select an exercise',
+              })}
+              onChange={handleExerciseChange}
+            >
+              <option value=''>Select an exercise</option>
+              {availableExercises.map(exercise => (
+                <option key={exercise._id} value={exercise._id}>
+                  {exercise.name} ({exercise.muscleGroups.join(', ')})
+                </option>
+              ))}
+            </select>
+            {errors.exerciseId && (
+              <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
+                {errors.exerciseId.message}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Sets */}
@@ -311,17 +264,10 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
                         valueAsNumber: true,
                       })}
                     />
-                    {errors.sets?.[index]?.reps ? (
+                    {errors.sets?.[index]?.reps && (
                       <p className='mt-1 text-xs text-red-600 dark:text-red-400'>
                         {errors.sets[index].reps.message}
                       </p>
-                    ) : (
-                      !watchSets[index]?.reps &&
-                      !watchSets[index]?.duration && (
-                        <p className='mt-1 text-xs text-amber-600 dark:text-amber-400'>
-                          Enter reps or duration
-                        </p>
-                      )
                     )}
                   </div>
 
@@ -340,7 +286,7 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
                           ? 'border-amber-300 dark:border-amber-700'
                           : 'border-gray-300 dark:border-gray-700'
                       } dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500`}
-                      placeholder='For timed exercises'
+                      placeholder='Enter duration'
                       min='0'
                       onKeyDown={handleNumericInput}
                       {...register(`sets.${index}.duration`, {
@@ -359,19 +305,13 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
                   </div>
                 </div>
 
-                <div className='mt-3'>
-                  <label className='inline-flex items-center'>
-                    <Controller
-                      name={`sets.${index}.completed`}
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          type='checkbox'
-                          className='rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50'
-                          checked={field.value}
-                          onChange={e => field.onChange(e.target.checked)}
-                        />
-                      )}
+                {/* Completed checkbox */}
+                <div className='mt-4'>
+                  <label className='flex items-center'>
+                    <input
+                      type='checkbox'
+                      className='rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800'
+                      {...register(`sets.${index}.completed`)}
                     />
                     <span className='ml-2 text-sm text-gray-700 dark:text-gray-300'>
                       Completed
@@ -381,19 +321,22 @@ const ExerciseForm = ({ exercise = null, onSubmit, onCancel }) => {
               </div>
             ))}
           </div>
+
+          {/* Validation message for sets */}
+          {watchSets.every(set => !set.reps && !set.duration) && (
+            <p className='mt-2 text-sm text-amber-600 dark:text-amber-400'>
+              Please add reps or duration for at least one set
+            </p>
+          )}
         </div>
 
         {/* Form Actions */}
         <div className='flex justify-end space-x-3'>
-          <Button type='button' variant='outline' onClick={onCancel}>
+          <Button type='button' variant='secondary' onClick={onCancel}>
             Cancel
           </Button>
-          <Button type='submit' variant='primary' disabled={loading}>
-            {loading
-              ? 'Saving...'
-              : exercise
-                ? 'Update Exercise'
-                : 'Add Exercise'}
+          <Button type='submit' variant='primary'>
+            {exercise ? 'Update Exercise' : 'Add Exercise'}
           </Button>
         </div>
       </form>
