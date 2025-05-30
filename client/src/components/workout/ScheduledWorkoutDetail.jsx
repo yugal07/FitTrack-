@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import ConfirmModal from '../ui/ConfirmModal';
 import api from '../../utils/api';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -14,6 +15,10 @@ const ScheduledWorkoutDetail = () => {
   const [scheduledWorkout, setScheduledWorkout] = useState(null);
   const [error, setError] = useState(null);
   const [showWorkoutDetails, setShowWorkoutDetails] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    loading: false,
+  });
 
   useEffect(() => {
     const fetchScheduledWorkout = async () => {
@@ -56,17 +61,16 @@ const ScheduledWorkoutDetail = () => {
   };
 
   const handleDeleteWorkout = async () => {
-    if (
-      window.confirm('Are you sure you want to delete this scheduled workout?')
-    ) {
-      try {
-        await api.delete(`/api/scheduled-workouts/${id}`);
-        toast.success('Workout deleted successfully');
-        navigate('/workouts');
-      } catch (err) {
-        console.error('Error deleting scheduled workout:', err);
-        toast.error('Failed to delete workout');
-      }
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
+
+    try {
+      await api.delete(`/api/scheduled-workouts/${id}`);
+      toast.success('Workout deleted successfully');
+      navigate('/workouts');
+    } catch (err) {
+      console.error('Error deleting scheduled workout:', err);
+      toast.error('Failed to delete workout');
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -552,7 +556,9 @@ const ScheduledWorkoutDetail = () => {
 
                 <Button
                   variant='danger'
-                  onClick={handleDeleteWorkout}
+                  onClick={() =>
+                    setDeleteConfirm({ isOpen: true, loading: false })
+                  }
                   className='w-full'
                 >
                   <svg
@@ -634,6 +640,19 @@ const ScheduledWorkoutDetail = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, loading: false })}
+        onConfirm={handleDeleteWorkout}
+        title='Delete Scheduled Workout'
+        message='Are you sure you want to delete this scheduled workout? This action cannot be undone.'
+        confirmText='Delete Workout'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </div>
   );
 };

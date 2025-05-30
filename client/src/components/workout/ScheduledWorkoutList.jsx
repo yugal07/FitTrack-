@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import api from '../../utils/api';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import ConfirmModal from '../ui/ConfirmModal';
 import { useToast } from '../../contexts/ToastContext';
 
 const ScheduledWorkoutList = () => {
@@ -13,6 +14,12 @@ const ScheduledWorkoutList = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [scheduledWorkouts, setScheduledWorkouts] = useState([]);
   const [error, setError] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    workoutId: null,
+    workoutName: '',
+    loading: false,
+  });
 
   useEffect(() => {
     fetchWorkouts();
@@ -36,19 +43,44 @@ const ScheduledWorkoutList = () => {
     }
   };
 
-  const handleDeleteWorkout = async (id, e) => {
+  const handleDeleteClick = (workout, e) => {
     e.stopPropagation();
-    if (
-      window.confirm('Are you sure you want to delete this scheduled workout?')
-    ) {
-      try {
-        await api.delete(`/api/scheduled-workouts/${id}`);
-        toast.success('Workout deleted successfully');
-        fetchWorkouts();
-      } catch (err) {
-        console.error('Error deleting scheduled workout:', err);
-        toast.error('Failed to delete workout');
-      }
+    setDeleteConfirm({
+      isOpen: true,
+      workoutId: workout._id,
+      workoutName: workout.name,
+      loading: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
+
+    try {
+      await api.delete(`/api/scheduled-workouts/${deleteConfirm.workoutId}`);
+      toast.success('Workout deleted successfully');
+      fetchWorkouts();
+      setDeleteConfirm({
+        isOpen: false,
+        workoutId: null,
+        workoutName: '',
+        loading: false,
+      });
+    } catch (err) {
+      console.error('Error deleting scheduled workout:', err);
+      toast.error('Failed to delete workout');
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    if (!deleteConfirm.loading) {
+      setDeleteConfirm({
+        isOpen: false,
+        workoutId: null,
+        workoutName: '',
+        loading: false,
+      });
     }
   };
 
@@ -252,7 +284,7 @@ const ScheduledWorkoutList = () => {
                     <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
                       <button
                         className='text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 mr-4'
-                        onClick={e => handleDeleteWorkout(workout._id, e)}
+                        onClick={e => handleDeleteClick(workout, e)}
                       >
                         Delete
                       </button>
@@ -273,6 +305,19 @@ const ScheduledWorkoutList = () => {
           </div>
         )}
       </Card>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title='Delete Scheduled Workout'
+        message={`Are you sure you want to delete "${deleteConfirm.workoutName}"? This action cannot be undone.`}
+        confirmText='Delete Workout'
+        cancelText='Cancel'
+        variant='danger'
+        loading={deleteConfirm.loading}
+      />
     </div>
   );
 };
