@@ -10,6 +10,7 @@ const NutritionItemForm = ({ item, onSubmit, onCancel }) => {
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm({
     defaultValues: {
       name: '',
